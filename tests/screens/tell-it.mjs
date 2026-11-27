@@ -231,6 +231,34 @@ export async function tryTellIt() {
 }
 
 /**
+ * The grown-up page's "Record 3 seconds" and "Play it back" use Tell it's own recorder and player, so the
+ * microphone goes off the moment recording stops, as on the page screen. Returns a problem, or ''.
+ */
+export async function tryDeviceCheckRecord() {
+  const script = await page('Page.addScriptToEvaluateOnNewDocument', { source: FAKE });
+  try {
+    if (!await open('#grown-ups', 'document.querySelectorAll(".gu-check button").length === 8')) return 'the grown-up page did not draw its checks';
+    const row = (name) => `[...document.querySelectorAll('.gu-check')].find((one) => one.textContent.includes(${JSON.stringify(name)}))`;
+    const result = (name) => evaluate(`${row(name)}.querySelector('.gu-result').textContent`);
+    // The pretend recorder hands over its sound 10ms after stop(): note whether the microphone is already off just after stop().
+    await evaluate(`(() => { const stop = MediaRecorder.prototype.stop;
+      MediaRecorder.prototype.stop = function () { stop.call(this); queueMicrotask(() => { window.__micAfterStop = window.__tracks.filter((t) => !t.stopped).length; }); }; })()`);
+    await evaluate(`${row('Record 3 seconds')}.querySelector('button').click()`);
+    if (!await waitFor(`/^[✓✗]/.test(${row('Record 3 seconds')}.querySelector('.gu-result').textContent)`, 6)) return 'Record 3 seconds gave no answer';
+    const recorded = await result('Record 3 seconds');
+    if (!recorded.startsWith('✓') || !recorded.includes('recorded 3 seconds as audio/webm')) return `Record 3 seconds says "${recorded}"`;
+    if (await micOn() || await evaluate('window.__micAfterStop') !== 0) return 'the microphone stayed on after the recorder stopped (Tell it turns it off at once)';
+    await evaluate(`${row('Play it back')}.querySelector('button').click()`);
+    if (!await waitFor(`window.__audio && window.__heard.includes('sound-1')`, 2)) return 'Play it back did not play the recording';
+    await evaluate(`window.__audio.onended({ type: 'ended' })`);
+    if (!await waitFor(`${row('Play it back')}.querySelector('.gu-result').textContent.startsWith('✓')`, 2)) return `Play it back says "${await result('Play it back')}"`;
+  } finally {
+    await page('Page.removeScriptToEvaluateOnNewDocument', { identifier: script.identifier });
+  }
+  return '';
+}
+
+/**
  * Tell it takes the picture's room: the keys never move. A full page (with the put-back bar too) and a
  * short page with a lesson row still fit; where the words already don't fit, they get no smaller. Returns a problem, or ''.
  */

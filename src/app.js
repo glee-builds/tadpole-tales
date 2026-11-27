@@ -184,8 +184,12 @@ function changed(next) {
   }
 }
 
-/** The saved book with this id that this app can open, or undefined (the caller goes back to the shelf). */
+/**
+ * The saved book with this id that this app can open, or undefined (the caller goes back to the shelf).
+ * Saves what is waiting first: a back-swipe from Finish within a second of typing would otherwise read the book without its last letters.
+ */
 async function findBook(id) {
+  await saveNow();
   try { return (await loadBooks()).find((one) => one.id === id && !isNewer(one)); } catch { return undefined; }
 }
 
@@ -352,7 +356,6 @@ function drawPictureMode(book, index, title) {
 // ---------- The reading view ----------
 
 async function showRead(id, token) {
-  await saveNow();
   let book;
   book = await findBook(id);
   if (token !== shown) return;
@@ -366,7 +369,6 @@ async function showRead(id, token) {
 // ---------- After Finish: title, author name, cover, lesson steps ----------
 
 async function showFinishScreen(id, token) {
-  await saveNow();
   let book;
   let author;
   book = await findBook(id);

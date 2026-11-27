@@ -280,6 +280,32 @@ export async function tryFinish() {
 }
 
 
+/**
+ * Back from Finish within a second of typing the title (a back-swipe): the page screen opens the
+ * book with that title, and typing there keeps it. The spare copy is off (as when localStorage is
+ * full), so only saving before reading the book can keep the title.
+ */
+export async function tryBackFromFinish() {
+  await open('', HOME);
+  await evaluate(`(async () => { ${STORE} await store.startOver(); await store.saveBook(book.setPageText(book.newBook('made-up-back', 1000), 0, 'A frog sat.', 1000)); })()`);
+  if (!await open('#book/made-up-back/0', 'document.querySelector(".keyboard") !== null')) return 'the page screen did not draw';
+  await evaluate(`Storage.prototype.realSetItem ??= Storage.prototype.setItem; Storage.prototype.setItem = () => { throw new Error('full'); };`);
+  try {
+    await tapButton('Finish');
+    if (!await waitFor(`document.querySelector('.screen h1')?.textContent.includes('called') && document.querySelector('.keyboard')`, 3)) return 'no title step';
+    await press('p', 'o', 'n', 'd');
+    await evaluate('history.back()'); // well inside the 1-second wait before saving
+    if (!await waitFor(`location.hash === '#book/made-up-back/0' && document.querySelector('.page-screen .keyboard')`, 3)) return 'back did not open the page screen';
+    await press('s');
+    await evaluate(`location.hash = ''`);
+    if (!await waitFor(HOME, 3)) return 'the shelf did not draw';
+    const kept = await evaluate(`(async () => { ${STORE} const [one] = await store.loadBooks(); return one.title + '|' + one.pages[0].text; })()`);
+    return kept === 'pond|A frog sat.s' ? '' : `after going back from Finish the book is saved as "${kept}" (the title was lost)`;
+  } finally {
+    await evaluate(`Storage.prototype.setItem = Storage.prototype.realSetItem;`);
+  }
+}
+
 // A pretend voice, put in the page before it loads (headless Chrome cannot speak).
 const FAKE_VOICE = `(() => {
   window.__spoken = []; window.__cancels = 0;

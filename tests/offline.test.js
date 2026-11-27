@@ -60,3 +60,35 @@ test('the list has no file twice, and includes the app itself', () => {
   assert.ok(listed.includes('./'));
   assert.ok(listed.includes('index.html'));
 });
+
+/** Install sw.js with a pretend cache where `failing` files can't be fetched. Resolves what was saved, or rejects like a failed install. */
+async function install(failing) {
+  const saved = [];
+  const listeners = {};
+  const cache = {
+    add: async (request) => { if (failing.includes(request.url)) throw new TypeError('network'); saved.push(request.url); },
+    addAll: async (requests) => { // all or nothing, as in a browser
+      if (requests.some((request) => failing.includes(request.url))) throw new TypeError('network');
+      saved.push(...requests.map((request) => request.url));
+    },
+  };
+  const self = { addEventListener: (type, listener) => { listeners[type] = listener; }, skipWaiting: async () => {} };
+  const Request = class { constructor(url) { this.url = url; } }; // Node's own wants a full address
+  new Function('self', 'caches', 'Request', sw)(self, { open: async () => cache }, Request);
+  let done;
+  listeners.install({ waitUntil: (promise) => { done = promise; } });
+  await done;
+  return saved;
+}
+
+test('install saves everything; a word list that fails to download doesn\'t stop the rest', async () => {
+  assert.deepEqual((await install([])).sort(), [...listed].sort());
+  const words = listed.filter((path) => path.startsWith('data/') && path.endsWith('.txt'));
+  assert.ok(words.includes('data/known-words.txt') && words.includes('data/common-words.txt'));
+  const saved = await install(words);
+  assert.deepEqual(saved.sort(), listed.filter((path) => !words.includes(path)).sort());
+});
+
+test('install fails (and a later launch tries again) if one of the app\'s own files fails', async () => {
+  await assert.rejects(install(['src/app.js']));
+});

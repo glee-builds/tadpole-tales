@@ -21,7 +21,7 @@
 // To find a check, look for its label below, then for the function it runs.
 
 import { PHONE, TABLETS, page, problems, checked, checkScreen, checkWith, shutDown, withoutLessons } from './screens/lib.mjs';
-import { tryBooks, tryNewer, tryFinish, tryReadAloud } from './screens/shelf-and-books.mjs';
+import { tryBooks, tryNewer, tryFinish, tryBackFromFinish, tryReadAloud } from './screens/shelf-and-books.mjs';
 import { tryKeyboard, tryStickers, tryFits } from './screens/page-keyboard-pictures.mjs';
 import { tryLessons, tryLessonPaths, tryLessonFits, tryPlanAfterLessons, tryNoLessons } from './screens/lessons.mjs';
 import {
@@ -30,7 +30,7 @@ import {
 import {
   tryLessonSteps, tryLessonSkips, tryNotYet, tryCloseAtEachStep, tryOnePage, tryFinishNoLessons,
 } from './screens/finish-lessons.mjs';
-import { tryTellIt, tryTellItFits } from './screens/tell-it.mjs';
+import { tryTellIt, tryTellItFits, tryDeviceCheckRecord } from './screens/tell-it.mjs';
 import { tryPageFits } from './screens/page-fit.mjs';
 
 try {
@@ -40,6 +40,7 @@ try {
   await checkWith('Every screen fits (phone)', withoutLessons(tryFits));
   await checkWith('Read to me: underlines in order, turns the page, Stop, hand-turn, no voice (phone)', tryReadAloud);
   await checkWith('Finish: title, author name, cover, shelf, Edit, close mid-step (phone)', withoutLessons(tryFinish));
+  await checkWith('Finish: back within a second of typing the title keeps it, even with no spare copy (phone)', withoutLessons(tryBackFromFinish));
   await checkWith('Finish with lessons: saved first, hear, tap a sentence, Do it, finish again, Not now, kind message (phone)', tryLessonSteps);
   await checkWith('Finish with lessons: every step skipped, no voice (phone)', tryLessonSkips);
   await checkWith('Finish with lessons: "I don\'t have one yet", Go back, Carry on, tap two pages (phone)', tryNotYet);
@@ -59,6 +60,7 @@ try {
   await checkWith('No lesson files: no card, no planning, no second shelf, no errors (phone)', tryNoLessons);
   await checkWith('Picture mode: add, drag, two-tap move, bigger, remove, 12 limit, save, reorder pages (phone)', tryStickers);
   await checkWith('Tell it: switch, record, stop, limit, play, again, microphone off, delete with page and book, not in backups, refused, no recorder (phone)', tryTellIt);
+  await checkWith('Device check: Record 3 seconds and Play it back use Tell it\'s own recorder, microphone off at once (phone)', tryDeviceCheckRecord);
   await checkWith('Tell it fits: keys never move; full page, put-back bar, lesson row (phone)', tryTellItFits);
   await checkWith('Page screen fits in every mix: lesson row, Tell it, Ideas, put-back bar, full page (phone)', () => tryPageFits('phone'));
   for (const [tablet, size] of Object.entries(TABLETS)) {

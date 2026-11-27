@@ -7,7 +7,8 @@
 //     shows up right away, all at once), and save that copy.
 //   - Offline: use the saved copy.
 //   - When it's first installed, it saves every file in FILES, so the app
-//     works offline even before it has been opened.
+//     works offline even before it has been opened. (A word list that fails
+//     to download doesn't stop the rest being saved.)
 //
 // When you add a file the app needs (a script, an image, a font), add it to
 // FILES. tests/offline.test.js fails if one is missing.
@@ -54,12 +55,22 @@ const FILES = [
   'assets/fonts/andika-latin-700-normal.woff2',
 ];
 
+// The word lists (data/*.txt): large, and the app works without them. A failed
+// one must not cost the offline copy of everything else.
+const isOptional = (file) => file.startsWith('data/') && file.endsWith('.txt');
+
 // First install: save every file. `cache: 'reload'` skips the browser's own
-// short-term copies, so the saved set is all from the same version.
+// short-term copies, so the saved set is all from the same version. The app's
+// own files are all-or-nothing (addAll); each word list is saved on its own and
+// may fail (it is saved later, the first time the app asks for it online).
 self.addEventListener('install', (event) => {
+  const fresh = (file) => new Request(file, { cache: 'reload' });
   event.waitUntil(
     caches.open(CACHE)
-      .then((cache) => cache.addAll(FILES.map((file) => new Request(file, { cache: 'reload' }))))
+      .then((cache) => Promise.all([
+        cache.addAll(FILES.filter((file) => !isOptional(file)).map(fresh)),
+        ...FILES.filter(isOptional).map((file) => cache.add(fresh(file)).catch(() => {})),
+      ]))
       .then(() => self.skipWaiting()),
   );
 });

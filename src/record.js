@@ -96,17 +96,20 @@ export function stop() {
 
 let playing = null; // { audio, finish }
 
-/** Play a recording with an <audio> from a Blob URL (revoked when it ends or stops). `onEnd` is called once. Call it inside a tap. */
+/**
+ * Play a recording with an <audio> from a Blob URL (revoked when it ends or stops). Call it inside a tap.
+ * `onEnd(why)` is called once: why is the 'ended' or 'error' event, play()'s error, or undefined after stopPlaying().
+ */
 export function play({ bytes, type }, onEnd) {
   stopPlaying();
   const url = URL.createObjectURL(new Blob([bytes], { type }));
   const audio = new Audio(url);
-  const finish = () => {
+  const finish = (why) => {
     if (playing?.audio !== audio) return;
     playing = null;
     audio.pause();
     URL.revokeObjectURL(url);
-    onEnd();
+    onEnd(why);
   };
   playing = { audio, finish };
   audio.onended = finish;
