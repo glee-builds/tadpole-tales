@@ -55,11 +55,14 @@ self.addEventListener('install', (event) => {
 });
 
 // Clear out saved files from any older version of this worker, and start
-// looking after the app right away.
+// looking after the app right away. Only this app's own caches: sibling apps
+// share the web address (glee-builds.github.io) and so its cache storage.
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((names) => Promise.all(names.filter((name) => name !== CACHE).map((name) => caches.delete(name))))
+      .then((names) => Promise.all(names
+        .filter((name) => name.startsWith('tadpole-tales-') && name !== CACHE)
+        .map((name) => caches.delete(name))))
       .then(() => self.clients.claim()),
   );
 });
