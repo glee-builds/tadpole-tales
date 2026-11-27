@@ -1,242 +1,530 @@
 [
   {
-    "id": "animals-frog",
+    "id": "baby",
+    "group": "characters",
+    "label": "baby",
+    "emoji": "👶"
+  },
+  {
+    "id": "girl",
+    "group": "characters",
+    "label": "girl",
+    "emoji": "👧🏻"
+  },
+  {
+    "id": "boy",
+    "group": "characters",
+    "label": "boy",
+    "emoji": "👦🏿"
+  },
+  {
+    "id": "child",
+    "group": "characters",
+    "label": "child",
+    "emoji": "🧒🏽"
+  },
+  {
+    "id": "woman",
+    "group": "characters",
+    "label": "woman",
+    "emoji": "👩🏼"
+  },
+  {
+    "id": "man",
+    "group": "characters",
+    "label": "man",
+    "emoji": "👨🏾"
+  },
+  {
+    "id": "grandma",
+    "group": "characters",
+    "label": "grandma",
+    "emoji": "👵🏽"
+  },
+  {
+    "id": "grandpa",
+    "group": "characters",
+    "label": "grandpa",
+    "emoji": "👴🏻"
+  },
+  {
+    "id": "older-person",
+    "group": "characters",
+    "label": "older person",
+    "emoji": "🧓🏿"
+  },
+  {
+    "id": "princess",
+    "group": "characters",
+    "label": "princess",
+    "emoji": "👸🏽"
+  },
+  {
+    "id": "prince",
+    "group": "characters",
+    "label": "prince",
+    "emoji": "🤴🏻"
+  },
+  {
+    "id": "fairy",
+    "group": "characters",
+    "label": "fairy",
+    "emoji": "🧚"
+  },
+  {
+    "id": "wizard",
+    "group": "characters",
+    "label": "wizard",
+    "emoji": "🧙"
+  },
+  {
+    "id": "mermaid",
+    "group": "characters",
+    "label": "mermaid",
+    "emoji": "🧜"
+  },
+  {
+    "id": "robot",
+    "group": "characters",
+    "label": "robot",
+    "emoji": "🤖"
+  },
+  {
+    "id": "ghost",
+    "group": "characters",
+    "label": "ghost",
+    "emoji": "👻"
+  },
+  {
+    "id": "dragon",
+    "group": "characters",
+    "label": "dragon",
+    "emoji": "🐉"
+  },
+  {
+    "id": "unicorn",
+    "group": "characters",
+    "label": "unicorn",
+    "emoji": "🦄"
+  },
+  {
+    "id": "frog",
     "group": "animals",
     "label": "frog",
-    "src": "assets/stickers/animals-frog.svg"
+    "emoji": "🐸"
   },
   {
-    "id": "animals-duck",
+    "id": "duck",
     "group": "animals",
     "label": "duck",
-    "src": "assets/stickers/animals-duck.svg"
+    "emoji": "🦆"
   },
   {
-    "id": "animals-fish",
-    "group": "animals",
-    "label": "fish",
-    "src": "assets/stickers/animals-fish.svg"
-  },
-  {
-    "id": "animals-turtle",
+    "id": "turtle",
     "group": "animals",
     "label": "turtle",
-    "src": "assets/stickers/animals-turtle.svg"
+    "emoji": "🐢"
   },
   {
-    "id": "animals-dragonfly",
+    "id": "fish",
     "group": "animals",
-    "label": "dragonfly",
-    "src": "assets/stickers/animals-dragonfly.svg"
+    "label": "fish",
+    "emoji": "🐟"
   },
   {
-    "id": "animals-snail",
+    "id": "snail",
     "group": "animals",
     "label": "snail",
-    "src": "assets/stickers/animals-snail.svg"
+    "emoji": "🐌"
   },
   {
-    "id": "animals-bird",
+    "id": "swan",
     "group": "animals",
-    "label": "bird",
-    "src": "assets/stickers/animals-bird.svg"
+    "label": "swan",
+    "emoji": "🦢"
   },
   {
-    "id": "animals-dog",
+    "id": "dog",
     "group": "animals",
     "label": "dog",
-    "src": "assets/stickers/animals-dog.svg"
+    "emoji": "🐶"
   },
   {
-    "id": "people-child-pigtails",
-    "group": "people",
-    "label": "child with pigtails",
-    "src": "assets/stickers/people-child-pigtails.svg"
+    "id": "cat",
+    "group": "animals",
+    "label": "cat",
+    "emoji": "🐱"
   },
   {
-    "id": "people-child-curly",
-    "group": "people",
-    "label": "child with curly hair",
-    "src": "assets/stickers/people-child-curly.svg"
+    "id": "rabbit",
+    "group": "animals",
+    "label": "rabbit",
+    "emoji": "🐰"
   },
   {
-    "id": "people-child-bun",
-    "group": "people",
-    "label": "child with a bun",
-    "src": "assets/stickers/people-child-bun.svg"
+    "id": "fox",
+    "group": "animals",
+    "label": "fox",
+    "emoji": "🦊"
   },
   {
-    "id": "people-child-short",
-    "group": "people",
-    "label": "child with short hair",
-    "src": "assets/stickers/people-child-short.svg"
+    "id": "bear",
+    "group": "animals",
+    "label": "bear",
+    "emoji": "🐻"
   },
   {
-    "id": "people-grownup-long-hair",
-    "group": "people",
-    "label": "grown-up with long hair",
-    "src": "assets/stickers/people-grownup-long-hair.svg"
+    "id": "owl",
+    "group": "animals",
+    "label": "owl",
+    "emoji": "🦉"
   },
   {
-    "id": "people-grownup-short",
-    "group": "people",
-    "label": "grown-up with short hair",
-    "src": "assets/stickers/people-grownup-short.svg"
+    "id": "butterfly",
+    "group": "animals",
+    "label": "butterfly",
+    "emoji": "🦋"
   },
   {
-    "id": "people-grownup-grey",
-    "group": "people",
-    "label": "grown-up with grey hair",
-    "src": "assets/stickers/people-grownup-grey.svg"
+    "id": "bee",
+    "group": "animals",
+    "label": "bee",
+    "emoji": "🐝"
   },
   {
-    "id": "people-grownup-bun",
-    "group": "people",
-    "label": "grown-up with a bun",
-    "src": "assets/stickers/people-grownup-bun.svg"
+    "id": "ladybug",
+    "group": "animals",
+    "label": "ladybug",
+    "emoji": "🐞"
   },
   {
-    "id": "places-tree",
-    "group": "places",
-    "label": "tree",
-    "src": "assets/stickers/places-tree.svg"
+    "id": "bird",
+    "group": "animals",
+    "label": "bird",
+    "emoji": "🐦"
   },
   {
-    "id": "places-house",
+    "id": "horse",
+    "group": "animals",
+    "label": "horse",
+    "emoji": "🐴"
+  },
+  {
+    "id": "lion",
+    "group": "animals",
+    "label": "lion",
+    "emoji": "🦁"
+  },
+  {
+    "id": "elephant",
+    "group": "animals",
+    "label": "elephant",
+    "emoji": "🐘"
+  },
+  {
+    "id": "whale",
+    "group": "animals",
+    "label": "whale",
+    "emoji": "🐳"
+  },
+  {
+    "id": "house",
     "group": "places",
     "label": "house",
-    "src": "assets/stickers/places-house.svg"
+    "emoji": "🏠"
   },
   {
-    "id": "places-castle",
+    "id": "castle",
     "group": "places",
     "label": "castle",
-    "src": "assets/stickers/places-castle.svg"
+    "emoji": "🏰"
   },
   {
-    "id": "places-cave",
+    "id": "tent",
     "group": "places",
-    "label": "cave",
-    "src": "assets/stickers/places-cave.svg"
+    "label": "tent",
+    "emoji": "⛺"
   },
   {
-    "id": "places-mountain",
+    "id": "tree",
+    "group": "places",
+    "label": "tree",
+    "emoji": "🌳"
+  },
+  {
+    "id": "evergreen",
+    "group": "places",
+    "label": "evergreen tree",
+    "emoji": "🌲"
+  },
+  {
+    "id": "palm-tree",
+    "group": "places",
+    "label": "palm tree",
+    "emoji": "🌴"
+  },
+  {
+    "id": "mountain",
     "group": "places",
     "label": "mountain",
-    "src": "assets/stickers/places-mountain.svg"
+    "emoji": "⛰️"
   },
   {
-    "id": "places-pond",
+    "id": "volcano",
     "group": "places",
-    "label": "pond",
-    "src": "assets/stickers/places-pond.svg"
+    "label": "volcano",
+    "emoji": "🌋"
   },
   {
-    "id": "places-lily-pad",
+    "id": "island",
     "group": "places",
-    "label": "lily pad",
-    "src": "assets/stickers/places-lily-pad.svg"
+    "label": "island",
+    "emoji": "🏝️"
   },
   {
-    "id": "places-boat",
+    "id": "beach-umbrella",
     "group": "places",
-    "label": "boat",
-    "src": "assets/stickers/places-boat.svg"
+    "label": "beach umbrella",
+    "emoji": "⛱️"
   },
   {
-    "id": "things-ball",
-    "group": "things",
-    "label": "ball",
-    "src": "assets/stickers/things-ball.svg"
+    "id": "school",
+    "group": "places",
+    "label": "school",
+    "emoji": "🏫"
   },
   {
-    "id": "things-key",
+    "id": "flower",
+    "group": "places",
+    "label": "flower",
+    "emoji": "🌸"
+  },
+  {
+    "id": "sunflower",
+    "group": "places",
+    "label": "sunflower",
+    "emoji": "🌻"
+  },
+  {
+    "id": "key",
     "group": "things",
     "label": "key",
-    "src": "assets/stickers/things-key.svg"
+    "emoji": "🔑"
   },
   {
-    "id": "things-treasure-chest",
+    "id": "gem",
     "group": "things",
-    "label": "treasure chest",
-    "src": "assets/stickers/things-treasure-chest.svg"
+    "label": "gem",
+    "emoji": "💎"
   },
   {
-    "id": "things-crown",
+    "id": "treasure",
+    "group": "things",
+    "label": "treasure",
+    "emoji": "💰"
+  },
+  {
+    "id": "crown",
     "group": "things",
     "label": "crown",
-    "src": "assets/stickers/things-crown.svg"
+    "emoji": "👑"
   },
   {
-    "id": "things-book",
+    "id": "book",
     "group": "things",
     "label": "book",
-    "src": "assets/stickers/things-book.svg"
+    "emoji": "📖"
   },
   {
-    "id": "things-kite",
+    "id": "balloon",
     "group": "things",
-    "label": "kite",
-    "src": "assets/stickers/things-kite.svg"
+    "label": "balloon",
+    "emoji": "🎈"
   },
   {
-    "id": "things-cake",
+    "id": "gift",
     "group": "things",
-    "label": "cake",
-    "src": "assets/stickers/things-cake.svg"
+    "label": "gift",
+    "emoji": "🎁"
   },
   {
-    "id": "things-lantern",
+    "id": "ball",
+    "group": "things",
+    "label": "ball",
+    "emoji": "⚽"
+  },
+  {
+    "id": "map",
+    "group": "things",
+    "label": "map",
+    "emoji": "🗺️"
+  },
+  {
+    "id": "lantern",
     "group": "things",
     "label": "lantern",
-    "src": "assets/stickers/things-lantern.svg"
+    "emoji": "🏮"
   },
   {
-    "id": "weather-sun",
+    "id": "candle",
+    "group": "things",
+    "label": "candle",
+    "emoji": "🕯️"
+  },
+  {
+    "id": "rocket",
+    "group": "things",
+    "label": "rocket",
+    "emoji": "🚀"
+  },
+  {
+    "id": "boat",
+    "group": "things",
+    "label": "boat",
+    "emoji": "⛵"
+  },
+  {
+    "id": "car",
+    "group": "things",
+    "label": "car",
+    "emoji": "🚗"
+  },
+  {
+    "id": "cake",
+    "group": "things",
+    "label": "cake",
+    "emoji": "🎂"
+  },
+  {
+    "id": "train",
+    "group": "things",
+    "label": "train",
+    "emoji": "🚂"
+  },
+  {
+    "id": "airplane",
+    "group": "things",
+    "label": "airplane",
+    "emoji": "✈️"
+  },
+  {
+    "id": "sun",
     "group": "weather",
     "label": "sun",
-    "src": "assets/stickers/weather-sun.svg"
+    "emoji": "☀️"
   },
   {
-    "id": "weather-moon",
+    "id": "sun-and-cloud",
+    "group": "weather",
+    "label": "sun and cloud",
+    "emoji": "⛅"
+  },
+  {
+    "id": "moon",
     "group": "weather",
     "label": "moon",
-    "src": "assets/stickers/weather-moon.svg"
+    "emoji": "🌙"
   },
   {
-    "id": "weather-star",
+    "id": "star",
     "group": "weather",
     "label": "star",
-    "src": "assets/stickers/weather-star.svg"
+    "emoji": "⭐"
   },
   {
-    "id": "weather-cloud",
+    "id": "shooting-star",
+    "group": "weather",
+    "label": "shooting star",
+    "emoji": "🌠"
+  },
+  {
+    "id": "sparkles",
+    "group": "weather",
+    "label": "sparkles",
+    "emoji": "✨"
+  },
+  {
+    "id": "cloud",
     "group": "weather",
     "label": "cloud",
-    "src": "assets/stickers/weather-cloud.svg"
+    "emoji": "☁️"
   },
   {
-    "id": "weather-rain",
+    "id": "rain",
     "group": "weather",
     "label": "rain",
-    "src": "assets/stickers/weather-rain.svg"
+    "emoji": "🌧️"
   },
   {
-    "id": "weather-rainbow",
-    "group": "weather",
-    "label": "rainbow",
-    "src": "assets/stickers/weather-rainbow.svg"
-  },
-  {
-    "id": "weather-snow",
+    "id": "snow",
     "group": "weather",
     "label": "snow",
-    "src": "assets/stickers/weather-snow.svg"
+    "emoji": "❄️"
   },
   {
-    "id": "weather-lightning",
+    "id": "rainbow",
+    "group": "weather",
+    "label": "rainbow",
+    "emoji": "🌈"
+  },
+  {
+    "id": "lightning",
     "group": "weather",
     "label": "lightning",
-    "src": "assets/stickers/weather-lightning.svg"
+    "emoji": "⚡"
+  },
+  {
+    "id": "wind",
+    "group": "weather",
+    "label": "wind",
+    "emoji": "🌬️"
+  },
+  {
+    "id": "earth",
+    "group": "weather",
+    "label": "Earth",
+    "emoji": "🌍"
+  },
+  {
+    "id": "happy",
+    "group": "feelings",
+    "label": "happy",
+    "emoji": "😀"
+  },
+  {
+    "id": "sad",
+    "group": "feelings",
+    "label": "sad",
+    "emoji": "😢"
+  },
+  {
+    "id": "scared",
+    "group": "feelings",
+    "label": "scared",
+    "emoji": "😨"
+  },
+  {
+    "id": "surprised",
+    "group": "feelings",
+    "label": "surprised",
+    "emoji": "😮"
+  },
+  {
+    "id": "angry",
+    "group": "feelings",
+    "label": "angry",
+    "emoji": "😠"
+  },
+  {
+    "id": "sleepy",
+    "group": "feelings",
+    "label": "sleepy",
+    "emoji": "😴"
+  },
+  {
+    "id": "love",
+    "group": "feelings",
+    "label": "love",
+    "emoji": "😍"
   }
 ]

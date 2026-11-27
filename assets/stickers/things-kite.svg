@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="kite">
-<path d="M50 8 L80 40 L50 74 L20 40 Z" fill="#ff9aa2"/>
-<path d="M50 8 L80 40 L50 40 Z" fill="#ffd166"/>
-<path d="M20 40 L50 40 L50 74 Z" fill="#8fd3f4"/>
-<path d="M50 74 Q40 84 52 96" fill="none" stroke="#2b2440" stroke-width="2" stroke-linecap="round"/>
-<circle cx="46" cy="84" r="3.5" fill="#a58ad6"/>
-<circle cx="52" cy="92" r="3.5" fill="#a58ad6"/>
-</svg>

@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="sun">
-<g stroke="#f2b84b" stroke-width="5" stroke-linecap="round"><line x1="82.0" y1="50.0" x2="92.0" y2="50.0"/><line x1="72.6" y1="72.6" x2="79.7" y2="79.7"/><line x1="50.0" y1="82.0" x2="50.0" y2="92.0"/><line x1="27.4" y1="72.6" x2="20.3" y2="79.7"/><line x1="18.0" y1="50.0" x2="8.0" y2="50.0"/><line x1="27.4" y1="27.4" x2="20.3" y2="20.3"/><line x1="50.0" y1="18.0" x2="50.0" y2="8.0"/><line x1="72.6" y1="27.4" x2="79.7" y2="20.3"/></g>
-<circle cx="50" cy="50" r="24" fill="#ffd166"/>
-<circle cx="42" cy="46" r="2.8" fill="#2b2440"/>
-<circle cx="58" cy="46" r="2.8" fill="#2b2440"/>
-<path d="M42 56 Q50 63 58 56" fill="none" stroke="#2b2440" stroke-width="3.5" stroke-linecap="round"/>
-</svg>

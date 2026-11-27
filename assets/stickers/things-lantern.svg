@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="lantern">
-<path d="M34 26 Q50 6 66 26" fill="none" stroke="#2b2440" stroke-width="4" stroke-linecap="round"/>
-<path d="M18 52 H8 M82 52 H92" stroke="#ffd166" stroke-width="3" stroke-linecap="round"/>
-<path d="M38 32 L62 32 Q76 50 62 74 L38 74 Q24 50 38 32 Z" fill="#ffd166"/>
-<path d="M50 42 Q56 52 50 62 Q44 52 50 42 Z" fill="#ff9f5a"/>
-<rect x="34" y="24" width="32" height="8" rx="2" fill="#b5835a"/>
-<rect x="34" y="74" width="32" height="8" rx="2" fill="#b5835a"/>
-</svg>
