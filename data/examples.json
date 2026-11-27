@@ -1,0 +1,150 @@
+[
+  {
+    "lesson": "beginning-middle-end",
+    "title": "Dot's Snow Friend",
+    "pages": [
+      {
+        "text": "One cold morning, Dot looked out the window. Snow covered everything! Dot pulled on a warm hat and ran outside.",
+        "stickers": [
+          { "id": "house", "x": 0.28, "y": 0.55, "size": 2 },
+          { "id": "snow", "x": 0.75, "y": 0.22, "size": 1 },
+          { "id": "child", "x": 0.7, "y": 0.72, "size": 1 }
+        ]
+      },
+      {
+        "text": "Dot rolled a big snowball and a small one. Dot stacked them up to make a snow friend. Then a puppy ran by and knocked the top off!",
+        "stickers": [
+          { "id": "child", "x": 0.25, "y": 0.68, "size": 1 },
+          { "id": "dog", "x": 0.72, "y": 0.72, "size": 1 },
+          { "id": "snow", "x": 0.5, "y": 0.22, "size": 1 }
+        ]
+      },
+      {
+        "text": "Dot laughed. Dot and the puppy rolled a new top together. Now the snow friend had a friend, and so did Dot.",
+        "stickers": [
+          { "id": "child", "x": 0.35, "y": 0.68, "size": 1 },
+          { "id": "dog", "x": 0.58, "y": 0.74, "size": 1 },
+          { "id": "sparkles", "x": 0.5, "y": 0.25, "size": 1 }
+        ]
+      }
+    ],
+    "find": { "kind": "page", "prompt": "Tap the page where the middle starts.", "page": 1 }
+  },
+  {
+    "lesson": "wants-something",
+    "title": "Pip and the Stars",
+    "pages": [
+      {
+        "text": "Pip was a small frog in a quiet pond. Every night, Pip looked up at the twinkly stars. Pip loved them.",
+        "stickers": [
+          { "id": "frog", "x": 0.4, "y": 0.72, "size": 1 },
+          { "id": "moon", "x": 0.8, "y": 0.2, "size": 1 },
+          { "id": "star", "x": 0.25, "y": 0.22, "size": 0.75 }
+        ]
+      },
+      {
+        "text": "Pip wanted to see the stars up close. How many were there? Nobody in the pond knew, and Pip wanted to count them all.",
+        "stickers": [
+          { "id": "frog", "x": 0.3, "y": 0.72, "size": 1 },
+          { "id": "star", "x": 0.6, "y": 0.2, "size": 0.75 },
+          { "id": "star", "x": 0.82, "y": 0.32, "size": 0.75 }
+        ]
+      },
+      {
+        "text": "Pip climbed the tallest tree. The stars were still far away. A kind owl offered a ride. Pip felt a bit scared, but brave too.",
+        "stickers": [
+          { "id": "tree", "x": 0.35, "y": 0.6, "size": 2 },
+          { "id": "frog", "x": 0.4, "y": 0.3, "size": 0.75 },
+          { "id": "owl", "x": 0.72, "y": 0.3, "size": 1 }
+        ]
+      },
+      {
+        "text": "Up they flew, past the clouds. The stars sparkled all around. Pip counted and counted, and smiled all night long.",
+        "stickers": [
+          { "id": "owl", "x": 0.45, "y": 0.55, "size": 1.5 },
+          { "id": "frog", "x": 0.47, "y": 0.4, "size": 0.75 },
+          { "id": "sparkles", "x": 0.82, "y": 0.22, "size": 1 }
+        ]
+      }
+    ],
+    "find": { "kind": "sentence", "prompt": "Tap where Pip wants something.", "page": 1, "sentence": "Pip wanted to see the stars up close." }
+  },
+  {
+    "lesson": "gets-in-the-way",
+    "title": "A Cake for Mo",
+    "pages": [
+      {
+        "text": "Mo the bear was sick in bed all week. Tam the rabbit felt sad for Mo. Tam wanted to cheer Mo up, so Tam baked a carrot cake.",
+        "stickers": [
+          { "id": "rabbit", "x": 0.3, "y": 0.68, "size": 1 },
+          { "id": "cake", "x": 0.55, "y": 0.74, "size": 1 },
+          { "id": "sad", "x": 0.8, "y": 0.22, "size": 0.75 }
+        ]
+      },
+      {
+        "text": "Tam carried the cake to the river. But the little bridge had washed away! Tam felt so worried. How could a rabbit get across?",
+        "stickers": [
+          { "id": "rabbit", "x": 0.2, "y": 0.6, "size": 1 },
+          { "id": "cake", "x": 0.33, "y": 0.72, "size": 0.75 },
+          { "id": "fish", "x": 0.7, "y": 0.76, "size": 1 }
+        ]
+      },
+      {
+        "text": "Tam tried hopping on the stones, but the cake wobbled. Then a big turtle swam up. The turtle let Tam ride across, cake and all!",
+        "stickers": [
+          { "id": "turtle", "x": 0.5, "y": 0.75, "size": 1.5 },
+          { "id": "rabbit", "x": 0.45, "y": 0.45, "size": 1 },
+          { "id": "cake", "x": 0.62, "y": 0.5, "size": 0.75 }
+        ]
+      },
+      {
+        "text": "Mo opened the door and grinned a big bear grin. Tam felt warm and proud inside. They shared the cake with the turtle.",
+        "stickers": [
+          { "id": "bear", "x": 0.25, "y": 0.62, "size": 1.5 },
+          { "id": "rabbit", "x": 0.55, "y": 0.7, "size": 1 },
+          { "id": "turtle", "x": 0.8, "y": 0.74, "size": 1 }
+        ]
+      }
+    ],
+    "find": { "kind": "sentence", "prompt": "Tap where something gets in Tam's way.", "page": 1, "sentence": "But the little bridge had washed away!" }
+  },
+  {
+    "lesson": "three-acts",
+    "title": "Kit's Red Balloon",
+    "pages": [
+      {
+        "text": "Kit the fox won a red balloon at the fair. Kit tied the string to one paw and skipped home, humming.",
+        "stickers": [
+          { "id": "fox", "x": 0.35, "y": 0.7, "size": 1 },
+          { "id": "balloon", "x": 0.5, "y": 0.3, "size": 1 },
+          { "id": "sun", "x": 0.85, "y": 0.2, "size": 1 }
+        ]
+      },
+      {
+        "text": "Then a gust of wind tugged the string loose. The balloon floated up into a tall tree!",
+        "stickers": [
+          { "id": "fox", "x": 0.25, "y": 0.72, "size": 1 },
+          { "id": "tree", "x": 0.65, "y": 0.6, "size": 2 },
+          { "id": "balloon", "x": 0.7, "y": 0.3, "size": 0.75 }
+        ]
+      },
+      {
+        "text": "Kit climbed up to grab it, but the wind blew harder. Whoosh! The balloon sailed over the hill, toward the dark clouds.",
+        "stickers": [
+          { "id": "fox", "x": 0.2, "y": 0.72, "size": 1 },
+          { "id": "mountain", "x": 0.6, "y": 0.66, "size": 1.5 },
+          { "id": "balloon", "x": 0.8, "y": 0.22, "size": 0.75 }
+        ]
+      },
+      {
+        "text": "A little bird zoomed up and caught the string. Back came the balloon! Kit laughed and shared a snack with the bird.",
+        "stickers": [
+          { "id": "fox", "x": 0.35, "y": 0.7, "size": 1 },
+          { "id": "bird", "x": 0.7, "y": 0.28, "size": 1 },
+          { "id": "balloon", "x": 0.5, "y": 0.3, "size": 1 }
+        ]
+      }
+    ],
+    "find": { "kind": "page", "prompt": "Tap the page where the trouble gets bigger.", "page": 2 }
+  }
+]
