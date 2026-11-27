@@ -6,6 +6,9 @@
 //
 // The app's keyboard sends one plain character per key (letters, space,
 // new line, . , ! ? ' "), never emoji, so text.length is the character count.
+// Restored text could still hold an emoji (two UTF-16 units): `cursor` counts
+// UTF-16 units, keyboard.js only puts it between whole characters, and
+// backspace deletes a whole emoji.
 
 export const LIMIT = 300; // about five short sentences: one page fits one screen
 
@@ -29,8 +32,10 @@ export const newLine = (state) => typeKey(state, '\n');
 /** Delete the character before the cursor. Shift is left as it is. */
 export function backspace(state) {
   if (state.cursor === 0) return state;
-  const text = state.text.slice(0, state.cursor - 1) + state.text.slice(state.cursor);
-  return { ...state, text, cursor: state.cursor - 1 };
+  // An emoji in restored text is two UTF-16 units: delete both.
+  const size = /[\uDC00-\uDFFF]/.test(state.text[state.cursor - 1]) && /[\uD800-\uDBFF]/.test(state.text[state.cursor - 2] ?? '') ? 2 : 1;
+  const text = state.text.slice(0, state.cursor - size) + state.text.slice(state.cursor);
+  return { ...state, text, cursor: state.cursor - size };
 }
 
 export const toggleShift = (state) => ({ ...state, shift: !state.shift });

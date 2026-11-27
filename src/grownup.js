@@ -6,7 +6,7 @@
 
 import { make, button, plural } from './ui.js';
 import { loadBooks, saveBook, deleteBook, startOver, getSetting, setSetting } from './store.js';
-import { makeBackup, backupName, readBackup, mergeBooks } from './book.js';
+import { makeBackup, backupName, readBackup, mergeBooks, isNewer } from './book.js';
 
 // ---------- Install first ----------
 
@@ -323,7 +323,7 @@ export function showGrownup(root, { onBack }) {
     shelf.replaceChildren(...books.map((book) => {
       const row = make('li', 'gu-book');
       row.append(
-        make('span', '', `${bookName(book)} · ${book.pages.length} page${book.pages.length === 1 ? '' : 's'} · ${shortDate(book.changed)}`),
+        make('span', '', isNewer(book) ? 'A book made with a newer version of the app' : `${bookName(book)} · ${book.pages.length} page${book.pages.length === 1 ? '' : 's'} · ${shortDate(book.changed)}`),
         askFirst('Delete…', 'Delete this book? It can\'t be undone.', 'Yes, delete', async () => {
           try {
             await deleteBook(book.id);

@@ -154,7 +154,7 @@ button { font-family: inherit; }
   width: 0;
   height: 1.2em;
   margin-right: -3px;
-  border-left: 3px solid var(--go);
+  border-left: 3px solid #e0622f; /* a darker --go: 3.5:1 on the white writing area */
   vertical-align: text-bottom;
 }
 

@@ -240,6 +240,51 @@ async function tryKeyboard() {
   await touch(back.x, back.y, 1500);
   if (await typed() !== '') return `holding backspace left "${await typed()}"`;
 
+  // Fast typing: the second finger lands before the first lifts. Both letters count, once each.
+  const a = await middleOf('[data-key="a"]');
+  const b = await middleOf('[data-key="b"]');
+  await page('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [a] });
+  await sleep(30);
+  await page('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [a, b] });
+  await sleep(30);
+  await page('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [b] });
+  await sleep(30);
+  await page('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await sleep(100);
+  if (await typed() !== 'ab') return `two overlapping taps typed "${await typed()}", not "ab"`;
+  // A hardware keyboard (or switch control): Enter on a focused key types it once.
+  await evaluate(`document.querySelector('[data-key="c"]').focus()`);
+  await page('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13, text: '\r' });
+  await page('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
+  await sleep(50);
+  if (await typed() !== 'abc') return `Enter on the focused "c" key gave "${await typed()}"`;
+  await evaluate(`for (let i = 0; i < 3; i++) document.querySelector('[data-key="backspace"]').click()`);
+  if (await typed() !== '') return `three keyboard presses of backspace left "${await typed()}"`;
+
+  // The cursor stands out from the white writing area (3:1 or more).
+  const contrast = await evaluate(`(() => {
+    const rgb = (color) => color.match(/[\\d.]+/g).slice(0, 3).map(Number);
+    const light = (color) => { const [r, g, b] = rgb(color).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+    const one = light(getComputedStyle(document.querySelector('.writing .cursor')).borderLeftColor);
+    const two = light(getComputedStyle(document.querySelector('.writing')).backgroundColor);
+    return (Math.max(one, two) + 0.05) / (Math.min(one, two) + 0.05);
+  })()`);
+  if (contrast < 3) return `the cursor is only ${contrast.toFixed(1)}:1 against the writing area`;
+
+  // Restored words with an emoji: tapping before the letter after it, then typing, keeps the emoji whole.
+  await evaluate(`(async () => {
+    const { mountWriter } = await import('/src/keyboard.js');
+    const box = document.createElement('div');
+    box.className = 'emoji-test';
+    box.style.cssText = 'position: fixed; left: 0; top: 0; width: 300px; height: 400px; display: flex; flex-direction: column; background: #fff; z-index: 9';
+    document.body.append(box);
+    window.__writer = mountWriter(box, { text: '😀b' });
+  })()`);
+  const letterB = await evaluate(`(() => { const box = [...document.querySelectorAll('.emoji-test .ch')][1].getBoundingClientRect(); return { x: box.left + 1, y: box.top + box.height / 2 }; })()`);
+  await touch(letterB.x, letterB.y);
+  const withEmoji = await evaluate(`(() => { document.querySelector('.emoji-test [data-key="x"]').click(); const text = window.__writer.getText(); window.__writer.remove(); document.querySelector('.emoji-test').remove(); return text; })()`);
+  if (withEmoji !== '😀xb') return `typing x before the b in "😀b" gave ${JSON.stringify(withEmoji)}`;
+
   // A full page (300 characters) fits in the writing area without scrolling.
   await evaluate(`(() => {
     const words = 'The frog hops to the big rock, and sees a tiny fish! "Hello," says the frog. ';
@@ -296,6 +341,15 @@ const STORE = `const store = await import('/src/store.js'); const book = await i
 const BREAK = `IDBDatabase.prototype.realTransaction ??= IDBDatabase.prototype.transaction;
   IDBDatabase.prototype.transaction = function () { throw new DOMException('test: connection lost', 'InvalidStateError'); };`;
 const MEND = `IDBDatabase.prototype.transaction = IDBDatabase.prototype.realTransaction;`;
+// Make every IndexedDB transaction hang with no answer at all (some Safari versions do).
+const STALL = `IDBDatabase.prototype.realTransaction ??= IDBDatabase.prototype.transaction;
+  IDBDatabase.prototype.transaction = function () {
+    const request = {};
+    const store = { put: () => request, get: () => request, getAll: () => request, delete: () => request, clear: () => request };
+    return { objectStore: () => store, abort() {} };
+  };`;
+/** Every spare copy in localStorage (one key per book). */
+const spareKeys = () => evaluate(`Object.keys(localStorage).filter((key) => key.startsWith('tadpole-tales.spare'))`);
 /** The text of page 1 of every saved book, read fresh from the database. */
 const savedTexts = () => evaluate(`(async () => { ${STORE} return (await store.loadBooks()).map((b) => b.pages[0].text); })()`);
 const markShows = () => evaluate(`(() => { const mark = document.querySelector('.save-mark'); return Boolean(mark && !mark.hidden && mark.textContent.includes('Not saved')); })()`);
@@ -331,10 +385,39 @@ async function trySaving() {
   await press('l', 'o', 'g');
   await sleep(1500);
   if (!await markShows()) return 'the "not saved" mark did not show when saving failed';
-  if (!(await evaluate(`localStorage.getItem('tadpole-tales.spare') || ''`)).includes('"log"')) return 'no spare copy in localStorage after a failed save';
+  if (!(await evaluate(`Object.keys(localStorage).filter((key) => key.startsWith('tadpole-tales.spare')).map((key) => localStorage.getItem(key)).join()`)).includes('"log"')) return 'no spare copy in localStorage after a failed save';
   await open('', 'document.querySelector(".go") !== null'); // a fresh page: saving works again
   if (JSON.stringify(await savedTexts()) !== '["log"]') return `the spare copy was not put back: ${JSON.stringify(await savedTexts())}`;
-  if (await evaluate(`localStorage.getItem('tadpole-tales.spare')`) !== null) return 'the spare copy stayed after it was saved';
+  if ((await spareKeys()).length) return 'the spare copy stayed after it was saved';
+
+  // Book A fails to save, then the writer types in book B: both are kept for the next load.
+  await evaluate(`(async () => { ${STORE} await store.startOver(); ${BREAK}
+    store.saveSoon(book.setPageText(book.newBook('made-up-a', 1), 0, 'ant', 1));
+    await store.saveNow();
+    store.saveSoon(book.setPageText(book.newBook('made-up-b', 2), 0, 'bee', 2));
+    await store.saveNow(); })()`);
+  await open('', 'document.querySelector(".go") !== null');
+  if (JSON.stringify((await savedTexts()).sort()) !== '["ant","bee"]') return `after A then B failed to save, the next load found ${JSON.stringify(await savedTexts())}, not ["ant","bee"]`;
+  if ((await spareKeys()).length) return `spare copies stayed after both books saved: ${await spareKeys()}`;
+
+  // saveNow waits for a save already under way, and says whether it worked.
+  const inFlight = await evaluate(`(async () => {
+    ${STORE}
+    let heard;
+    const stop = store.onSaveState((state) => { heard = state; });
+    store.saveSoon(book.setPageText(book.newBook('made-up-fly', 1), 0, 'fly', 1));
+    store.saveNow(); // the 1-second timer's save, under way
+    const good = await store.saveNow(); // Refresh's save must wait for it
+    if (heard !== 'saved' || good !== true) { stop(); return 'saveNow returned while a save was under way (' + heard + ', ' + good + ')'; }
+    ${BREAK}
+    store.saveSoon(book.setPageText(book.newBook('made-up-fly', 1), 0, 'flew', 2));
+    store.saveNow();
+    const bad = await store.saveNow();
+    ${MEND}
+    stop();
+    return heard === 'not-saved' && bad === false ? '' : 'saveNow did not report a failed save under way (' + heard + ', ' + bad + ')';
+  })()`);
+  if (inFlight) return inFlight;
 
   // One failure (Safari closed the connection): the save reopens and works.
   const retried = await evaluate(`(async () => {
@@ -821,6 +904,33 @@ async function tryBooks() {
   await tapOn('.refresh-button');
   if (!await reloaded()) return 'Refresh did not reload once saving worked again';
   if (JSON.stringify(await savedTexts()) !== '["pip dived"]') return `after the mended Refresh the book holds ${JSON.stringify(await savedTexts())}`;
+
+  // The database never answers: Refresh gives up in time, stays, and shows the mark.
+  await change('pip ran');
+  await evaluate(STALL);
+  await tapOn('.refresh-button');
+  if (!await waitFor(`!document.querySelector('.refresh-button').disabled`, 25)) return 'Refresh waited for ever on a save the database never answered';
+  if (!await evaluate('window.__same === true')) return 'Refresh reloaded although the save never finished';
+  if (!await markShows()) return 'no "not saved" mark after the database never answered';
+  await evaluate(MEND);
+  return '';
+}
+
+/** A book from a newer version: on the shelf with a note, never opened, never changed. Returns a problem, or ''. */
+async function tryNewer() {
+  if (!await open('', 'document.querySelector(".go") !== null')) return 'home did not draw';
+  const record = { id: 'made-up-newer', format: 99, changed: 5, title: 'From later', chapters: ['one'] };
+  await evaluate(`(async () => { ${STORE} await store.startOver(); await store.saveBook(${JSON.stringify(record)}); })()`);
+  if (!await open('', 'document.querySelector(".book-card") !== null')) return 'a newer book is not on the shelf';
+  const card = await evaluate(`document.querySelector('.book-card').textContent`);
+  if (!card.includes('newer version') || !card.includes('Refresh')) return `the newer book's card says "${card}"`;
+  if (await evaluate(`document.querySelector('.book-card a, .book-card button') !== null`)) return 'the newer book can be opened or edited from the shelf';
+  if (!await open('#book/made-up-newer/0', 'location.hash === "" && !document.querySelector(".shelf").hidden')) return 'the page screen opened a newer book';
+  if (!await open('#finish/made-up-newer', 'location.hash === "" && !document.querySelector(".shelf").hidden')) return 'the finish screen opened a newer book';
+  if (!await open('#read/made-up-newer', 'location.hash === "" && !document.querySelector(".shelf").hidden')) return 'the reading view opened a newer book';
+  if (!await open('#grown-ups', 'document.querySelectorAll(".gu-book").length === 1')) return 'the grown-up page does not list the newer book';
+  const kept = await evaluate(`(async () => { ${STORE} return (await store.loadBooks())[0]; })()`);
+  if (JSON.stringify(kept) !== JSON.stringify(record)) return `the newer book changed: ${JSON.stringify(kept)}`;
   return '';
 }
 
@@ -1064,7 +1174,8 @@ try {
   await checkWith('Every screen fits (phone)', tryFits);
   await checkWith('Read to me: underlines in order, turns the page, Stop, hand-turn, no voice (phone)', tryReadAloud);
   await checkWith('Finish: title, author name, cover, shelf, Edit, close mid-step (phone)', tryFinish);
-  await checkWith('Saving: save, reload, spare copy, retry once, "not saved" mark, unreadable books', trySaving);
+  await checkWith('Saving: save, reload, spare copies per book, saveNow waits, retry once, "not saved" mark, unreadable books', trySaving);
+  await checkWith('A book from a newer version: shown with a note, never opened or changed', tryNewer);
   await checkWith('Grown-up page: hold to open, every device check, delete a book, start over', tryGrownup);
   await checkWith('Backup: back up, start over, restore, restore again, broken file', tryBackup);
   await checkKeyboard('Keyboard: type, tap to move the cursor, hold backspace, 300 fit (phone)');

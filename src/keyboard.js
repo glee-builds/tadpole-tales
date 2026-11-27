@@ -68,47 +68,69 @@ export function mountWriter(parent, { text = '', limit = LIMIT, label = 'Your wo
     if (textChanged) onChange?.(state.text);
   }
 
-  // One span per character, so a tap can measure where each one is.
+  // One span per character, so a tap can measure where each one is. `gaps[i]`
+  // is the cursor (in UTF-16 units, as typing.js counts) before span i, so an
+  // emoji in restored text is one span and the cursor never lands inside it.
+  let gaps = [];
   function draw() {
     area.textContent = '';
-    [...state.text].forEach((char, i) => {
-      if (i === state.cursor) area.append(cursorMark());
+    gaps = [];
+    let at = 0;
+    let drawn = false;
+    for (const char of state.text) {
+      if (!drawn && at >= state.cursor) { area.append(cursorMark()); drawn = true; }
+      gaps.push(at);
       area.append(make('span', 'ch', char));
-    });
-    if (state.cursor >= state.text.length) area.append(cursorMark());
+      at += char.length;
+    }
+    gaps.push(at);
+    if (!drawn) area.append(cursorMark());
     area.append(make('span', 'end', '\u200b')); // marks where an empty last line sits
     area.querySelector('.cursor').scrollIntoView({ block: 'nearest' });
     keyboard.classList.toggle('shifted', state.shift);
     shiftKey.setAttribute('aria-pressed', String(state.shift));
   }
 
-  keyboard.addEventListener('click', (event) => {
-    const key = event.target.closest('[data-key]')?.dataset.key;
-    if (!key) return;
-    if (key === 'backspace') {
-      if (event.detail === 0) change(backspace(state)); // a screen reader or keyboard "click"; taps are handled on pointerdown
-    } else if (key === 'shift') change(toggleShift(state));
+  function press(key) {
+    if (key === 'backspace') change(backspace(state));
+    else if (key === 'shift') change(toggleShift(state));
     else if (key === 'space') change(typeKey(state, ' '));
     else if (key === 'enter') change(newLine(state));
     else change(typeKey(state, key));
-  });
+  }
 
-  // Backspace deletes as soon as it is touched, then keeps deleting while held.
+  // Keys act on touch-down: when two fast touches overlap, iOS often sends no
+  // click, and letters were lost. The click that follows a touch is skipped;
+  // a click with no touch before it (Enter or Space on a focused key, or a
+  // screen reader) still presses the key.
+  let touched = null; // the key the last touch went down on, until its click
   let holding;
   const stopHold = () => clearTimeout(holding);
   keyboard.addEventListener('pointerdown', (event) => {
-    if (event.target.closest('[data-key]')?.dataset.key !== 'backspace') return;
-    const repeat = () => { change(backspace(state)); holding = setTimeout(repeat, HOLD_EVERY); };
+    const node = event.target.closest('[data-key]');
+    touched = node;
+    if (!node || event.button > 0) return;
+    event.preventDefault(); // no mouse events, focus or text selection from the touch
+    press(node.dataset.key);
+    if (node.dataset.key !== 'backspace') return;
+    // Backspace keeps deleting while held.
+    const repeat = () => { press('backspace'); holding = setTimeout(repeat, HOLD_EVERY); };
     stopHold();
-    change(backspace(state));
     holding = setTimeout(repeat, HOLD_WAIT);
   });
+  keyboard.addEventListener('click', (event) => {
+    const node = event.target.closest('[data-key]');
+    if (!node) return;
+    if (node === touched) { touched = null; return; } // already pressed on touch-down
+    press(node.dataset.key);
+  });
+  keyboard.addEventListener('keydown', () => { touched = null; }); // a key press is never the end of a touch
   for (const type of ['pointerup', 'pointercancel', 'pointerleave']) keyboard.addEventListener(type, stopHold);
   // A finger sliding off the backspace key also stops it.
   keyboard.addEventListener('pointerout', (event) => { if (event.target.closest('.key-backspace')) stopHold(); });
   keyboard.addEventListener('contextmenu', (event) => event.preventDefault()); // a long press must not open a menu
 
-  area.addEventListener('pointerdown', (event) => change(moveCursor(state, nearestGap(area, event.clientX, event.clientY))));
+  area.addEventListener('pointerdown', (event) => change(moveCursor(state, gaps[nearestGap(area, event.clientX, event.clientY)])));
 
   parent.append(area, keyboard);
   draw();

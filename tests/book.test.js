@@ -115,8 +115,9 @@ test('upgradeBook gives a book with no pages one empty page', () => {
   assert.deepEqual(upgradeBook({ id: 'b-9', pages: [] }).pages, [{ text: '', stickers: [] }]);
 });
 
-test('upgradeBook refuses a newer format and things that are not books', () => {
-  assert.throws(() => upgradeBook({ ...newBook('b-1', 1), format: 2 }), { message: 'newer book' });
+test('upgradeBook keeps a newer format whole and refuses things that are not books', () => {
+  const newer = { ...newBook('b-1', 1), format: 2 };
+  assert.equal(upgradeBook(newer), newer);
   assert.throws(() => upgradeBook({ pages: [] }), { message: 'not a book' });
   assert.throws(() => upgradeBook({ id: 'b-1' }), { message: 'not a book' });
   assert.throws(() => upgradeBook(null), { message: 'not a book' });
@@ -132,7 +133,8 @@ test('title and cover are set without changing the book passed in', () => {
 
 test('upgradeBook mends a title and cover that are the wrong shape, and keeps good ones', () => {
   const odd = upgradeBook({ id: 'b-9', pages: [], title: 7, cover: { stickers: 'x' } });
-  assert.deepEqual([odd.title, odd.cover], ['', null]);
+  assert.deepEqual([odd.title, odd.cover], ['7', null]); // a number keeps its digits
+  assert.equal(upgradeBook({ id: 'b-9', pages: [], title: { x: 1 } }).title, '');
   const good = { id: 'b-9', pages: [], title: 'Pip', cover: { stickers: [{ id: 'frog', x: 0.5, y: 0.5, size: 1 }] } };
   const kept = upgradeBook(good);
   assert.deepEqual([kept.title, kept.cover], ['Pip', good.cover]);

@@ -3,7 +3,8 @@
 // A book is { format, id, created, changed, finished, title, cover, pages }.
 // `title` is text (at most TITLE_LIMIT characters when typed); `cover` is null
 // or { stickers: [...] }, the same sticker shape as a page's.
-// `pages` is a list of { text, stickers }, 1 to 12 long. Every function
+// `pages` is a list of { text, stickers }, 1 to 12 long (a hand-made backup
+// can hold more: they are kept, and no page can be added). Every function
 // returns a new book and sets `changed` to `now`; none changes the one passed in.
 // A page's stickers are { id, x, y, size } (see stickers.js); the format number stays 1
 // because upgradeBook already fills `stickers` with [] on an older record.
@@ -85,25 +86,49 @@ export function movePage(book, from, to, now) {
 /** True when no page has any words or stickers. */
 export const isBlank = (book) => book.pages.every((page) => page.text === '' && page.stickers.length === 0);
 
-/** Turn a saved record into a format-1 book, filling in anything missing. */
+/** True for a book made by a newer version of the app: shown on the shelf, never opened or changed. */
+export const isNewer = (book) => book.format > BOOK_FORMAT;
+
+/**
+ * Turn a saved record into a format-1 book, filling in anything missing.
+ * Fields it doesn't know (from a later phase) are kept, on the book and on
+ * each page. A book over 12 pages keeps every page. A book from a newer
+ * format is returned whole and unchanged (see isNewer). Throws 'not a book'
+ * without a string id.
+ */
 export function upgradeBook(record) {
-  if (!record || !record.id || !Array.isArray(record.pages)) throw new Error('not a book');
-  if (record.format > BOOK_FORMAT) throw new Error('newer book');
+  if (typeof record?.id !== 'string' || !record.id) throw new Error('not a book');
+  if (isNewer(record)) return record;
+  if (!Array.isArray(record.pages)) throw new Error('not a book');
   const created = record.created ?? record.changed ?? 0;
-  const pages = record.pages.slice(0, MAX_PAGES).map((page) => ({
-    text: page?.text ?? '',
-    stickers: page?.stickers ?? [],
+  const pages = record.pages.map((page) => ({
+    ...page,
+    text: asText(page?.text),
+    stickers: Array.isArray(page?.stickers) ? page.stickers : [],
   }));
   return {
+    ...record,
     format: BOOK_FORMAT,
-    id: record.id,
     created,
     changed: record.changed ?? created,
     finished: record.finished ?? false,
-    title: typeof record.title === 'string' ? record.title : '',
-    cover: Array.isArray(record.cover?.stickers) ? { stickers: record.cover.stickers } : null,
+    title: asText(record.title),
+    cover: Array.isArray(record.cover?.stickers) ? { ...record.cover } : null,
     pages: pages.length ? pages : [newPage()],
   };
+}
+
+/** A hand-edited number becomes its digits; null, a list or an object becomes ''. */
+const asText = (value) => (value == null || typeof value === 'object' ? '' : String(value));
+
+/** A random id for a new book. crypto.randomUUID needs Safari 15.4, so older ones make it from random bytes. */
+export function newId() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40; // version 4
+  bytes[8] = (bytes[8] & 0x3f) | 0x80; // variant
+  const hex = [...bytes].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
 // ---------- The backup file ----------

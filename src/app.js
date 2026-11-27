@@ -10,7 +10,7 @@
 import { make, button, saveMark, plural } from './ui.js';
 import { mountWriter } from './keyboard.js';
 import { LIMIT, isFull } from './typing.js';
-import { newBook, addPage, removePage, putBackPage, movePage, setPageText, setPageStickers, canAddPage, isBlank } from './book.js';
+import { newBook, newId, addPage, removePage, putBackPage, movePage, setPageText, setPageStickers, canAddPage, isBlank, isNewer } from './book.js';
 import { loadBooks, saveSoon, saveNow, onSaveState, getSetting, setSetting } from './store.js';
 import { holdToOpen, showGrownup, isInstalled, INSTALL_NOTE } from './grownup.js';
 import { mountPicture } from './stickers.js';
@@ -46,6 +46,14 @@ function coverTitle(book) {
 }
 
 function bookCard(book) {
+  if (isNewer(book)) { // made by a newer version of the app: shown, but never opened or edited here
+    const card = make('div', 'book-card finished');
+    const inside = card.appendChild(make('div', 'book-open'));
+    inside.append(make('div', 'cover cover-0'), make('div', 'card-info'));
+    inside.firstChild.append(make('span', 'cover-title', 'A book'));
+    inside.lastChild.append(make('span', 'card-status', 'Made with a newer version — tap Refresh'));
+    return card;
+  }
   const card = make('div', `book-card ${book.finished ? 'finished' : 'unfinished'}`);
   const open = card.appendChild(make('a', 'book-open'));
   open.href = book.finished ? `#read/${book.id}` : `#book/${book.id}/0`;
@@ -91,7 +99,7 @@ async function showShelf(token) {
 }
 
 shelf.querySelector('.go').addEventListener('click', () => {
-  const book = newBook(crypto.randomUUID(), Date.now());
+  const book = newBook(newId(), Date.now());
   open = { book, removed: [], stored: false }; // saved at the first word, so backing out leaves no empty book
   location.hash = `book/${book.id}/0`;
 });
@@ -161,7 +169,7 @@ function changed(next) {
 async function showPage(id, wanted, token) {
   if (!open || open.book.id !== id) {
     let book;
-    try { book = (await loadBooks()).find((one) => one.id === id); } catch { /* shelf says so */ }
+    try { book = (await loadBooks()).find((one) => one.id === id && !isNewer(one)); } catch { /* shelf says so */ }
     if (token !== shown) return;
     if (!book) { location.hash = ''; return; }
     open = { book, removed: [], stored: true };
@@ -295,7 +303,7 @@ async function showPage(id, wanted, token) {
 async function showRead(id, token) {
   await saveNow();
   let book;
-  try { book = (await loadBooks()).find((one) => one.id === id); } catch { /* the shelf says so */ }
+  try { book = (await loadBooks()).find((one) => one.id === id && !isNewer(one)); } catch { /* the shelf says so */ }
   if (token !== shown) return;
   if (!book) { location.hash = ''; return; }
   screen = make('main', 'screen reading');
@@ -310,7 +318,7 @@ async function showFinishScreen(id, token) {
   await saveNow();
   let book;
   let author;
-  try { book = (await loadBooks()).find((one) => one.id === id); } catch { /* the shelf says so */ }
+  try { book = (await loadBooks()).find((one) => one.id === id && !isNewer(one)); } catch { /* the shelf says so */ }
   try { author = await getSetting('author'); } catch { /* asked for again */ }
   if (token !== shown) return;
   if (!book) { location.hash = ''; return; }

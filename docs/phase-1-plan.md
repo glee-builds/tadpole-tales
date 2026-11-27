@@ -18,7 +18,7 @@ Every task: `node --test tests/` and `node tests/screens.mjs` pass, the privacy 
 ```js
 {
   format: 1,                 // BOOK_FORMAT; bump only with an upgrade step in upgradeBook
-  id: 'b-2f9c…',             // from crypto.randomUUID(), passed in by the caller
+  id: 'b-2f9c…',             // from newId() in book.js (crypto.randomUUID, or random bytes before Safari 15.4), passed in by the caller
   created: 1764200000000,    // ms since 1970 (Date.now())
   changed: 1764200000000,
   finished: false,
@@ -69,6 +69,8 @@ Files: `src/keyboard.js`, `styles.css`, `sw.js`, `src/app.js` (temporary demo), 
 
 Export: `mountWriter(parent, { text = '', limit = LIMIT, label = 'Your words', onChange })` adds a writing area and the keyboard to `parent` and returns `{ getText(), setText(text), remove() }`. `onChange(text)` runs after every change. `parent` must be a flex column that fills the screen; the writing area grows to fill what the keyboard leaves.
 
+Keys act on `pointerdown` (with `preventDefault`), and the click that follows a touch is skipped; a click with no touch before it (Enter or Space on a focused key, a screen reader) presses the key. Restored text may hold an emoji: it is drawn as one span and the cursor (UTF-16 units) never lands inside it.
+
 DOM other tasks and tests may rely on: `.writing` (the drawn text, `role="textbox"`, `aria-readonly="true"`, its `aria-label` is the label, its text is the writer's text), `.writing .cursor`, `.keyboard`, and each key a `<button>` with `data-key` (`a`…`z`, `shift`, `backspace`, `space`, `enter`, and the punctuation itself).
 
 Done when: see the pull request; the screen test presses keys, taps to move the cursor, and checks there is no text field.
@@ -77,7 +79,7 @@ Done when: see the pull request; the screen test presses keys, taps to move the 
 
 Files: `src/book.js`, `tests/book.test.js`.
 
-Exports: `BOOK_FORMAT = 1`, `MAX_PAGES = 12`, `newBook(id, now)`, `addPage(book, after, now)` (new empty page after index `after`; returns the book unchanged at 12 pages), `canAddPage(book)`, `removePage(book, index, now)` returns `{ book, removed: { page, index } }` (never removes the last page: returns `{ book, removed: null }`), `putBackPage(book, removed, now)` (puts it back at `index`, or at the end if that's past the end; unchanged at 12 pages), `setPageText(book, index, text, now)`, `isBlank(book)` (every page has no text and no stickers), `upgradeBook(record)` (returns a format-1 book; throws `Error('newer book')` for a format above `BOOK_FORMAT`, and `Error('not a book')` if it has no `id` or no `pages` array).
+Exports: `BOOK_FORMAT = 1`, `MAX_PAGES = 12`, `newBook(id, now)`, `addPage(book, after, now)` (new empty page after index `after`; returns the book unchanged at 12 pages), `canAddPage(book)`, `removePage(book, index, now)` returns `{ book, removed: { page, index } }` (never removes the last page: returns `{ book, removed: null }`), `putBackPage(book, removed, now)` (puts it back at `index`, or at the end if that's past the end; unchanged at 12 pages), `setPageText(book, index, text, now)`, `isBlank(book)` (every page has no text and no stickers), `upgradeBook(record)` (returns a format-1 book, keeping every field it doesn't know on the book and each page, turning `title` and page `text` into strings, and keeping every page even past 12; a record with a format above `BOOK_FORMAT` is returned whole and unchanged; throws `Error('not a book')` without a non-empty string `id`, or, below a newer format, without a `pages` array). Added in the Phase 1 review: `isNewer(book)` (true for a newer format: the shelf shows it with "Made with a newer version — tap Refresh", nothing opens or changes it) and `newId()`.
 
 Every function returns a new book and sets `changed` to `now`; none changes the one passed in. The removed page is kept by the page screen only while the book is open, never saved.
 
@@ -92,9 +94,9 @@ Database `tadpole-tales`, version 1, stores: `books` (keyPath `id`), `recordings
 Exports:
 - `loadBooks()`: `Promise<Book[]>`, every book through `upgradeBook`. Rejects if the database can't be read; the caller must then show "couldn't open your books", never an empty shelf. A record that fails `upgradeBook` is kept in the database and left off the list.
 - `saveBook(book)`: `Promise<void>`. On failure it reopens the database and tries once more, then rejects.
-- `deleteBook(id)`, `startOver()` (empties every store and the spare copy), `getSetting(key)` (resolves `undefined` if not set), `setSetting(key, value)`. Keys used: `author`, `progress`, `lastBackup` (ISO date), `tellIt` (boolean).
-- `saveSoon(book)`: saves 1 second after the last call. `saveNow()`: saves at once whatever is waiting (called on `visibilitychange` to hidden and `pagehide`, which `store.js` listens for itself).
-- Spare copy: `saveSoon` also writes `localStorage['tadpole-tales.spare'] = JSON.stringify(book)` straight away, and removes it once that book saves. `loadBooks` puts it back when its `changed` is newer than the stored copy (or the book isn't stored), and saves it; the spare is cleared only after that save works. (Changed from the first plan: there is no `takeSpare()`, because clearing the spare before it was saved could lose it.)
+- `deleteBook(id)`, `startOver()` (empties every store and every spare copy), `getSetting(key)` (resolves `undefined` if not set), `setSetting(key, value)`. Keys used: `author`, `progress`, `lastBackup` (ISO date), `tellIt` (boolean).
+- `saveSoon(book)`: saves 1 second after the last call. `saveNow()`: saves at once whatever is waiting, then waits for any save already under way, and resolves `true` if everything is saved, `false` if not (called on `visibilitychange` to hidden and `pagehide`, which `store.js` listens for itself). Each read or write gives up after 5 seconds, so no caller waits for ever.
+- Spare copies, one per book: `saveSoon` also writes `localStorage['tadpole-tales.spare.<id>'] = JSON.stringify(book)` straight away, and removes it once that book saves (the bare `tadpole-tales.spare` key from before is still read). Books waiting to be saved are kept per id too, so a failed save of one book is never dropped when another is typed in. `loadBooks` puts it back when its `changed` is newer than the stored copy (or the book isn't stored), and saves it; the spare is cleared only after that save works. (Changed from the first plan: there is no `takeSpare()`, because clearing the spare before it was saved could lose it.)
 - `onSaveState(callback)`: calls `callback('saved' | 'saving' | 'not-saved')` at once and on each change; returns a function that stops it. The page screen shows the "not saved" mark: `saveMark()` in `src/ui.js` returns `{ node, update }`, used as `onSaveState(mark.update)`.
 - Writes go one at a time in order, so a retried older save can't land on top of a newer one.
 - `askToPersist()`: `navigator.storage.persist()` if it exists; resolves `true` or `false`.
@@ -106,7 +108,7 @@ Done when: a screen test saves, reloads and finds the book; a forced failure (th
 Files: `index.html`, `styles.css`, `src/app.js`, `src/reading.js` (new), `sw.js`, `tests/screens.mjs`. Remove the 1.4 demo.
 
 Screens by `location.hash`: `''` bookshelf, `#book/<id>/<page>` page screen (Write mode), `#read/<id>` reading view, `#grown-ups`.
-- Bookshelf: books from `loadBooks()`, unfinished first, newest `changed` first; "Make a new book" makes `newBook(crypto.randomUUID(), Date.now())`. If `!matchMedia('(display-mode: standalone)').matches && !navigator.standalone`, show "Add to Home Screen to keep books safe."
+- Bookshelf: books from `loadBooks()`, unfinished first, newest `changed` first; "Make a new book" makes `newBook(newId(), Date.now())`. If `!matchMedia('(display-mode: standalone)').matches && !navigator.standalone`, show "Add to Home Screen to keep books safe."
 - Page screen: back, "Page n of m", the picture area (empty box, 4:3, shrinks first), `mountWriter` with the page text, add page, remove page (with put back until leaving), previous and next page, "Finish". Every change calls `saveSoon(book)`. When `isFull`, show "Add a page".
 - `src/reading.js` exports `showReading(root, book, { onClose })`: one page at a time, the words as typed, previous and next.
 

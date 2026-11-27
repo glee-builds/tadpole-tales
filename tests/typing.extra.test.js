@@ -90,3 +90,9 @@ test('shift on the last place before the limit makes that last letter capital, t
   assert.equal(state.text.length, LIMIT);
   assert.equal(state.shift, false);
 });
+
+test('backspace deletes an emoji from a restored page whole, never half of it', () => {
+  const state = backspace(startTyping('a😀'));
+  assert.equal(state.text, 'a');
+  assert.equal(state.cursor, 1);
+});
