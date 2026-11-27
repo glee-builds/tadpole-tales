@@ -16,34 +16,22 @@ export function button(className, text, onClick) {
   return node;
 }
 
-/** Play the "not quite" wiggle on `node`, even if it just played. */
-export function wiggle(node) {
-  node.classList.remove('wiggle');
-  void node.offsetWidth; // makes the browser notice the class was removed
-  node.classList.add('wiggle');
+/** How much CSS zoom (the tablet rule in styles.css) enlarges `node` on the screen. */
+function zoomOf(node) {
+  let zoom = 1;
+  for (let at = node; at; at = at.parentElement) zoom *= Number(getComputedStyle(at).zoom) || 1;
+  return zoom;
 }
 
 /**
- * A row of dots, one per round. Call update(now): rounds before `now` are
- * done (filled, with a check mark), and `now` is the one on screen.
+ * What to divide a tap's screen position by so it matches `node`'s box. Under
+ * CSS zoom old Safari measures boxes in un-zoomed pixels and newer browsers in
+ * screen pixels (the same sum as `across` in Little Pond).
  */
-export function progressDots(count) {
-  const node = make('div', 'dots');
-  const dots = Array.from({ length: count }, () => node.appendChild(make('span', 'dot')));
-  function update(now) {
-    dots.forEach((dot, i) => {
-      dot.className = 'dot' + (i < now ? ' dot-done' : i === now ? ' dot-now' : '');
-      dot.textContent = i < now ? '✓' : '';
-    });
-  }
-  return { node, update };
-}
+export const tapScale = (node) => (zoomOf(node) * node.offsetWidth) / node.getBoundingClientRect().width;
 
 /** "1 duckling", "3 ducklings". */
 export const plural = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`;
-
-/** The whole numbers from `low` to `high`: range(2, 5) is [2, 3, 4, 5]. */
-export const range = (low, high) => Array.from({ length: high - low + 1 }, (_, i) => low + i);
 
 /**
  * The "not saved" mark: an icon and words, shown only while a save has

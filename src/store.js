@@ -3,7 +3,7 @@
 // IndexedDB is the browser's own database. Ours is called `tadpole-tales`:
 //   books       one record per book (see src/book.js), keyed by its id
 //   recordings  empty until Phase 4
-//   settings    { key, value }: author, progress, lastBackup, tellIt
+//   settings    { key, value }: author, progress, lastBackup, tellIt (tellIt is for Phase 4)
 //
 // Saving happens by itself. A screen calls saveSoon(book) after every change;
 // the book is saved 1 second after the last change, and at once when the app
@@ -23,6 +23,9 @@ const WAIT = 1000;      // ms after the last change before saving
 const OPEN_WAIT = 5000; // ms to wait for the database to open
 const RUN_WAIT = 5000;  // ms to wait for one read or write
 
+const pending = new Map(); // book id -> the newest copy waiting to be saved
+let timer; // the saveSoon timer
+
 // ---------- Opening the database ----------
 
 let opening = null; // a promise of the open database, shared by every caller
@@ -36,7 +39,7 @@ function open() {
     request.onupgradeneeded = () => {
       const db = request.result;
       db.createObjectStore('books', { keyPath: 'id' });
-      db.createObjectStore('recordings', { keyPath: 'id' });
+      db.createObjectStore('recordings', { keyPath: 'id' }); // for Phase 4: kept so the database doesn't need an upgrade then
       db.createObjectStore('settings', { keyPath: 'key' });
     };
     request.onsuccess = () => {
@@ -134,12 +137,14 @@ function writeSpare(book) {
   try { localStorage.setItem(`${SPARE}.${book.id}`, JSON.stringify(book)); } catch { /* full or off: IndexedDB still saves */ }
 }
 
+function clearSpare(key) {
+  try { localStorage.removeItem(key); } catch { /* off */ }
+}
+
 /** Remove the spares of book `id`, or only those no newer than `changed`. */
 function dropSpares(id, changed = Infinity) {
   for (const { key, book } of readSpares()) {
-    if (book.id === id && book.changed <= changed) {
-      try { localStorage.removeItem(key); } catch { /* off */ }
-    }
+    if (book.id === id && book.changed <= changed) clearSpare(key);
   }
 }
 
@@ -200,7 +205,7 @@ export async function deleteBook(id) {
 export async function startOver() {
   clearTimeout(timer);
   pending.clear();
-  for (const { key } of readSpares()) { try { localStorage.removeItem(key); } catch { /* off */ } }
+  for (const { key } of readSpares()) clearSpare(key);
   for (const name of ['books', 'recordings', 'settings']) {
     await inTurn(() => run(name, 'readwrite', (store) => store.clear()));
   }
@@ -219,9 +224,6 @@ export function setSetting(key, value) {
 }
 
 // ---------- Saving by itself ----------
-
-const pending = new Map(); // book id -> the newest copy waiting to be saved
-let timer;
 
 /** Save `book` 1 second after the last call. Keeps a spare copy at once. */
 export function saveSoon(book) {
@@ -258,7 +260,7 @@ if (typeof document !== 'undefined') {
 }
 
 /** Ask the browser not to clear our storage when space is short. Resolves true or false. */
-export async function askToPersist() {
+async function askToPersist() {
   try {
     return Boolean(await navigator.storage?.persist?.());
   } catch {

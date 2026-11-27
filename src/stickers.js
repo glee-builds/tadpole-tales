@@ -14,7 +14,7 @@
 // The plain functions (adding, clamping, sizes, pointer to parts) need no
 // page, so tests/stickers.test.js runs them in Node.
 
-import { make, button, wiggle } from './ui.js';
+import { make, button, tapScale } from './ui.js';
 
 export const MAX_STICKERS = 12;
 export const SIZES = [0.75, 1, 1.5, 2, 3]; // the "smaller" and "bigger" steps
@@ -88,17 +88,10 @@ export function pointerToFraction(box, scale, clientX, clientY) {
 
 // ---------- On the page ----------
 
-/** How much CSS zoom (the tablet rule in styles.css) enlarges `node` on the screen. */
-function zoomOf(node) {
-  let zoom = 1;
-  for (let at = node; at; at = at.parentElement) zoom *= Number(getComputedStyle(at).zoom) || 1;
-  return zoom;
-}
-
 /** A pointer's place on `node`, as parts of it, under tablet zoom in old and new browsers. */
 function fractionOn(node, clientX, clientY) {
   const box = node.getBoundingClientRect();
-  return pointerToFraction(box, (zoomOf(node) * node.offsetWidth) / box.width, clientX, clientY);
+  return pointerToFraction(box, tapScale(node), clientX, clientY);
 }
 
 let list; // data/stickers.json, fetched once
@@ -111,13 +104,11 @@ export function loadStickerList() {
   return list;
 }
 
-let styled = false;
-function addStyles() {
-  if (styled) return;
-  styled = true;
-  const link = document.head.appendChild(document.createElement('link'));
-  link.rel = 'stylesheet';
-  link.href = new URL('./stickers.css', import.meta.url).href;
+/** Play the "not quite" wiggle on `node`, even if it just played. */
+function wiggle(node) {
+  node.classList.remove('wiggle');
+  void node.offsetWidth; // makes the browser notice the class was removed
+  node.classList.add('wiggle');
 }
 
 /**
@@ -128,7 +119,6 @@ function addStyles() {
  * wide as `parent` lets it be; set a width or max-width on .picture to shrink it.
  */
 export function mountPicture(parent, { stickers: start = [], onChange, editable = false } = {}) {
-  addStyles();
   let stickers = start;
   let selected = -1;
   let byId = new Map();
@@ -250,7 +240,7 @@ export function mountPicture(parent, { stickers: start = [], onChange, editable 
     byId = new Map(all.map((s) => [s.id, s]));
     if (editable) {
       for (const s of all) {
-        const node = tray.appendChild(button('tray-sticker'));
+        const node = tray.appendChild(button('pill tray-sticker'));
         node.dataset.sticker = s.id;
         node.setAttribute('aria-label', s.label);
         node.append(emoji(s));
@@ -284,7 +274,7 @@ function emoji({ emoji: picture }) {
 }
 
 function toolButton(icon, words, onClick) {
-  const node = button('sticker-tool', '', onClick);
+  const node = button('pill sticker-tool', '', onClick);
   node.append(make('span', 'tool-icon', icon), make('span', '', words));
   node.firstChild.setAttribute('aria-hidden', 'true');
   return node;

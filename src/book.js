@@ -58,10 +58,14 @@ export function putBackPage(book, removed, now) {
   return insertPage(book, Math.min(removed.index, book.pages.length), removed.page, now);
 }
 
-export function setPageText(book, index, text, now) {
-  const pages = book.pages.map((page, i) => (i === index ? { ...page, text } : page));
-  return { ...book, pages, changed: now };
-}
+/** The book with page `index` changed by `change` (text or stickers). */
+const updatePage = (book, index, change, now) => ({
+  ...book,
+  pages: book.pages.map((page, i) => (i === index ? { ...page, ...change } : page)),
+  changed: now,
+});
+
+export const setPageText = (book, index, text, now) => updatePage(book, index, { text }, now);
 
 export const setTitle = (book, title, now) => ({ ...book, title, changed: now });
 
@@ -69,10 +73,7 @@ export const setTitle = (book, title, now) => ({ ...book, title, changed: now })
 export const setCoverStickers = (book, stickers, now) => ({ ...book, cover: { stickers }, changed: now });
 
 /** Replace page `index`'s stickers (a list of { id, x, y, size }, kept by stickers.js). */
-export function setPageStickers(book, index, stickers, now) {
-  const pages = book.pages.map((page, i) => (i === index ? { ...page, stickers } : page));
-  return { ...book, pages, changed: now };
-}
+export const setPageStickers = (book, index, stickers, now) => updatePage(book, index, { stickers }, now);
 
 /** Move page `from` to place `to` (both 0 to pages - 1). Out of range: unchanged. Never loses a page. */
 export function movePage(book, from, to, now) {
@@ -81,6 +82,15 @@ export function movePage(book, from, to, now) {
   const pages = [...book.pages];
   pages.splice(to, 0, ...pages.splice(from, 1));
   return { ...book, pages, changed: now };
+}
+
+/**
+ * The book's name for a cover or a list: its title, else its first words, cut
+ * to `limit` characters with "…". Empty if it has neither (the caller says so).
+ */
+export function bookTitle(book, limit) {
+  const words = (book.title || book.pages.map((page) => page.text).join(' ')).replace(/\s+/g, ' ').trim();
+  return words.length > limit ? `${words.slice(0, limit)}…` : words;
 }
 
 /** True when no page has any words or stickers. */

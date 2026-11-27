@@ -1,4 +1,4 @@
-/* stickers.css: the picture area and sticker tray (src/stickers.js loads this). */
+/* stickers.css: the picture area and sticker tray (linked from index.html, after styles.css). */
 
 /* Always 4:3. Stickers are placed and sized as parts of it, so they look the same at any size. */
 .picture {
@@ -7,7 +7,7 @@
   width: 100%;
   aspect-ratio: 4 / 3; /* Safari 15 has it */
   overflow: hidden;
-  border: 2px solid #e3d6c3;
+  border: 2px solid var(--edge);
   border-radius: 16px;
   background: #fff;
   -webkit-user-select: none;
@@ -16,7 +16,7 @@
 }
 
 /* On the page screen: the water-blue picture. In Write mode it is as tall as its slot lets it be. */
-.page-screen .picture { border-color: #e3dccf; background: #cdeef5; }
+.page-screen .picture { border-color: var(--border); background: #cdeef5; }
 .picture-slot .picture { position: absolute; top: 0; bottom: 0; left: 50%; width: auto; max-width: 100%; transform: translateX(-50%); }
 
 /* A sticker's left and top are its middle; its width is set by stickers.js. */
@@ -49,25 +49,8 @@
 /* "Bigger", "Smaller", "Remove": shown for the tapped sticker. Keeps its room when hidden, so nothing jumps. */
 .sticker-tools { flex: none; display: flex; justify-content: center; gap: 8px; }
 
-.sticker-tool {
-  flex: 1 1 0;
-  max-width: 140px;
-  min-height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 0 8px;
-  border: 0;
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 2px 0 #d9cbb6;
-  color: var(--text);
-  font-size: 1rem;
-  font-weight: 700;
-}
+.sticker-tool { flex: 1 1 0; max-width: 140px; gap: 6px; padding: 0 8px; border-radius: 12px; font-size: 1rem; }
 
-.sticker-tool:disabled { opacity: 0.4; }
 .tool-icon { font-size: 1.4rem; line-height: 1; }
 
 .sticker-full { flex: none; margin: 0; text-align: center; font-weight: 700; }
@@ -85,15 +68,7 @@
   padding: 4px;
 }
 
-.tray-sticker {
-  width: 64px;
-  height: 64px;
-  padding: 0;
-  border: 0;
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 2px 0 #d9cbb6;
-}
+.tray-sticker { width: 64px; height: 64px; padding: 0; border-radius: 12px; }
 
 .tray-sticker .emoji { font-size: 40px; }
 .tray-full .tray-sticker { opacity: 0.4; }

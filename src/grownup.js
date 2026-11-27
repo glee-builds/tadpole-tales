@@ -6,7 +6,7 @@
 
 import { make, button, plural } from './ui.js';
 import { loadBooks, saveBook, deleteBook, startOver, getSetting, setSetting } from './store.js';
-import { makeBackup, backupName, readBackup, mergeBooks, isNewer, BACKUP_LIMIT } from './book.js';
+import { makeBackup, backupName, readBackup, mergeBooks, isNewer, bookTitle, BACKUP_LIMIT } from './book.js';
 
 // ---------- Install first ----------
 
@@ -188,25 +188,19 @@ export async function runCheck({ name, run }) {
 export function askFirst(label, question, yesLabel, onYes, extras = []) {
   const box = make('div', 'gu-ask');
   const ask = make('div', 'gu-confirm');
-  const start = button('plain-button', label, () => { start.hidden = true; ask.hidden = false; });
+  const start = button('pill plain-button', label, () => { start.hidden = true; ask.hidden = false; });
   ask.hidden = true;
   ask.append(
     make('p', '', question),
     ...extras,
-    button('plain-button', 'Cancel', () => { ask.hidden = true; start.hidden = false; }),
-    button('plain-button gu-danger', yesLabel, () => { ask.hidden = true; start.hidden = false; onYes(); }),
+    button('pill plain-button', 'Cancel', () => { ask.hidden = true; start.hidden = false; }),
+    button('pill plain-button gu-danger', yesLabel, () => { ask.hidden = true; start.hidden = false; onYes(); }),
   );
   box.append(start, ask);
   return box;
 }
 
 const shortDate = (time) => new Date(time).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
-
-/** The book's first words, so a grown-up can tell which book it is. */
-function bookName(book) {
-  const words = (book.title || book.pages.map((page) => page.text).join(' ')).replace(/\s+/g, ' ').trim();
-  return words ? (words.length > 40 ? `${words.slice(0, 40)}…` : words) : 'A book with no words yet';
-}
 
 /** Draw the grown-up page into `root`. `onBack` leaves it. */
 export function showGrownup(root, { onBack }) {
@@ -217,11 +211,34 @@ export function showGrownup(root, { onBack }) {
   top.append(make('h1', '', 'For grown-ups'));
 
   // Install first.
-  const keep = make('p', 'gu-note', 'Books are kept only on this device. Removing the app\'s icon from the Home Screen deletes its books.');
   if (!isInstalled()) root.append(make('p', 'gu-note gu-warn', `⚠ ${INSTALL_NOTE}`));
-  root.append(keep);
+  root.append(make('p', 'gu-note', 'Books are kept only on this device. Removing the app\'s icon from the Home Screen deletes its books.'));
 
-  // The device check.
+  drawDeviceCheck(root);
+  const backup = drawBackup(root, () => books.draw());
+  const books = drawBooks(root, backup.setFile);
+
+  // Start over.
+  root.append(make('h2', '', 'Start over'));
+  root.append(askFirst(
+    'Start over…',
+    'This deletes every book and setting on this device. It can\'t be undone.',
+    'Yes, delete everything',
+    async () => {
+      try {
+        await startOver();
+        books.said.textContent = '✓ Everything was deleted.';
+      } catch {
+        books.said.textContent = '⚠ Couldn\'t delete everything. Try again.';
+      }
+      books.draw();
+    },
+    [button('pill plain-button', 'Back up first', backup.backUp)],
+  ));
+}
+
+/** The device check: one button per check, and a block of results to copy. */
+function drawDeviceCheck(root) {
   root.append(make('h2', '', 'Device check'), make('p', 'gu-note', 'Tap each check. Sound and the microphone need a tap to start.'));
   const results = new Map();
   const copyText = make('pre', 'gu-copy');
@@ -236,7 +253,7 @@ export function showGrownup(root, { onBack }) {
   for (const check of DEVICE_CHECKS) {
     const row = list.appendChild(make('li', 'gu-check'));
     const result = make('span', 'gu-result', 'not checked yet');
-    const go = button('plain-button', check.name, async () => {
+    const go = button('pill plain-button', check.name, async () => {
       go.disabled = true;
       result.textContent = '… checking';
       const found = await runCheck(check);
@@ -250,7 +267,7 @@ export function showGrownup(root, { onBack }) {
   }
   const copied = make('p', 'gu-note');
   copied.setAttribute('role', 'status');
-  const copy = button('plain-button', 'Copy results', async () => {
+  const copy = button('pill plain-button', 'Copy results', async () => {
     try {
       await navigator.clipboard.writeText(copyText.textContent);
       copied.textContent = '✓ Copied.';
@@ -260,8 +277,14 @@ export function showGrownup(root, { onBack }) {
   });
   drawCopy();
   root.append(copyText, copy, copied);
+}
 
-  // Back up and restore.
+/**
+ * Back up and restore. `onRestored` runs after a restore (the book list draws
+ * again). Returns { backUp, setFile }: the shelf's books are made into a file
+ * ahead of time (setFile), so the share sheet opens inside the tap (iOS needs that).
+ */
+function drawBackup(root, onRestored) {
   root.append(
     make('h2', '', 'Back up and restore'),
     make('p', 'gu-note', 'A backup is one file with every book. Save it somewhere safe, such as Files or iCloud Drive. Restoring only adds books that aren\'t on the shelf; it never changes or removes one.'),
@@ -269,25 +292,25 @@ export function showGrownup(root, { onBack }) {
   const last = root.appendChild(make('p', 'gu-note'));
   const showLast = (when) => { last.textContent = when ? `Last backup: ${shortDate(when)}` : 'No backup yet.'; };
   getSetting('lastBackup').then(showLast, () => showLast());
-  let file = null; // the backup, made ahead so the share sheet opens inside the tap (iOS needs that)
+  let file = null;
   const backUp = async () => {
     if (!file) return;
     try {
       if (navigator.canShare?.({ files: [file] })) await navigator.share({ files: [file] });
       else download(file);
     } catch (error) {
-      if (error.name === 'AbortError') { backupSaid.textContent = 'The backup was not saved.'; return; } // the share sheet was closed
+      if (error.name === 'AbortError') { said.textContent = 'The backup was not saved.'; return; } // the share sheet was closed
       download(file); // the share sheet refused: download instead
     }
     const when = new Date().toISOString();
     await setSetting('lastBackup', when).catch(() => {});
     showLast(when);
-    backupSaid.textContent = `✓ Backup made: ${file.name}`;
+    said.textContent = `✓ Backup made: ${file.name}`;
   };
-  const backupButton = button('plain-button', 'Back up all books', backUp);
+  const backupButton = button('pill plain-button', 'Back up all books', backUp);
   backupButton.disabled = true;
   // The file picker sits inside a label, so a tap opens it without help from script.
-  const pick = make('label', 'plain-button gu-pick', 'Restore from a file…');
+  const pick = make('label', 'pill plain-button gu-pick', 'Restore from a file…');
   const chooser = pick.appendChild(make('input'));
   chooser.type = 'file';
   chooser.accept = '.json,application/json';
@@ -295,21 +318,30 @@ export function showGrownup(root, { onBack }) {
     const chosen = chooser.files[0];
     chooser.value = ''; // so the same file can be picked again
     if (!chosen) return;
-    backupSaid.textContent = '… restoring';
-    backupSaid.textContent = await restore(chosen);
-    drawBooks();
+    said.textContent = '… restoring';
+    said.textContent = await restore(chosen);
+    onRestored();
   });
-  const backupSaid = make('p', 'gu-note');
-  backupSaid.setAttribute('role', 'status');
-  root.append(backupButton, pick, backupSaid);
-
-  // Delete a book.
-  root.append(make('h2', '', 'Books'));
-  const shelf = root.appendChild(make('ul', 'gu-books'));
   const said = make('p', 'gu-note');
   said.setAttribute('role', 'status');
-  root.append(said);
-  async function drawBooks() {
+  root.append(backupButton, pick, said);
+  return {
+    backUp,
+    setFile(next) { file = next; backupButton.disabled = !file; },
+  };
+}
+
+/**
+ * The books, each with a Delete button. Returns { draw, said }: `draw()` lists
+ * the books again, `said` is the line that tells how a delete went.
+ * `onFile(file)` gets the backup file made from the books each time.
+ */
+function drawBooks(root, onFile) {
+  root.append(make('h2', '', 'Books'));
+  const shelf = root.appendChild(make('ul', 'gu-books'));
+  const said = root.appendChild(make('p', 'gu-note'));
+  said.setAttribute('role', 'status');
+  async function draw() {
     let books;
     try {
       books = await loadBooks();
@@ -317,13 +349,12 @@ export function showGrownup(root, { onBack }) {
       shelf.replaceChildren(make('li', 'gu-warn', '⚠ Couldn\'t open the books on this device.'));
       return;
     }
-    file = await backupFile(books).catch(() => null);
-    backupButton.disabled = !file;
+    onFile(await backupFile(books).catch(() => null));
     books.sort((a, b) => b.changed - a.changed);
     shelf.replaceChildren(...books.map((book) => {
       const row = make('li', 'gu-book');
       row.append(
-        make('span', '', isNewer(book) ? 'A book made with a newer version of the app' : `${bookName(book)} · ${book.pages.length} page${book.pages.length === 1 ? '' : 's'} · ${shortDate(book.changed)}`),
+        make('span', '', isNewer(book) ? 'A book made with a newer version of the app' : `${bookTitle(book, 40) || 'A book with no words yet'} · ${plural(book.pages.length, 'page')} · ${shortDate(book.changed)}`),
         askFirst('Delete…', 'Delete this book? It can\'t be undone.', 'Yes, delete', async () => {
           try {
             await deleteBook(book.id);
@@ -331,32 +362,15 @@ export function showGrownup(root, { onBack }) {
           } catch {
             said.textContent = '⚠ The book couldn\'t be deleted. Try again.';
           }
-          drawBooks();
+          draw();
         }),
       );
       return row;
     }));
     if (!books.length) shelf.append(make('li', '', 'No books yet.'));
   }
-  drawBooks();
-
-  // Start over.
-  root.append(make('h2', '', 'Start over'));
-  root.append(askFirst(
-    'Start over…',
-    'This deletes every book and setting on this device. It can\'t be undone.',
-    'Yes, delete everything',
-    async () => {
-      try {
-        await startOver();
-        said.textContent = '✓ Everything was deleted.';
-      } catch {
-        said.textContent = '⚠ Couldn\'t delete everything. Try again.';
-      }
-      drawBooks();
-    },
-    [button('plain-button', 'Back up first', backUp)],
-  ));
+  draw();
+  return { draw, said };
 }
 
 /** Every book and setting a backup holds, as a file ready to share. */

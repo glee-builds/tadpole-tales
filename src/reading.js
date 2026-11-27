@@ -37,7 +37,6 @@ export function showReading(root, book, { onClose }) {
   const nav = root.appendChild(make('div', 'read-nav'));
   const previous = nav.appendChild(button('pill', '‹ Previous', () => show(index - 1)));
   const count = nav.appendChild(make('p', 'read-count'));
-  count.style.margin = '0';
   const next = nav.appendChild(button('pill', 'Next ›', () => show(index + 1)));
 
   function setVoiceLabel() {
