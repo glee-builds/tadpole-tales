@@ -1,6 +1,8 @@
 // book.js: what a book is, as plain functions (no screen, no database).
 //
 // A book is { format, id, created, changed, finished, title, cover, pages }.
+// `title` is text (at most TITLE_LIMIT characters when typed); `cover` is null
+// or { stickers: [...] }, the same sticker shape as a page's.
 // `pages` is a list of { text, stickers }, 1 to 12 long. Every function
 // returns a new book and sets `changed` to `now`; none changes the one passed in.
 // The 300-character limit per page is kept by typing.js while the writer types.
@@ -8,6 +10,7 @@
 
 export const BOOK_FORMAT = 1; // bump only with an upgrade step in upgradeBook
 export const MAX_PAGES = 12;
+export const TITLE_LIMIT = 40; // typed in the finish step; a longer saved title is kept whole
 
 const newPage = () => ({ text: '', stickers: [] });
 
@@ -57,6 +60,11 @@ export function setPageText(book, index, text, now) {
   return { ...book, pages, changed: now };
 }
 
+export const setTitle = (book, title, now) => ({ ...book, title, changed: now });
+
+/** The cover's stickers (the title is separate). */
+export const setCoverStickers = (book, stickers, now) => ({ ...book, cover: { stickers }, changed: now });
+
 /** True when no page has any words or stickers. */
 export const isBlank = (book) => book.pages.every((page) => page.text === '' && page.stickers.length === 0);
 
@@ -75,8 +83,8 @@ export function upgradeBook(record) {
     created,
     changed: record.changed ?? created,
     finished: record.finished ?? false,
-    title: record.title ?? '',
-    cover: record.cover ?? null,
+    title: typeof record.title === 'string' ? record.title : '',
+    cover: Array.isArray(record.cover?.stickers) ? { stickers: record.cover.stickers } : null,
     pages: pages.length ? pages : [newPage()],
   };
 }

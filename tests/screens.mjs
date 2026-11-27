@@ -646,7 +646,9 @@ const reloaded = () => waitFor('window.__same === undefined', 5);
 /** What is wrong with how the screen fits, or ''. The books list may scroll inside itself; the page may not. */
 const fitProblem = () => evaluate(`(() => {
   if (document.documentElement.scrollHeight > innerHeight + 1 || document.documentElement.scrollWidth > innerWidth) return 'the page scrolls';
-  const buttons = [...document.querySelectorAll('button, a.book-card')].filter((node) => node.offsetParent !== null);
+  const buttons = [...document.querySelectorAll('button, a.book-open')].filter((node) => node.offsetParent !== null && !node.matches('.tray-sticker')); // the tray scrolls inside itself, checked below
+  const tray = document.querySelector('.sticker-tray');
+  if (tray && tray.getBoundingClientRect().bottom > innerHeight + 0.5) return 'the sticker tray is off the bottom of the screen';
   const short = buttons.filter((node) => node.offsetHeight < 48);
   if (short.length) return short.length + ' buttons are shorter than 48px: ' + short.map((node) => node.textContent.trim()).join(', ');
   const low = buttons.filter((node) => node.getBoundingClientRect().bottom > innerHeight + 0.5);
@@ -716,7 +718,14 @@ async function tryBooks() {
 
   // Finish: back on the shelf, no longer "Keep going".
   await tapButton('Finish');
-  if (!await waitFor(`location.hash === '' && document.querySelector('.book-card')?.textContent.includes('Finished')`, 3)) return 'Finish did not mark the book finished on the shelf';
+  if (!await waitFor(`location.hash.startsWith('#finish/') && document.querySelector('.keyboard') !== null`, 3)) return 'Finish did not open the title step';
+  // Skip every step (title, author name, cover): the book is still finished, and no name was kept.
+  for (const step of ['called', 'author name', 'cover']) {
+    if (!await waitFor(`document.querySelector('.screen h1').textContent.includes(${JSON.stringify(step)})`, 3)) return `no "${step}" step`;
+    await tapButton('Skip');
+  }
+  if (!await waitFor(`location.hash === '' && document.querySelector('.book-card')?.textContent.includes('Finished')`, 3)) return 'Skipping every step did not leave the book finished on the shelf';
+  if (await heading() !== 'Your books') return `skipping the name gave the heading "${await heading()}"`;
 
   // Reading view.
   await tapOn('.book-card');
@@ -756,6 +765,89 @@ async function tryBooks() {
   await tapOn('.refresh-button');
   if (!await reloaded()) return 'Refresh did not reload once saving worked again';
   if (JSON.stringify(await savedTexts()) !== '["pip dived"]') return `after the mended Refresh the book holds ${JSON.stringify(await savedTexts())}`;
+  return '';
+}
+
+const SHOTS_AT = (name) => process.env.SHOTS && page('Page.captureScreenshot', { format: 'png' })
+  .then(({ data }) => writeFileSync(join(process.env.SHOTS, `${name}-${PHONE_NOW}.png`), Buffer.from(data, 'base64')));
+let PHONE_NOW = 0;
+
+/** Finish a book: title, author name (first time only), cover; skip on a second book; closing mid-step; Edit. Returns a problem, or ''. */
+async function tryFinish() {
+  await open('', 'document.querySelector(".go") !== null');
+  PHONE_NOW = await evaluate('innerWidth');
+  const seed = (id, text) => evaluate(`(async () => { ${STORE} await store.saveBook(book.setPageText(book.addPage(book.setPageText(book.newBook(${JSON.stringify(id)}, 1000), 0, ${JSON.stringify(text)}, 1000), 0, 1000), 1, 'It ended.', 1000)); })()`);
+  await evaluate(`(async () => { ${STORE} await store.startOver(); })()`);
+  await seed('made-up-fin-1', 'A frog sat down.');
+  if (!await open('#book/made-up-fin-1/0', 'document.querySelector(".keyboard") !== null')) return 'the page screen did not draw';
+  await tapButton('Finish');
+
+  // Title step, on the app's keys.
+  if (!await waitFor(`document.querySelector('.screen h1')?.textContent.includes('called') && document.querySelector('.keyboard')`, 3)) return 'no title step';
+  if (!await noFields()) return 'a text field is on the title step';
+  if (await evaluate(`document.querySelector('.finish-top button').textContent`) !== 'Skip') return 'an empty title should offer Skip';
+  await press('t', 'r', 'e', 'e');
+  if (await typed() !== 'tree') return `the title holds "${await typed()}"`;
+  if (!(await evaluate(`document.querySelector('.finish-top button').textContent`)).includes('Next')) return 'a typed title should offer Next';
+  let problem = await fitProblem();
+  if (problem) return `title step: ${problem}`;
+  await tapButton('Next');
+
+  // The name, asked once.
+  if (!await waitFor(`document.querySelector('.screen h1')?.textContent.includes('author name')`, 3)) return 'no author name step on the first book';
+  await press('p', 'i', 'p');
+  problem = await fitProblem();
+  if (problem) return `name step: ${problem}`;
+  await tapButton('Next');
+
+  // The cover: the title, a sticker, "by pip".
+  if (!await waitFor(`document.querySelector('.finish-cover .tray-sticker') !== null`, 3)) return 'no cover step';
+  if (!await noFields()) return 'a text field is on the cover step';
+  const cover = await evaluate(`document.querySelector('.finish-cover').textContent`);
+  if (!cover.includes('tree') || !cover.includes('by pip')) return `the cover says "${cover}"`;
+  const tray = await middleOf('.tray-sticker');
+  await touch(tray.x, tray.y);
+  if (!await waitFor(`document.querySelectorAll('.finish-cover .picture .sticker').length === 1`, 2)) return 'a tray tap did not put a sticker on the cover';
+  await sleep(300);
+  problem = await fitProblem();
+  if (problem) return `cover step: ${problem}`;
+  await SHOTS_AT('cover-step');
+  await tapButton('Done');
+
+  // The shelf: kind message, "Books by pip", the cover with its sticker, Edit.
+  if (!await waitFor(`location.hash === '' && document.querySelector('.book-card')`, 3)) return 'Done did not go back to the shelf';
+  if (!await evaluate(`document.querySelector('.shelf-message')?.textContent.includes('Your book is on the shelf!')`)) return 'no kind message on the shelf';
+  const shelfNow = `document.querySelector('h1').textContent === 'Books by pip' && document.querySelector('.book-card .cover-title').textContent === 'tree' && document.querySelectorAll('.book-card .cover .sticker').length === 1`;
+  if (!await waitFor(shelfNow, 3)) return 'the shelf does not show "Books by pip" and the cover';
+  // Reload: same.
+  await open('', 'document.querySelector(".book-card .cover .sticker") !== null');
+  if (!await waitFor(shelfNow, 3)) return 'after a reload the shelf does not show "Books by pip" and the cover';
+  problem = await fitProblem();
+  if (problem) return `shelf: ${problem}`;
+  await SHOTS_AT('shelf');
+  const kept = await evaluate(`(async () => { ${STORE} const [one] = await store.loadBooks(); return [one.finished, one.title, one.cover?.stickers.length, await store.getSetting('author')].join('|'); })()`);
+  if (kept !== 'true|tree|1|pip') return `the saved book is "${kept}"`;
+
+  // Edit opens the pages; Finish again asks for the title (already filled in) and not for the name.
+  await tapButton('Edit');
+  if (!await waitFor(`location.hash === '#book/made-up-fin-1/0' && document.querySelector('.keyboard')`, 3)) return 'Edit did not open the pages';
+  await tapButton('Finish');
+  if (!await waitFor(`document.querySelector('.screen h1')?.textContent.includes('called') && document.querySelector('.writing .ch')`, 3)) return 'Edit then Finish did not show the title again';
+  if (await typed() !== 'tree') return `the title step shows "${await typed()}"`;
+  await tapButton('Next');
+  if (!await waitFor(`document.querySelector('.finish-cover')`, 3)) return 'the name was asked a second time';
+  await tapButton('Done');
+  await waitFor(`location.hash === ''`, 3);
+
+  // Closing the app mid-step: a second book, title typed, then the app opens again with nothing lost.
+  await seed('made-up-fin-2', 'The moon came out.');
+  await open('#book/made-up-fin-2/0', 'document.querySelector(".keyboard") !== null');
+  await tapButton('Finish');
+  await waitFor(`document.querySelector('.screen h1')?.textContent.includes('called')`, 3);
+  await press('m', 'o', 'o', 'n');
+  await open('', 'document.querySelectorAll(".book-card").length === 2');
+  const two = await evaluate(`(async () => { ${STORE} const b = (await store.loadBooks()).find((one) => one.id === 'made-up-fin-2'); return b.finished + '|' + b.title; })()`);
+  if (two !== 'true|moon') return `closing mid-step left the book as "${two}"`;
   return '';
 }
 
@@ -888,6 +980,7 @@ try {
   await checkWith('Books: make a 3-page book, reload, finish, read it, Refresh saves first', tryBooks);
   await checkWith('Every screen fits (phone)', tryFits);
   await checkWith('Read to me: underlines in order, turns the page, Stop, hand-turn, no voice (phone)', tryReadAloud);
+  await checkWith('Finish: title, author name, cover, shelf, Edit, close mid-step (phone)', tryFinish);
   await checkWith('Saving: save, reload, spare copy, retry once, "not saved" mark, unreadable books', trySaving);
   await checkWith('Grown-up page: hold to open, every device check, delete a book, start over', tryGrownup);
   await checkWith('Backup: back up, start over, restore, restore again, broken file', tryBackup);
@@ -899,6 +992,7 @@ try {
     await checkKeyboard(`Keyboard (${tablet})`);
     await checkWith(`Stickers (${tablet})`, tryStickers);
     await checkWith(`Every screen fits (${tablet})`, tryFits);
+    await checkWith(`Finish (${tablet})`, tryFinish);
   }
 } catch (error) {
   problems.push(`stopped early: ${String(error.message).split('\n')[0]}`);

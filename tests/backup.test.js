@@ -82,3 +82,9 @@ test('a book with the same id but different words: the shelf copy is kept, untou
 test('the same book twice in one file is added once', () => {
   assert.deepEqual(mergeBooks([], [moon, moon]), { add: [moon], skipped: 1 });
 });
+
+test('the author name is in the backup file, and comes back only as text', () => {
+  assert.equal(JSON.parse(JSON.stringify(makeBackup({ books: [], author: 'Pip' }, NOW))).author, 'Pip');
+  assert.equal(readBackup(JSON.stringify(makeBackup({ books: [] }, NOW))).author, '');
+  assert.equal(readBackup('{"app":"tadpole-tales","backup":1,"author":5,"books":[]}').author, '');
+});

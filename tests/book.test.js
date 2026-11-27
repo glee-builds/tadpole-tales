@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   BOOK_FORMAT, MAX_PAGES, newBook, addPage, canAddPage, removePage, putBackPage,
-  setPageText, isBlank, upgradeBook,
+  setPageText, isBlank, upgradeBook, setTitle, setCoverStickers,
 } from '../src/book.js';
 
 /** A made-up book with pages "a", "b", "c"... */
@@ -120,4 +120,21 @@ test('upgradeBook refuses a newer format and things that are not books', () => {
   assert.throws(() => upgradeBook({ pages: [] }), { message: 'not a book' });
   assert.throws(() => upgradeBook({ id: 'b-1' }), { message: 'not a book' });
   assert.throws(() => upgradeBook(null), { message: 'not a book' });
+});
+
+test('title and cover are set without changing the book passed in', () => {
+  const book = newBook('b-1', 1000);
+  const stickers = [{ id: 'frog', x: 0.5, y: 0.5, size: 1 }];
+  const next = setCoverStickers(setTitle(book, 'The Big Rock', 2000), stickers, 3000);
+  assert.deepEqual([next.title, next.cover, next.changed], ['The Big Rock', { stickers }, 3000]);
+  assert.deepEqual([book.title, book.cover], ['', null]);
+});
+
+test('upgradeBook mends a title and cover that are the wrong shape, and keeps good ones', () => {
+  const odd = upgradeBook({ id: 'b-9', pages: [], title: 7, cover: { stickers: 'x' } });
+  assert.deepEqual([odd.title, odd.cover], ['', null]);
+  const good = { id: 'b-9', pages: [], title: 'Pip', cover: { stickers: [{ id: 'frog', x: 0.5, y: 0.5, size: 1 }] } };
+  const kept = upgradeBook(good);
+  assert.deepEqual([kept.title, kept.cover], ['Pip', good.cover]);
+  assert.equal(kept.format, 1);
 });

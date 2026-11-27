@@ -41,7 +41,7 @@ test('upgradeBook refuses a record from a newer format, even one that is otherwi
 
 test('upgradeBook keeps the record fields it knows and does not change the record', () => {
   const record = deepFreeze({
-    format: 1, id: 'b-3', created: 10, changed: 20, finished: true, title: 'Frog', cover: { sticker: 'frog' },
+    format: 1, id: 'b-3', created: 10, changed: 20, finished: true, title: 'Frog', cover: { stickers: [{ id: 'frog', x: 0.5, y: 0.5, size: 1 }] },
     pages: [{ text: 'Hi', stickers: [] }],
   });
   const book = upgradeBook(record);
