@@ -3,6 +3,7 @@
 // Each tryX returns a problem, or '' when all is well. tests/screens.mjs runs them.
 
 import {
+  reachPage,
   page, evaluate, sleep, waitFor, settle,
   HOME, open, touch, middleOf, press, typed,
   tapOn, tapButton, heading, noFields, isDisabled, fitProblem,
@@ -25,14 +26,14 @@ export async function tryBooks() {
 
   // Backing out of a new book before writing anything leaves no empty book.
   await tapOn('.go');
-  if (!await waitFor('document.querySelector(".keyboard") !== null', 3)) return 'Make a new book did not open the page screen';
+  if (!await reachPage()) return 'Make a new book did not open the page screen';
   await tapOn('.back');
   await saveNow(); // anything the page was waiting to save is saved now
   if ((await savedTexts()).length) return 'an empty book was saved';
 
   // Three pages, on the app's own keys.
   await tapOn('.go');
-  await waitFor('document.querySelector(".keyboard") !== null', 3);
+  await reachPage();
   if (await heading() !== 'Page 1 of 1') return `the page screen says "${await heading()}"`;
   if (!await noFields()) return 'a text field is on the page screen';
   if (!await isDisabled('Prev') || !await isDisabled('Remove')) return 'Prev and Remove should be off on a one-page book';
@@ -77,14 +78,14 @@ export async function tryBooks() {
   await waitFor(`document.querySelector('.screen-title')?.textContent === 'Page 2 of 3'`, 3);
   if (await typed() !== 'hops') return `page 2 holds "${await typed()}"`;
   await tapOn('.back');
-  if (!await waitFor(`document.querySelectorAll('.book-card').length === 1`, 3)) return 'the shelf has no card for the new book';
-  const card = await evaluate(`document.querySelector('.book-card').textContent`);
+  if (!await waitFor(`document.querySelectorAll('.book-card:not(.example-card)').length === 1`, 3)) return 'the shelf has no card for the new book';
+  const card = await evaluate(`document.querySelector('.book-card:not(.example-card)').textContent`);
   if (!card.includes('Keep going') || !card.includes('3 pages') || !card.includes('pip')) return `the card says "${card}"`;
 
   // Reload: still there, first, with "Keep going". Open it again.
-  await open('', 'document.querySelector(".book-card") !== null');
-  if (!await evaluate(`document.querySelector('.book-card').textContent.includes('Keep going')`)) return 'after a reload the book is not marked "Keep going"';
-  await tapOn('.book-card');
+  await open('', 'document.querySelector(".book-card:not(.example-card)") !== null');
+  if (!await evaluate(`document.querySelector('.book-card:not(.example-card)').textContent.includes('Keep going')`)) return 'after a reload the book is not marked "Keep going"';
+  await tapOn('.book-card:not(.example-card)');
   await waitFor('document.querySelector(".keyboard") !== null', 3);
   if (await typed() !== 'pip') return `the saved page 1 holds "${await typed()}"`;
 
@@ -96,11 +97,11 @@ export async function tryBooks() {
     if (!await waitFor(`document.querySelector('.screen h1').textContent.includes(${JSON.stringify(step)})`, 3)) return `no "${step}" step`;
     await tapButton('Skip');
   }
-  if (!await waitFor(`location.hash === '' && document.querySelector('.book-card')?.textContent.includes('Finished')`, 3)) return 'Skipping every step did not leave the book finished on the shelf';
+  if (!await waitFor(`location.hash === '' && document.querySelector('.book-card:not(.example-card)')?.textContent.includes('Finished')`, 3)) return 'Skipping every step did not leave the book finished on the shelf';
   if (await heading() !== 'Your books') return `skipping the name gave the heading "${await heading()}"`;
 
   // Reading view.
-  await tapOn('.book-card');
+  await tapOn('.book-card:not(.example-card)');
   if (!await waitFor(`document.querySelector('.read-page') !== null`, 3)) return 'a finished book did not open in the reading view';
   if (!await noFields()) return 'a text field is on the reading view';
   const readPage = () => evaluate(`document.querySelector('.read-page').textContent + '|' + document.querySelector('.read-count').textContent`);
@@ -111,11 +112,11 @@ export async function tryBooks() {
   if (await readPage() !== 'home|Page 3 of 3') return `reading page 3 shows "${await readPage()}"`;
   if (!await isDisabled('Next')) return 'Next should be off on the last page';
   await tapButton('Close');
-  if (!await waitFor(`location.hash === '' && document.querySelectorAll('.book-card').length === 1`, 3)) return 'Close did not go back to the shelf';
+  if (!await waitFor(`location.hash === '' && document.querySelectorAll('.book-card:not(.example-card)').length === 1`, 3)) return 'Close did not go back to the shelf';
 
   // The name makes the heading.
   await evaluate(`(async () => { ${STORE} await store.setSetting('author', 'Pip'); })()`);
-  await open('', 'document.querySelector(".book-card") !== null');
+  await open('', 'document.querySelector(".book-card:not(.example-card)") !== null');
   if (!await waitFor(`document.querySelector('h1').textContent === 'Books by Pip'`)) return 'the heading is not "Books by Pip"';
 
   // Refresh saves first, then reloads. `window.__same` goes away only when the page reloads.
@@ -182,10 +183,10 @@ export async function tryNewer() {
   if (!await open('', HOME)) return 'home did not draw';
   const record = { id: 'made-up-newer', format: 99, changed: 5, title: 'From later', chapters: ['one'] };
   await evaluate(`(async () => { ${STORE} await store.startOver(); await store.saveBook(${JSON.stringify(record)}); })()`);
-  if (!await open('', 'document.querySelector(".book-card") !== null')) return 'a newer book is not on the shelf';
-  const card = await evaluate(`document.querySelector('.book-card').textContent`);
+  if (!await open('', 'document.querySelector(".book-card:not(.example-card)") !== null')) return 'a newer book is not on the shelf';
+  const card = await evaluate(`document.querySelector('.book-card:not(.example-card)').textContent`);
   if (!card.includes('newer version') || !card.includes('Refresh')) return `the newer book's card says "${card}"`;
-  if (await evaluate(`document.querySelector('.book-card a, .book-card button') !== null`)) return 'the newer book can be opened or edited from the shelf';
+  if (await evaluate(`document.querySelector('.book-card:not(.example-card) a, .book-card:not(.example-card) button') !== null`)) return 'the newer book can be opened or edited from the shelf';
   if (!await open('#book/made-up-newer/0', 'location.hash === "" && !document.querySelector(".shelf").hidden')) return 'the page screen opened a newer book';
   if (!await open('#finish/made-up-newer', 'location.hash === "" && !document.querySelector(".shelf").hidden')) return 'the finish screen opened a newer book';
   if (!await open('#read/made-up-newer', 'location.hash === "" && !document.querySelector(".shelf").hidden')) return 'the reading view opened a newer book';
@@ -242,12 +243,12 @@ export async function tryFinish() {
   await tapButton('Done');
 
   // The shelf: kind message, "Books by pip", the cover with its sticker, Edit.
-  if (!await waitFor(`location.hash === '' && document.querySelector('.book-card')`, 3)) return 'Done did not go back to the shelf';
+  if (!await waitFor(`location.hash === '' && document.querySelector('.book-card:not(.example-card)')`, 3)) return 'Done did not go back to the shelf';
   if (!await evaluate(`document.querySelector('.shelf-message')?.textContent.includes('Your book is on the shelf!')`)) return 'no kind message on the shelf';
-  const shelfNow = `document.querySelector('h1').textContent === 'Books by pip' && document.querySelector('.book-card .cover-title').textContent === 'tree' && document.querySelectorAll('.book-card .cover .sticker').length === 1`;
+  const shelfNow = `document.querySelector('h1').textContent === 'Books by pip' && document.querySelector('.book-card:not(.example-card) .cover-title').textContent === 'tree' && document.querySelectorAll('.book-card:not(.example-card) .cover .sticker').length === 1`;
   if (!await waitFor(shelfNow, 3)) return 'the shelf does not show "Books by pip" and the cover';
   // Reload: same.
-  await open('', 'document.querySelector(".book-card .cover .sticker") !== null');
+  await open('', 'document.querySelector(".book-card:not(.example-card) .cover .sticker") !== null');
   if (!await waitFor(shelfNow, 3)) return 'after a reload the shelf does not show "Books by pip" and the cover';
   problem = await fitProblem();
   if (problem) return `shelf: ${problem}`;
@@ -272,7 +273,7 @@ export async function tryFinish() {
   await tapButton('Finish');
   await waitFor(`document.querySelector('.screen h1')?.textContent.includes('called')`, 3);
   await press('m', 'o', 'o', 'n');
-  await open('', 'document.querySelectorAll(".book-card").length === 2');
+  await open('', 'document.querySelectorAll(".book-card:not(.example-card)").length === 2');
   const two = await evaluate(`(async () => { ${STORE} const b = (await store.loadBooks()).find((one) => one.id === 'made-up-fin-2'); return b.finished + '|' + b.title; })()`);
   if (two !== 'true|moon') return `closing mid-step left the book as "${two}"`;
   return '';

@@ -115,7 +115,8 @@ shelf.querySelector('.go').addEventListener('click', async () => {
   const lesson = lessons && currentLesson(await getProgress(), lessons.lessons);
   const book = { ...newBook(newId(), Date.now()), ...(lesson && { lesson: lesson.id }) }; // a book remembers its lesson
   open = { book, removed: [], stored: false }; // saved at the first word, so backing out leaves no empty book
-  location.hash = lesson ? `lesson/${book.id}/${lesson.id}/new` : `book/${book.id}/0`; // the lesson card, then planning
+  // The lesson card (while lessons remain), then planning; every book is offered planning once lessons load.
+  location.hash = lesson ? `lesson/${book.id}/${lesson.id}/new` : `${lessons ? 'plan' : 'book'}/${book.id}/0`;
 });
 
 // Not opened from the Home Screen: tell a grown-up the books may not be safe.

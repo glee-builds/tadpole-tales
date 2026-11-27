@@ -6,8 +6,7 @@
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { withLessons } from './lessons.mjs';
-import { send, page, evaluate, waitFor, until, open, tapOn, tapButton, press, typed, isDisabled, STORE, saveNow, fitProblem, settle, HOME } from './lib.mjs';
+import { reachPage, send, page, evaluate, waitFor, until, open, tapOn, tapButton, press, typed, isDisabled, STORE, saveNow, fitProblem, settle, HOME } from './lib.mjs';
 
 // Put in every page before its own scripts: a pretend microphone and recorder, and an <audio> that
 // only notes what it was asked to play. window.__tracks lists every microphone track handed out.
@@ -204,11 +203,12 @@ export async function tryTellIt() {
     await evaluate(`(async () => { ${STORE} await store.startOver(); await store.setSetting('tellIt', true); })()`);
     await open('', HOME);
     await tapOn('.go');
+    await reachPage();
     if (!await waitFor(`${bar} !== null`, 3)) return 'Tell it did not show on a new book';
     problem = await recordOnce();
     if (problem) return `on a new book: ${problem}`;
     await evaluate(`location.hash = ''`);
-    if (!await waitFor('document.querySelectorAll(".book-card").length === 1', 3)) return 'a new book with only a recording was not kept';
+    if (!await waitFor('document.querySelectorAll(".book-card:not(.example-card)").length === 1', 3)) return 'a new book with only a recording was not kept';
     if (await allRecordings() !== 1) return 'the new book\'s recording was not kept';
   } finally {
     await page('Page.removeScriptToEvaluateOnNewDocument', { identifier: script.identifier });
@@ -234,7 +234,7 @@ export async function tryTellIt() {
  * Tell it takes the picture's room: the keys never move. A full page (with the put-back bar too) and a
  * short page with a lesson row still fit; where the words already don't fit, they get no smaller. Returns a problem, or ''.
  */
-export const tryTellItFits = () => withLessons(async () => {
+export const tryTellItFits = async () => {
   await open('', HOME);
   await evaluate(`(async () => { ${STORE} await store.startOver();
     const long = 'The frog hops to the big rock, and sees a tiny fish! "Hello," says the frog. '.repeat(5).slice(0, 300);
@@ -271,4 +271,4 @@ export const tryTellItFits = () => withLessons(async () => {
   if (problem) return `with the put-back bar: ${problem}`;
   await evaluate(`(async () => { ${STORE} await store.startOver(); })()`);
   return '';
-});
+};

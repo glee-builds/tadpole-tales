@@ -1,5 +1,5 @@
 // Tests for src/lessons.js. Run all tests with: node --test
-// The fixtures are copies of the draft lesson wording; the real files arrive with the wording pull request.
+// The lesson data is the real wording in data/.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -9,7 +9,7 @@ import {
 } from '../src/lessons.js';
 import { readBackup, makeBackup } from '../src/book.js';
 
-const load = (name) => JSON.parse(readFileSync(new URL(`./fixtures/${name}`, import.meta.url), 'utf8'));
+const load = (name) => JSON.parse(readFileSync(new URL(`../data/${name}`, import.meta.url), 'utf8'));
 const lessons = load('lessons.json').lessons;
 const examples = load('examples.json');
 const book = (...texts) => ({ pages: texts.map((text) => ({ text, stickers: [] })) });

@@ -20,10 +20,10 @@
 //   tell-it.mjs                      Tell it: recording a page out loud, with a pretend microphone
 // To find a check, look for its label below, then for the function it runs.
 
-import { PHONE, TABLETS, page, problems, checked, checkScreen, checkWith, shutDown } from './screens/lib.mjs';
+import { PHONE, TABLETS, page, problems, checked, checkScreen, checkWith, shutDown, withoutLessons } from './screens/lib.mjs';
 import { tryBooks, tryNewer, tryFinish, tryReadAloud } from './screens/shelf-and-books.mjs';
 import { tryKeyboard, tryStickers, tryFits } from './screens/page-keyboard-pictures.mjs';
-import { tryLessons, tryLessonPaths, tryLessonFits, tryNoLessons } from './screens/lessons.mjs';
+import { tryLessons, tryLessonPaths, tryLessonFits, tryPlanAfterLessons, tryNoLessons } from './screens/lessons.mjs';
 import {
   trySaving, tryGrownup, tryBackup, tryHostile, tryServerLock, checkOffline, removeDownloads,
 } from './screens/grownup-backup-security.mjs';
@@ -36,10 +36,10 @@ import { tryPageFits } from './screens/page-fit.mjs';
 try {
   await checkWith('Test server: nothing outside the repo', tryServerLock);
   await checkScreen('Home (phone)', '');
-  await checkWith('Books: make a 3-page book, reload, finish, read it, Refresh saves first', tryBooks);
-  await checkWith('Every screen fits (phone)', tryFits);
+  await checkWith('Books: make a 3-page book, reload, finish, read it, Refresh saves first', withoutLessons(tryBooks));
+  await checkWith('Every screen fits (phone)', withoutLessons(tryFits));
   await checkWith('Read to me: underlines in order, turns the page, Stop, hand-turn, no voice (phone)', tryReadAloud);
-  await checkWith('Finish: title, author name, cover, shelf, Edit, close mid-step (phone)', tryFinish);
+  await checkWith('Finish: title, author name, cover, shelf, Edit, close mid-step (phone)', withoutLessons(tryFinish));
   await checkWith('Finish with lessons: saved first, hear, tap a sentence, Do it, finish again, Not now, kind message (phone)', tryLessonSteps);
   await checkWith('Finish with lessons: every step skipped, no voice (phone)', tryLessonSkips);
   await checkWith('Finish with lessons: "I don\'t have one yet", Go back, Carry on, tap two pages (phone)', tryNotYet);
@@ -51,10 +51,11 @@ try {
   await checkWith('Damaged books: the good book still shows; page, reading and grown-up screens draw', tryHostile);
   await checkWith('Grown-up page: hold to open, every device check, delete a book, start over', tryGrownup);
   await checkWith('Backup: back up, start over, restore, restore again, broken file', tryBackup);
-  await checkWith('Keyboard: type, tap to move the cursor, hold backspace, 300 fit (phone)', tryKeyboard);
+  await checkWith('Keyboard: type, tap to move the cursor, hold backspace, 300 fit (phone)', withoutLessons(tryKeyboard));
   await checkWith('Lessons: shelf, card, example and find, planning, close mid-planning, reminder and idea cards (phone)', tryLessons);
   await checkWith('Lessons: skip planning, five questions, sentence find, Skip, second shelf grows (phone)', tryLessonPaths);
   await checkWith('Lessons: every lesson screen fits (phone)', tryLessonFits);
+  await checkWith('After lesson 4: no card, but "Plan your story" is still offered (phone)', tryPlanAfterLessons);
   await checkWith('No lesson files: no card, no planning, no second shelf, no errors (phone)', tryNoLessons);
   await checkWith('Picture mode: add, drag, two-tap move, bigger, remove, 12 limit, save, reorder pages (phone)', tryStickers);
   await checkWith('Tell it: switch, record, stop, limit, play, again, microphone off, delete with page and book, not in backups, refused, no recorder (phone)', tryTellIt);
@@ -63,12 +64,12 @@ try {
   for (const [tablet, size] of Object.entries(TABLETS)) {
     await page('Emulation.setDeviceMetricsOverride', { ...size, deviceScaleFactor: 2, mobile: true });
     await checkScreen(`Home (${tablet})`, '');
-    await checkWith(`Keyboard (${tablet})`, tryKeyboard);
+    await checkWith(`Keyboard (${tablet})`, withoutLessons(tryKeyboard));
     await checkWith(`Picture mode (${tablet})`, tryStickers);
-    await checkWith(`Every screen fits (${tablet})`, tryFits);
+    await checkWith(`Every screen fits (${tablet})`, withoutLessons(tryFits));
     await checkWith(`Tell it fits (${tablet})`, tryTellItFits);
     await checkWith(`Page screen fits in every mix (${tablet})`, () => tryPageFits(tablet));
-    await checkWith(`Finish (${tablet})`, tryFinish);
+    await checkWith(`Finish (${tablet})`, withoutLessons(tryFinish));
     await checkWith(`Lesson screens fit (${tablet})`, tryLessonFits);
     await checkWith(`Finish with lessons (${tablet})`, tryLessonSteps);
     await checkWith(`Finish with lessons: two pages, not yet (${tablet})`, tryNotYet);
