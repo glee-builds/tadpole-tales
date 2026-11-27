@@ -50,6 +50,7 @@ src/book.js         a book as plain functions
 src/store.js        saving books on the device (the only file that uses IndexedDB)
 src/app.js          starts the app and picks the screen by location.hash
 src/reading.js      the reading view (showReading)
+src/finish.js       title, author name and cover after Finish (showFinish)
 src/grownup.js      the grown-up page: device check, backup and restore, delete a book, start over
 docs/decisions.md   decisions log
 docs/phase-1-plan.md  Phase 1 task notes and shared names

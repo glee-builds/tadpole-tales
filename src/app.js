@@ -4,16 +4,18 @@
 //   ''                    the bookshelf
 //   '#book/<id>/<page>'   the page screen (Write mode); <page> counts from 0
 //   '#read/<id>'          the reading view
+//   '#finish/<id>'        title, author name and cover, after "Finish"
 //   '#grown-ups'          the grown-up page
 
 import { make, button, saveMark, plural } from './ui.js';
 import { mountWriter } from './keyboard.js';
 import { LIMIT, isFull } from './typing.js';
 import { newBook, addPage, removePage, putBackPage, setPageText, canAddPage, isBlank } from './book.js';
-import { loadBooks, saveSoon, saveNow, onSaveState, getSetting } from './store.js';
+import { loadBooks, saveSoon, saveNow, onSaveState, getSetting, setSetting } from './store.js';
 import { holdToOpen, showGrownup, isInstalled, INSTALL_NOTE } from './grownup.js';
 import { mountPicture } from './stickers.js';
 import { showReading } from './reading.js';
+import { showFinish } from './finish.js';
 
 // The service worker (sw.js) saves the app's files so it opens without
 // internet. If the phone can't run one, the app works as before, online.
@@ -44,19 +46,25 @@ function coverTitle(book) {
 }
 
 function bookCard(book) {
-  const card = make('a', `book-card ${book.finished ? 'finished' : 'unfinished'}`);
-  card.href = book.finished ? `#read/${book.id}` : `#book/${book.id}/0`;
+  const card = make('div', `book-card ${book.finished ? 'finished' : 'unfinished'}`);
+  const open = card.appendChild(make('a', 'book-open'));
+  open.href = book.finished ? `#read/${book.id}` : `#book/${book.id}/0`;
   // A cover color from the id, so a book keeps its color.
   const color = [...book.id].reduce((sum, char) => sum + char.charCodeAt(0), 0) % 4;
-  const cover = card.appendChild(make('div', `cover cover-${color}`));
+  const cover = open.appendChild(make('div', `cover cover-${color}`));
   cover.append(make('span', 'cover-title', coverTitle(book)));
-  const info = card.appendChild(make('div', 'card-info'));
+  if (book.cover?.stickers.length) mountPicture(cover, { stickers: book.cover.stickers }); // read-only
+  const info = open.appendChild(make('div', 'card-info'));
   info.append(book.finished
     ? make('span', 'card-status', '✓ Finished')
     : make('span', 'card-status keep-going', '✎ Keep going'));
   info.append(make('span', 'card-pages', plural(book.pages.length, 'page')));
+  // A finished book opens to read; "Edit" opens its pages to change (Finish then asks for the title and cover again).
+  if (book.finished) card.append(button('pill card-edit', '✎ Edit', () => { location.hash = `book/${book.id}/0`; }));
   return card;
 }
+
+let shelfMessage = ''; // a kind message for the shelf, set when a book is finished
 
 async function showShelf(token) {
   await saveNow(); // coming back from a book: what was typed is saved before the shelf reads it
@@ -78,6 +86,8 @@ async function showShelf(token) {
   booksBox.replaceChildren(...(books.length
     ? books.map(bookCard)
     : [make('p', 'books-note', 'No books yet. Make your first one!')]));
+  if (shelfMessage) booksBox.prepend(make('p', 'books-note shelf-message', `🎉 ${shelfMessage}`));
+  shelfMessage = '';
 }
 
 shelf.querySelector('.go').addEventListener('click', () => {
@@ -165,7 +175,7 @@ async function showPage(id, wanted, token) {
     if (isBlank(open.book)) { location.hash = ''; return; }
     changed({ ...open.book, finished: true, changed: Date.now() });
     await saveNow();
-    if (saveState !== 'not-saved') location.hash = ''; // if it didn't save, stay and show the mark
+    if (saveState !== 'not-saved') location.hash = `finish/${open.book.id}`; // if it didn't save, stay and show the mark
   }));
   finish.setAttribute('aria-label', 'Finish the book');
 
@@ -243,6 +253,37 @@ async function showRead(id, token) {
   document.body.append(screen);
 }
 
+// ---------- Title, author name and cover ----------
+
+async function showFinishScreen(id, token) {
+  await saveNow();
+  let book;
+  let author;
+  try { book = (await loadBooks()).find((one) => one.id === id); } catch { /* the shelf says so */ }
+  try { author = await getSetting('author'); } catch { /* asked for again */ }
+  if (token !== shown) return;
+  if (!book) { location.hash = ''; return; }
+  screen = make('main', 'screen finish-screen');
+  const mark = saveMark();
+  stopWatching = onSaveState(mark.update);
+  screen.append(mark.node);
+  const body = screen.appendChild(make('div', 'finish-body'));
+  showFinish(body, {
+    book,
+    author,
+    onBook: saveSoon,
+    onAuthor: (name) => setSetting('author', name).catch(() => {}),
+    onDone: async () => {
+      await saveNow();
+      if (saveState === 'not-saved') return; // stay and show the mark
+      shelfMessage = 'Your book is on the shelf!';
+      location.hash = '';
+    },
+  });
+  shelf.hidden = true;
+  document.body.append(screen);
+}
+
 // ---------- Choosing the screen ----------
 
 async function show() {
@@ -261,6 +302,7 @@ async function show() {
   if (kind === 'try-stickers') { shelf.hidden = true; return; } // the temporary demo below draws itself
   if (kind === 'book' && id) await showPage(id, Number(page) || 0, token);
   else if (kind === 'read' && id) await showRead(id, token);
+  else if (kind === 'finish' && id) await showFinishScreen(id, token);
   else {
     shelf.hidden = true; // until the books are read, so an old shelf is never shown
     await showShelf(token);
