@@ -36,7 +36,7 @@ test('only good stickers are kept, on a page and on the cover', () => {
   assert.deepEqual(book.pages[0].stickers, [ok]);
   assert.deepEqual(book.pages[1].stickers, []);
   assert.deepEqual(book.cover, { stickers: [ok] });
-  assert.equal(upgradeBook({ ...good, cover: { stickers: 'x' } }).cover, null);
+  assert.deepEqual(upgradeBook({ ...good, cover: { stickers: 'x' } }).cover, { stickers: [] });
 });
 
 test('finished is true or false, and the dates are numbers', () => {

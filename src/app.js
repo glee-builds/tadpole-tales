@@ -2,7 +2,7 @@
 //
 // Screens, by location.hash:
 //   ''                    the bookshelf
-//   '#book/<id>/<page>'   the page screen (Write mode); <page> counts from 0
+//   '#book/<id>/<page>'   the page screen (Write or Picture mode); <page> counts from 0
 //   '#read/<id>'          the reading view
 //   '#finish/<id>'        title, author name and cover, after "Finish"
 //   '#grown-ups'          the grown-up page
@@ -169,10 +169,15 @@ function changed(next) {
   }
 }
 
+/** The saved book with this id that this app can open, or undefined (the caller goes back to the shelf). */
+async function findBook(id) {
+  try { return (await loadBooks()).find((one) => one.id === id && !isNewer(one)); } catch { return undefined; }
+}
+
 async function showPage(id, wanted, token) {
   if (!open || open.book.id !== id) {
     let book;
-    try { book = (await loadBooks()).find((one) => one.id === id && !isNewer(one)); } catch { /* shelf says so */ }
+    book = await findBook(id);
     if (token !== shown) return;
     if (!book) { location.hash = ''; return; }
     open = { book, removed: [], stored: true };
@@ -315,7 +320,7 @@ function drawPictureMode(book, index, title) {
 async function showRead(id, token) {
   await saveNow();
   let book;
-  try { book = (await loadBooks()).find((one) => one.id === id && !isNewer(one)); } catch { /* the shelf says so */ }
+  book = await findBook(id);
   if (token !== shown) return;
   if (!book) { location.hash = ''; return; }
   screen = make('main', 'screen reading');
@@ -330,7 +335,7 @@ async function showFinishScreen(id, token) {
   await saveNow();
   let book;
   let author;
-  try { book = (await loadBooks()).find((one) => one.id === id && !isNewer(one)); } catch { /* the shelf says so */ }
+  book = await findBook(id);
   try { author = await getSetting('author'); } catch { /* asked for again */ }
   if (token !== shown) return;
   if (!book) { location.hash = ''; return; }

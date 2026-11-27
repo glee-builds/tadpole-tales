@@ -66,16 +66,15 @@
   min-height: 76px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  display: flex;
-  flex-wrap: wrap;
-  align-content: flex-start;
-  justify-content: center;
-  gap: 8px;
   padding: 4px;
   border: 2px solid var(--border);
   border-radius: 16px;
   background: var(--tint);
 }
+
+.tray-group + .tray-group { margin-top: 6px; }
+.tray-heading { margin: 0 0 4px 4px; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.tray-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 
 .tray-sticker { flex: none; width: 64px; height: 64px; padding: 0; border-radius: 12px; }
 .tray-sticker .emoji { font-size: 40px; }
