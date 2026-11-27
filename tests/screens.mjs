@@ -60,7 +60,7 @@ try {
   await checkWith('Lessons: shelf, card, example and find, planning, close mid-planning, reminder and idea cards (phone)', tryLessons);
   await checkWith('Lessons: skip planning, five questions, sentence find, Skip, second shelf grows (phone)', tryLessonPaths);
   await checkWith('Lessons: every lesson screen fits (phone)', tryLessonFits);
-  await checkWith('After lesson 4: no card, but "Plan your story" is still offered (phone)', tryPlanAfterLessons);
+  await checkWith('After the last lesson: pick a lesson (card, planning) or None (planning) (phone)', tryPlanAfterLessons);
   await checkWith('No lesson files: no card, no planning, no second shelf, no errors (phone)', tryNoLessons);
   await checkWith('Picture mode: add, drag, two-tap move, bigger, remove, 12 limit, save, reorder pages (phone)', tryStickers);
   await checkWith('Tell it: switch, record, stop, limit, play, again, microphone off, delete with page and book, not in backups, refused, no recorder (phone)', tryTellIt);

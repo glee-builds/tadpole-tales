@@ -42,7 +42,7 @@ test('lessons: numbered 1, 2, 3... with unique ids and every field the app reads
     for (const key of ['prompt', 'notYet', 'notYetOffer']) words(c[key], `${at}.selfCheck.${key}`);
     if (c.kind === 'two-pages') words(c.secondPrompt, `${at}.selfCheck.secondPrompt`);
     if (l.tip != null) {
-      assert.ok(['and-then', 'under-three-pages'].includes(l.tip.check), `${at}.tip.check "${l.tip.check}" is not a tip the app knows`);
+      assert.ok(['and-then', 'under-three-pages', 'no-talking', 'dream-ending'].includes(l.tip.check), `${at}.tip.check "${l.tip.check}" is not a tip the app knows`);
       words(l.tip.job, `${at}.tip.job`);
     }
   });

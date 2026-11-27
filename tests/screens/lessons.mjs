@@ -213,16 +213,52 @@ export const tryLessonFits = async () => {
 
 /** A writer who has finished all 4 books: no lesson card, but "Plan your story" is still offered. */
 export async function tryPlanAfterLessons() {
-  await fresh();
-  await evaluate(`(async () => { ${STORE} await store.setSetting('progress', { lessonsOpened: 5 }); })()`);
-  await open('', HOME);
-  await tapOn('.go');
-  if (!await waitFor(SHOWS('.plan-question'), 3)) return `after lesson 4, Make a new book did not open planning (the address is ${await evaluate('location.hash')})`;
-  if (await evaluate(`document.querySelector('.lesson-card') !== null`)) return 'a lesson card showed after the last lesson';
-  if (await fitProblem()) return `planning after lesson 4: ${await fitProblem()}`;
+  const count = async () => evaluate(`document.querySelectorAll('.pick-lesson').length`);
+  const start = async () => {
+    await fresh();
+    await evaluate(`(async () => { ${STORE} await store.setSetting('progress', { lessonsOpened: 99 }); })()`); // every lesson finished, however many there are
+    await open('', HOME);
+    await tapOn('.go');
+    return waitFor(SHOWS('.pick-none'), 3);
+  };
+  // Pick a lesson: its card, then planning, then the book keeps that lesson.
+  if (!await start()) return `after the last lesson, Make a new book did not ask for a lesson (the address is ${await evaluate('location.hash')})`;
+  const { lessons, messages } = await evaluate(`fetch('data/lessons.json').then((r) => r.json())`);
+  const lessonCount = lessons.length;
+  if (await count() !== lessonCount) return `the picker shows ${await count()} lessons, not ${lessonCount}`;
+  const words = await text('.screen');
+  const none = await text('.pick-none');
+  if (!words.includes(messages.pickLesson ?? 'Pick a lesson to keep in mind') || !none.includes(messages.pickNone ?? 'No lesson this time')) return `the picker says "${words}"`;
+  if (await fitProblem()) return `the lesson picker: ${await fitProblem()}`;
+  if (await evaluate(`[...document.querySelectorAll('.screen button')].some((b) => b.getBoundingClientRect().height < 48)`)) return 'a picker button is under 48px';
+  await shot('pick-lesson', await width());
+  await tapOn('.pick-lesson', lessonCount - 1);
+  if (!await waitFor(SHOWS('.lesson-card'), 3)) return 'picking a lesson did not show its card';
+  const title = await text('.lesson-title');
+  await tapButton('Try it in your book');
+  if (!await waitFor(SHOWS('.plan-question'), 3)) return 'the card did not go on to planning';
+  await tapButton('Skip planning');
+  if (!await waitFor(SHOWS('.keyboard'), 3)) return 'Skip planning did not go to writing';
+  if (!(await text('.lesson-reminder'))) return `the picked lesson ("${title}") gave no reminder on the page`;
+  await press('h', 'i');
+  await tapOn('.back');
+  await saveNow();
+  const picked = (await books())[0]?.lesson;
+  if (!picked) return 'the book did not keep the picked lesson';
+
+  // None: straight to planning, no card, no lesson on the book.
+  if (!await start()) return 'the picker did not show the second time';
+  await tapOn('.pick-none');
+  if (!await waitFor(SHOWS('.plan-question'), 3)) return `None did not open planning (the address is ${await evaluate('location.hash')})`;
+  if (await evaluate(`document.querySelector('.lesson-card') !== null`)) return 'a lesson card showed after None';
+  if (await fitProblem()) return `planning after None: ${await fitProblem()}`;
   await tapButton('Skip planning');
   if (!await waitFor(SHOWS('.keyboard'), 3)) return 'Skip planning did not go to writing';
   if (await evaluate(`document.querySelector('.lesson-reminder') !== null`)) return 'a reminder showed on a book with no lesson';
+  await press('h', 'i');
+  await tapOn('.back');
+  await saveNow();
+  if ((await books())[0]?.lesson) return 'None still left a lesson on the book';
   return '';
 }
 

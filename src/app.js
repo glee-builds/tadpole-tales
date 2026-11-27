@@ -18,7 +18,7 @@ import { mountPicture } from './stickers.js';
 import { showReading } from './reading.js';
 import { showFinish, startFinish } from './finish.js';
 import { loadLessonData, drawLessonRoute, lessonBar, tadpoleBooks } from './lesson-screens.js';
-import { currentLesson } from './lessons.js';
+import { currentLesson, pickOptions, withPickedLesson } from './lessons.js';
 import { planOf, setPlanAnswer, ideaCards } from './plan.js';
 import { tellItOn, mountTellIt } from './record.js';
 
@@ -116,7 +116,8 @@ shelf.querySelector('.go').addEventListener('click', async () => {
   const book = { ...newBook(newId(), Date.now()), ...(lesson && { lesson: lesson.id }) }; // a book remembers its lesson
   open = { book, removed: [], stored: false }; // saved at the first word, so backing out leaves no empty book
   // The lesson card (while lessons remain), then planning; every book is offered planning once lessons load.
-  location.hash = lesson ? `lesson/${book.id}/${lesson.id}/new` : `${lessons ? 'plan' : 'book'}/${book.id}/0`;
+  const pick = lessons && !lesson && pickOptions(await getProgress(), lessons.lessons).length > 0; // after the last lesson: pick one first
+  location.hash = lesson ? `lesson/${book.id}/${lesson.id}/new` : pick ? `pick/${book.id}` : `${lessons ? 'plan' : 'book'}/${book.id}/0`;
 });
 
 // Not opened from the Home Screen: tell a grown-up the books may not be safe.
@@ -408,12 +409,15 @@ async function showLessonRoute(parts, token) {
     const book = await findBook(bookId);
     if (book) open = { book, removed: [], stored: true };
   }
+  const progress = kind === 'pick' ? await getProgress() : undefined;
   if (token !== shown) return;
   const book = open?.book.id === bookId ? open.book : null;
   screen = make('main', `screen ${kind}-screen`);
   const drawn = data && drawLessonRoute(screen, parts, {
     data,
     book,
+    progress,
+    onPick: (id) => { open.book = withPickedLesson(open.book, id, data.lessons); },
     onAnswer: (id, text) => changed(setPlanAnswer(open.book, id, text, Date.now())),
     go: (hash, replace) => (replace ? location.replace(`#${hash}`) : (location.hash = hash)),
   });
@@ -431,7 +435,7 @@ async function show() {
   const [kind, id, page] = parts;
   clearScreen();
   if (kind !== 'book') mode = 'write';
-  const lessonScreen = ['lesson', 'plan', 'example'].includes(kind); // these keep the book that is open
+  const lessonScreen = ['lesson', 'plan', 'example', 'pick'].includes(kind); // these keep the book that is open
   if (!(kind === 'book' || lessonScreen) || (open && open.book.id !== id)) { // leaving the book: the put-back is gone, and so are removed pages' recordings
     if (open) deleteRecordings(open.book.id, open.book.pages.map((one) => one.id)).catch(() => {});
     open = null;
