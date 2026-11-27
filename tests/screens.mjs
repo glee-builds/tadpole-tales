@@ -508,6 +508,112 @@ async function tryBackup() {
   return '';
 }
 
+// ---------- The picture area (src/stickers.js) ----------
+
+/** Drag a finger from one point to another in small steps. */
+async function drag(from, to, steps = 10) {
+  await page('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [from] });
+  for (let i = 1; i <= steps; i++) {
+    await sleep(16);
+    const at = { x: from.x + ((to.x - from.x) * i) / steps, y: from.y + ((to.y - from.y) * i) / steps };
+    await page('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [at] });
+  }
+  await page('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await sleep(50);
+}
+
+/** Every placed sticker: its middle and width on screen, and as parts of the picture. */
+const placed = () => evaluate(`(() => {
+  const pic = document.querySelector('.picture').getBoundingClientRect();
+  return [...document.querySelectorAll('.picture .sticker')].map((node) => {
+    const box = node.getBoundingClientRect();
+    return { x: box.left + box.width / 2, y: box.top + box.height / 2, width: box.width,
+      fx: (box.left + box.width / 2 - pic.left) / pic.width, fy: (box.top + box.height / 2 - pic.top) / pic.height,
+      inside: box.left >= pic.left - 1 && box.right <= pic.right + 1 && box.top >= pic.top - 1 && box.bottom <= pic.bottom + 1 };
+  });
+})()`);
+const toolsShow = () => evaluate(`getComputedStyle(document.querySelector('.sticker-tools')).visibility !== 'hidden'`);
+
+/** Add, drag, size and remove stickers in the demo, with real touches. Returns a problem, or ''. */
+async function tryStickers() {
+  if (!await open('#try-stickers', 'document.querySelector(".tray-sticker .emoji") !== null')) return 'the sticker demo did not draw';
+  await sleep(200);
+  if (await evaluate('document.querySelectorAll("input, textarea, [contenteditable]").length')) return 'a text field is on the screen';
+  const shape = await evaluate(`(() => { const box = document.querySelector('.picture').getBoundingClientRect(); return box.width / box.height; })()`);
+  if (Math.abs(shape - 4 / 3) > 0.02) return `the picture is ${shape.toFixed(2)}:1, not 4:3`;
+
+  // Tap the tray three times: three stickers, and the newest one shows its buttons.
+  const tray = await middleOf('.tray-sticker');
+  for (let i = 0; i < 3; i++) await touch(tray.x, tray.y);
+  if ((await placed()).length !== 3) return `three taps on the tray placed ${(await placed()).length} stickers`;
+  if (!await toolsShow()) return 'a new sticker does not show its buttons';
+
+  // Drag the top sticker 60px right and 30px down: it follows the finger (this checks the tablet zoom sums).
+  const before = (await placed())[2];
+  await drag({ x: before.x, y: before.y }, { x: before.x + 60, y: before.y + 30 });
+  const after = (await placed())[2];
+  if (Math.abs(after.x - before.x - 60) > 2 || Math.abs(after.y - before.y - 30) > 2) {
+    return `a 60, 30 drag moved the sticker ${Math.round(after.x - before.x)}, ${Math.round(after.y - before.y)}`;
+  }
+
+  // Tap the empty picture: the buttons hide. Tap the sticker: they show.
+  const corner = await evaluate(`(() => { const box = document.querySelector('.picture').getBoundingClientRect(); return { x: box.left + 6, y: box.top + 6 }; })()`);
+  await touch(corner.x, corner.y);
+  if (await toolsShow()) return 'tapping the empty picture did not hide the buttons';
+  await touch(after.x, after.y);
+  if (!await toolsShow()) return 'tapping a sticker did not show its buttons';
+
+  // Bigger, then remove.
+  const tools = await evaluate(`[...document.querySelectorAll('.sticker-tool')].map((b) => ({ words: b.textContent, tall: b.offsetHeight }))`);
+  if (tools.some((tool) => tool.tall < 48)) return `a sticker button is less than 48px tall: ${JSON.stringify(tools)}`;
+  const bigger = await evaluate(`(() => { const box = [...document.querySelectorAll('.sticker-tool')].find((b) => b.textContent.includes('Bigger')).getBoundingClientRect(); return { x: box.left + box.width / 2, y: box.top + box.height / 2 }; })()`);
+  await touch(bigger.x, bigger.y);
+  const grown = (await placed())[2];
+  if (Math.abs(grown.width / after.width - 1.5) > 0.05) return `"Bigger" made the sticker ${(grown.width / after.width).toFixed(2)} times as wide, not 1.5`;
+  const remove = await evaluate(`(() => { const box = [...document.querySelectorAll('.sticker-tool')].find((b) => b.textContent.includes('Remove')).getBoundingClientRect(); return { x: box.left + box.width / 2, y: box.top + box.height / 2 }; })()`);
+  await touch(remove.x, remove.y);
+  if ((await placed()).length !== 2) return `"Remove" left ${(await placed()).length} stickers, not 2`;
+  if (await toolsShow()) return 'the buttons still show after the sticker was removed';
+
+  // Up to 12, and no more.
+  for (let i = 0; i < 11; i++) await touch(tray.x, tray.y);
+  if ((await placed()).length !== 12) return `the tray let ${(await placed()).length} stickers on, not 12`;
+  if (await evaluate('document.querySelector(".sticker-full").hidden')) return 'no "12 is the most" note at 12 stickers';
+
+  // Drag one far past the bottom right: it stops at the edge. Nothing spills outside the picture.
+  const last = (await placed())[11];
+  await drag({ x: last.x, y: last.y }, { x: await evaluate('innerWidth - 2'), y: await evaluate('innerHeight - 2') });
+  const end = await placed();
+  if (end.some((s) => !s.inside)) return 'a sticker spills outside the picture';
+  if (end[11].fx < 0.85 || end[11].fy < 0.8) return `dragging past the corner left the sticker at ${end[11].fx.toFixed(2)}, ${end[11].fy.toFixed(2)}`;
+
+  const fit = await evaluate(`(() => ({
+    scrolls: document.documentElement.scrollHeight > innerHeight || document.documentElement.scrollWidth > innerWidth,
+    small: [...document.querySelectorAll('.tray-sticker, .back')].filter((b) => b.offsetWidth < 48 || b.offsetHeight < 48).length,
+  }))()`);
+  if (fit.scrolls) return 'the page scrolls';
+  if (fit.small) return `${fit.small} buttons are smaller than 48px`;
+
+  // The read-only picture puts a sticker in the same place.
+  const reading = await evaluate(`(async () => {
+    const { mountPicture, loadStickerList } = await import('/src/stickers.js');
+    const [first] = await loadStickerList();
+    const box = document.createElement('div');
+    box.style.cssText = 'position: fixed; left: 0; top: 0; width: 200px';
+    document.body.append(box);
+    mountPicture(box, { stickers: [{ id: first.id, x: 0.25, y: 0.6, size: 1 }] });
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const pic = box.querySelector('.picture').getBoundingClientRect();
+    const s = box.querySelector('.sticker').getBoundingClientRect();
+    const result = { buttons: box.querySelectorAll('button').length, fx: (s.left + s.width / 2 - pic.left) / pic.width, fy: (s.top + s.height / 2 - pic.top) / pic.height };
+    box.remove();
+    return result;
+  })()`);
+  if (reading.buttons) return 'the read-only picture has buttons';
+  if (Math.abs(reading.fx - 0.25) > 0.02 || Math.abs(reading.fy - 0.6) > 0.02) return `the read-only picture put 0.25, 0.6 at ${reading.fx.toFixed(2)}, ${reading.fy.toFixed(2)}`;
+  return '';
+}
+
 /** Run a check that returns a problem (or ''), and note it. */
 async function checkWith(label, check) {
   checked++;
@@ -529,10 +635,12 @@ try {
   await checkWith('Grown-up page: hold to open, every device check, delete a book, start over', tryGrownup);
   await checkWith('Backup: back up, start over, restore, restore again, broken file', tryBackup);
   await checkKeyboard('Keyboard: type, tap to move the cursor, hold backspace, 300 fit (phone)');
+  await checkWith('Stickers: add, drag, bigger, remove, 12 limit, all inside, read-only (phone)', tryStickers);
   for (const [tablet, size] of Object.entries(TABLETS)) {
     await page('Emulation.setDeviceMetricsOverride', { ...size, deviceScaleFactor: 2, mobile: true });
     await checkScreen(`Home (${tablet})`, '');
     await checkKeyboard(`Keyboard (${tablet})`);
+    await checkWith(`Stickers (${tablet})`, tryStickers);
   }
 } catch (error) {
   problems.push(`stopped early: ${String(error.message).split('\n')[0]}`);

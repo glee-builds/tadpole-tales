@@ -5,6 +5,7 @@ import { mountWriter } from './keyboard.js';
 import { newBook, setPageText } from './book.js';
 import { saveSoon, saveNow, onSaveState } from './store.js';
 import { holdToOpen, showGrownup, isInstalled, INSTALL_NOTE } from './grownup.js';
+import { mountPicture } from './stickers.js';
 
 // The service worker (sw.js) saves the app's files so it opens without
 // internet. If the phone can't run one, the app works as before, online.
@@ -56,3 +57,15 @@ function show() {
 }
 addEventListener('hashchange', show);
 show();
+// Temporary: index.html#try-stickers opens the picture area to try stickers,
+// until the page screen (task 1.7) has a Picture mode. Nothing is saved.
+if (location.hash === '#try-stickers') {
+  const screen = make('main', 'screen try-stickers');
+  const top = screen.appendChild(make('div', 'screen-top'));
+  const back = top.appendChild(button('back', '←', () => { location.hash = ''; location.reload(); }));
+  back.setAttribute('aria-label', 'Back');
+  top.append(make('h2', '', 'Try the stickers'));
+  mountPicture(screen, { editable: true });
+  shelf.hidden = true;
+  document.body.append(screen);
+}
