@@ -7,14 +7,35 @@
   --on-go: #2b2440;
 }
 
+/* Andika: a font made for children learning to read. The files live in
+   assets/fonts (with the license), so there are no outside requests. */
+@font-face {
+  font-family: "Andika";
+  src: url("assets/fonts/andika-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Andika";
+  src: url("assets/fonts/andika-latin-700-normal.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: system-ui, sans-serif;
+  font-family: "Andika", system-ui, sans-serif;
 }
+
+/* Buttons don't pick up the page font on their own. */
+button { font-family: inherit; }
 
 .shelf {
   min-height: 100vh;
