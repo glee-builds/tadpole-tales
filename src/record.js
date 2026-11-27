@@ -148,7 +148,7 @@ const REFUSED = ['NotAllowedError', 'SecurityError'];
 
 /**
  * Put the Tell it row in `parent`, for one page. `onSaved` is called after a
- * recording is saved. With `inRow`, `parent` is the lesson reminder's row: the buttons share it and the note floats under it. Returns { remove }, which also stops the microphone and the sound.
+ * recording is saved. With `inRow`, `parent` is the lesson reminder's row: the buttons share it, and the note takes the reminder's place for about 4 seconds (it stays while "Recording" shows). Returns { remove }, which also stops the microphone and the sound.
  */
 export function mountTellIt(parent, { bookId, pageId, onSaved, inRow = false }) {
   const bar = parent.appendChild(make('div', inRow ? 'tell-bar tell-in-row' : 'tell-bar'));
