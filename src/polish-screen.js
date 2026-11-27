@@ -36,13 +36,12 @@ export const namesFrom = (book, author) =>
 export function sentenceAround(text, item) {
   const before = text.slice(0, item.start);
   const after = text.slice(item.end);
-  let from = Math.max(before.lastIndexOf('.'), before.lastIndexOf('!'), before.lastIndexOf('?'), before.lastIndexOf('\n')) + 1;
+  const from = Math.max(before.lastIndexOf('.'), before.lastIndexOf('!'), before.lastIndexOf('?'), before.lastIndexOf('\n')) + 1;
   let to = after.search(/[.!?\n]/);
   to = to === -1 ? text.length : item.end + to + 1;
-  const cut = (s, e) => [from > 0 && s > from ? '…' : '', e < to ? '…' : ''];
   const s = Math.max(from, item.start - AROUND);
   const e = Math.min(to, item.end + AROUND);
-  const [lead, tail] = cut(s, e);
+  const [lead, tail] = [s > from ? '…' : '', e < to ? '…' : ''];
   return [lead + text.slice(s, item.start).trimStart(), text.slice(item.start, item.end), text.slice(item.end, e).trimEnd() + tail];
 }
 
