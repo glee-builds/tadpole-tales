@@ -8,7 +8,7 @@ Shared rules for all coding projects are in `../CLAUDE.md`, and they apply here.
 - **Claude merges its own pull requests once the GitHub checks pass.** The owner reviews afterwards. If a check fails, fix it on the same branch; never merge a red pull request.
 - **`main` is protected on GitHub:** a pull request with the passing `test` check is required, and force-pushing is not allowed.
 - One pull request does one thing.
-- This repo is public. Write "the writer", never a name, age, grade, or pronoun, in files, commit messages, branch names, and pull requests. Before pushing, scan with `grep -rn -w -i -E "he|him|his|she|her|son|daughter|year-old" . --exclude-dir=.git`.
+- This repo is public. Write "the writer", never a name, age, grade, or pronoun, in files, commit messages, branch names, and pull requests. Before pushing, scan with `grep -rn -w -i -E "he|him|his|she|her|son|daughter|year-old" . --exclude-dir=.git --exclude-dir=data --exclude-dir=tools --exclude=*.txt`. It skips the word lists (`data/*.txt`, `tools/`) because they naturally hold ordinary English words like "her" and "son".
 - The planning brief lives in `../_briefs/tadpole-tales/` and is never copied into this repo.
 
 ## Locked decisions
@@ -48,6 +48,8 @@ sw.js                    the service worker: lets the app open offline; lists ev
 manifest.webmanifest     the home-screen install settings (name, icons, portrait)
 assets/                  the tadpole, the app icon and its PNGs (made with headless Chrome), the font files
 data/stickers.json       the sticker list: id, group, label and the device's own emoji
+data/known-words.txt     words Polish never questions (built by tools/build-words.mjs); data/common-words.txt: the only words Polish may suggest
+tools/build-words.mjs    rebuilds data/known-words.txt
 src/app.js               starts the app; draws the bookshelf and the page screen (Write and Picture modes);
                          picks the other screens by location.hash
 src/ui.js                small helpers: make, button, plural, tapScale (taps under tablet zoom), the "not saved" mark (saveMark)
@@ -60,6 +62,7 @@ src/stickers.css         styles for the picture area and the sticker tray (linke
 src/reading.js           the reading view (showReading): one page at a time, with Read to me
 src/readaloud.js        "Read to me": speaks a book one sentence at a time with the device's voice
 src/sentences.js         cuts a page's text into sentences for reading aloud
+src/polish.js            spelling suggestions for the Polish step: loadWordLists, wordsToAsk, applySuggestion
 src/voice.js             picks the best English voice on the device; never an online one
 src/finish.js            title, author name and cover after Finish (showFinish)
 src/grownup.js           the grown-up page, one function per section: device check, backup and restore, books, start over
