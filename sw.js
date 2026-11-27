@@ -30,6 +30,8 @@ const FILES = [
   'src/voice.js',
   'src/sentences.js',
   'src/readaloud.js',
+  'src/stickers.js',
+  'src/stickers.css',
   'assets/apple-touch-icon.png',
   'assets/icon-192.png',
   'assets/icon-512.png',
