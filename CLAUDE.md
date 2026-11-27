@@ -66,6 +66,7 @@ tests/                   tests for the plain functions (node --test) and tests/s
 docs/                    decisions.md (the decisions log), phase-1-plan.md (task notes), device-checks.md (the owner's checklist)
 .github/                 the tests workflow and the pull request template
 README.md                what the app does and how to run it and the tests
+.gitignore               files Git ignores (backup files hold the writer's books)
 ```
 
 ## Preview locally
