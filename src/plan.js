@@ -19,7 +19,9 @@ const CARDS = {
 export function planOf(book) {
   const plan = book?.plan;
   if (!plan || typeof plan !== 'object' || Array.isArray(plan)) return {};
-  return Object.fromEntries(Object.entries(plan).filter(([, text]) => typeof text === 'string' && text.trim() !== ''));
+  return Object.fromEntries(Object.entries(plan)
+    .filter(([, text]) => typeof text === 'string' && text.trim() !== '')
+    .map(([id, text]) => [id, text.slice(0, PLAN_LIMIT)])); // a hand-edited backup can't make a huge idea card
 }
 
 /** The book with one answer saved (an empty answer takes it out of the plan). */

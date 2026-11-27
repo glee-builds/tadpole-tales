@@ -11,6 +11,8 @@
 
 import { splitSentences } from './sentences.js';
 
+// messages.noLessonYet (data/lessons.json) is not shown anywhere yet; it is kept for a later phase.
+
 const opened = (progress, lessons) => Math.min(Math.max(Math.floor(progress?.lessonsOpened) || 1, 1), lessons.length + 1);
 
 /** A number for a book id (a progress entry can't hold text). Two ids sharing one is very unlikely. */
