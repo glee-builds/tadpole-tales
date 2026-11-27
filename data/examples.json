@@ -146,5 +146,159 @@
       }
     ],
     "find": { "kind": "page", "prompt": "Tap the page where the trouble gets bigger.", "page": 2 }
+  },
+  {
+    "lesson": "senses",
+    "title": "Ollie Follows the Smell",
+    "pages": [
+      {
+        "text": "Ollie the bear woke up with a rumbly tummy. Grrrumble! Ollie wanted honey, sweet and sticky.",
+        "stickers": [
+          { "id": "bear", "x": 0.35, "y": 0.68, "size": 1.5 },
+          { "id": "sleepy", "x": 0.7, "y": 0.25, "size": 0.75 },
+          { "id": "sun", "x": 0.88, "y": 0.18, "size": 0.75 }
+        ]
+      },
+      {
+        "text": "But the honey pot was empty! Ollie sniffed the air. Something smelled sweet, like flowers in the sun.",
+        "stickers": [
+          { "id": "bear", "x": 0.25, "y": 0.68, "size": 1.5 },
+          { "id": "flower", "x": 0.7, "y": 0.75, "size": 1 },
+          { "id": "sunflower", "x": 0.85, "y": 0.68, "size": 1 }
+        ]
+      },
+      {
+        "text": "Ollie followed the smell to a tall tree. Bzzz! The bees buzzed loud and cross. Ollie felt a little scared.",
+        "stickers": [
+          { "id": "tree", "x": 0.6, "y": 0.58, "size": 2 },
+          { "id": "bee", "x": 0.55, "y": 0.25, "size": 0.75 },
+          { "id": "bear", "x": 0.2, "y": 0.72, "size": 1 }
+        ]
+      },
+      {
+        "text": "Ollie picked the bees a bunch of flowers. The bees shared a drip of warm, golden honey. It tasted like sunshine!",
+        "stickers": [
+          { "id": "bear", "x": 0.3, "y": 0.68, "size": 1.5 },
+          { "id": "flower", "x": 0.55, "y": 0.72, "size": 0.75 },
+          { "id": "bee", "x": 0.72, "y": 0.35, "size": 0.75 }
+        ]
+      }
+    ],
+    "find": { "kind": "sentence", "prompt": "Tap a sentence where Ollie smells something.", "page": 1, "sentence": "Something smelled sweet, like flowers in the sun." }
+  },
+  {
+    "lesson": "talking",
+    "title": "Picnic in the Rain",
+    "pages": [
+      {
+        "text": "Pim the rabbit packed a picnic basket. \"Let's eat by the pond!\" Pim said. Fig the fox clapped. \"Yes! I'll bring the cake.\"",
+        "stickers": [
+          { "id": "rabbit", "x": 0.3, "y": 0.68, "size": 1 },
+          { "id": "fox", "x": 0.68, "y": 0.68, "size": 1 },
+          { "id": "sun", "x": 0.85, "y": 0.2, "size": 1 }
+        ]
+      },
+      {
+        "text": "But at the pond, dark clouds rolled in. Plip, plop! \"Oh no,\" Fig said. \"Our picnic is all soggy.\"",
+        "stickers": [
+          { "id": "rain", "x": 0.5, "y": 0.22, "size": 1.5 },
+          { "id": "rabbit", "x": 0.3, "y": 0.72, "size": 1 },
+          { "id": "fox", "x": 0.65, "y": 0.72, "size": 1 }
+        ]
+      },
+      {
+        "text": "Pim spotted a big tree with thick leaves. \"Quick, under here!\" Pim shouted. The leaves kept them dry.",
+        "stickers": [
+          { "id": "tree", "x": 0.5, "y": 0.5, "size": 2.5 },
+          { "id": "rabbit", "x": 0.42, "y": 0.78, "size": 0.75 },
+          { "id": "fox", "x": 0.6, "y": 0.78, "size": 0.75 }
+        ]
+      },
+      {
+        "text": "They ate cake and listened to the rain. \"This is the best picnic ever,\" Fig said. Pim grinned. \"Next time, let's ask for rain!\"",
+        "stickers": [
+          { "id": "cake", "x": 0.5, "y": 0.75, "size": 1 },
+          { "id": "rabbit", "x": 0.28, "y": 0.7, "size": 1 },
+          { "id": "fox", "x": 0.72, "y": 0.7, "size": 1 }
+        ]
+      }
+    ],
+    "find": { "kind": "sentence", "prompt": "Tap something a character says.", "page": 0, "sentence": "\"Let's eat by the pond!\"" }
+  },
+  {
+    "lesson": "show-feelings",
+    "title": "Juno Sings at the Show",
+    "pages": [
+      {
+        "text": "Juno the cat loved to sing. Juno wanted to sing at the school show. On show day, Juno's tummy did flip-flops.",
+        "stickers": [
+          { "id": "cat", "x": 0.35, "y": 0.7, "size": 1 },
+          { "id": "school", "x": 0.72, "y": 0.55, "size": 1.5 },
+          { "id": "star", "x": 0.85, "y": 0.18, "size": 0.75 }
+        ]
+      },
+      {
+        "text": "Juno peeked at the crowd. So many faces! Juno's paws shook, and Juno's voice came out as tiny as a squeak.",
+        "stickers": [
+          { "id": "cat", "x": 0.5, "y": 0.65, "size": 1.5 },
+          { "id": "scared", "x": 0.78, "y": 0.25, "size": 0.75 }
+        ]
+      },
+      {
+        "text": "Then Juno spotted Pip the frog in the front row. Pip waved and gave a big thumbs-up. Juno took a deep breath.",
+        "stickers": [
+          { "id": "cat", "x": 0.3, "y": 0.45, "size": 1.25 },
+          { "id": "frog", "x": 0.68, "y": 0.75, "size": 1 }
+        ]
+      },
+      {
+        "text": "Juno sang loud and clear. Everyone clapped and cheered! Juno's tail swished, and Juno bowed with the biggest grin.",
+        "stickers": [
+          { "id": "cat", "x": 0.5, "y": 0.6, "size": 1.5 },
+          { "id": "sparkles", "x": 0.25, "y": 0.22, "size": 1 },
+          { "id": "frog", "x": 0.8, "y": 0.78, "size": 0.75 }
+        ]
+      }
+    ],
+    "find": { "kind": "sentence", "prompt": "Tap where you can tell how Juno feels.", "page": 1, "sentence": "Juno's paws shook, and Juno's voice came out as tiny as a squeak." }
+  },
+  {
+    "lesson": "change-ending",
+    "title": "Olo and the Dark",
+    "pages": [
+      {
+        "text": "Olo was a little owl with a big problem. Olo was scared of the dark! Every night, Olo hid in the nest with a lantern.",
+        "stickers": [
+          { "id": "owl", "x": 0.4, "y": 0.6, "size": 1.25 },
+          { "id": "lantern", "x": 0.62, "y": 0.66, "size": 0.75 },
+          { "id": "moon", "x": 0.85, "y": 0.18, "size": 0.75 }
+        ]
+      },
+      {
+        "text": "Olo's friends flew off to see the moon. Olo wanted to go too. But the woods were so dark and so quiet.",
+        "stickers": [
+          { "id": "evergreen", "x": 0.25, "y": 0.62, "size": 2 },
+          { "id": "owl", "x": 0.55, "y": 0.6, "size": 1 },
+          { "id": "moon", "x": 0.82, "y": 0.2, "size": 1 }
+        ]
+      },
+      {
+        "text": "Then the lantern blew out! Olo shivered. But slowly, Olo's big eyes could see. The moon made the leaves shine silver.",
+        "stickers": [
+          { "id": "owl", "x": 0.45, "y": 0.6, "size": 1.25 },
+          { "id": "evergreen", "x": 0.78, "y": 0.62, "size": 1.5 },
+          { "id": "moon", "x": 0.2, "y": 0.2, "size": 1 }
+        ]
+      },
+      {
+        "text": "Olo flapped up to the friends by the moon. Now Olo loves the dark, and the lantern stays home.",
+        "stickers": [
+          { "id": "owl", "x": 0.4, "y": 0.45, "size": 1 },
+          { "id": "owl", "x": 0.62, "y": 0.42, "size": 1 },
+          { "id": "moon", "x": 0.8, "y": 0.2, "size": 1.25 }
+        ]
+      }
+    ],
+    "find": { "kind": "sentence", "prompt": "Tap where Olo has changed.", "page": 3, "sentence": "Now Olo loves the dark, and the lantern stays home." }
   }
 ]

@@ -85,11 +85,89 @@
       "praise": "Your trouble starts on page {page}. Readers will want to know what happens!",
       "job": "Make the trouble a little bigger before it gets solved.",
       "tip": { "check": "under-three-pages", "job": "Add a page in the middle where the trouble gets bigger." }
+    },
+    {
+      "id": "senses",
+      "number": 5,
+      "title": "Use your senses",
+      "idea": "Tell what things look, sound, smell, taste or feel like.",
+      "before": "Lu walked into the kitchen.",
+      "after": "Lu walked into the warm kitchen. It smelled like apple pie!",
+      "tryIt": "Try it in your book: tell what something sounds or smells like.",
+      "reminder": "Look, listen, sniff, touch, taste",
+      "selfCheck": {
+        "kind": "sentence",
+        "prompt": "Tap a sentence with a sound, smell, look, or feel.",
+        "notYet": "I don't have one yet",
+        "notYetOffer": "That's okay! Want to go back and add it?"
+      },
+      "praise": "Your words on page {page} help readers feel like they're there.",
+      "job": "Add one detail to a page, like a sound or a smell.",
+      "tip": null
+    },
+    {
+      "id": "talking",
+      "number": 6,
+      "title": "Talking",
+      "idea": "Let your characters talk. Write the words they say.",
+      "before": "Nell said the cake was gone.",
+      "after": "\"Oh no, the cake is gone!\" Nell said.",
+      "tryIt": "Try it in your book: let a character say something.",
+      "reminder": "What do your characters say?",
+      "selfCheck": {
+        "kind": "sentence",
+        "prompt": "Tap a line where someone talks.",
+        "notYet": "I don't have one yet",
+        "notYetOffer": "That's okay! Want to go back and add it?"
+      },
+      "praise": "Someone talks on page {page}. Readers can hear your characters!",
+      "job": "Add one thing someone says.",
+      "tip": { "check": "no-talking", "job": "Add one thing someone says." }
+    },
+    {
+      "id": "show-feelings",
+      "number": 7,
+      "title": "Show feelings",
+      "idea": "Show how a character feels by what their body does.",
+      "before": "Dot was scared of the storm.",
+      "after": "When the thunder boomed, Dot's legs shook. Dot hid under the blanket.",
+      "tryIt": "Try it in your book: show a feeling without saying its name.",
+      "reminder": "How does your character's body show it?",
+      "selfCheck": {
+        "kind": "sentence",
+        "prompt": "Tap a sentence that shows a feeling.",
+        "notYet": "I don't have one yet",
+        "notYetOffer": "That's okay! Want to go back and add it?"
+      },
+      "praise": "On page {page}, readers can tell how your character feels.",
+      "job": "Add how your character feels at the end.",
+      "tip": null
+    },
+    {
+      "id": "change-ending",
+      "number": 8,
+      "title": "Endings that change someone",
+      "idea": "By the end, your character is different or learned something.",
+      "before": "Bo found the way home.",
+      "after": "Bo found the way home. Now Bo isn't scared of the dark woods.",
+      "tryIt": "Try it in your book: show how your character changed.",
+      "reminder": "How is your character different now?",
+      "selfCheck": {
+        "kind": "sentence",
+        "prompt": "Tap the sentence where your character changed.",
+        "notYet": "I don't have one yet",
+        "notYetOffer": "That's okay! Want to go back and add it?"
+      },
+      "praise": "Your character changed on page {page}. Readers will remember that!",
+      "job": "Add one sentence about what is different now.",
+      "tip": { "check": "dream-ending", "job": "Try an ending where the problem really gets solved." }
     }
   ],
   "messages": {
     "finished": "You finished your book. You're an author!",
     "readItToSomeone": "Read it to someone!",
-    "noLessonYet": "Tadpole is still writing the next lesson. Keep making books!"
+    "noLessonYet": "Tadpole is still writing the next lesson. Keep making books!",
+    "pickLesson": "Pick one lesson to keep in mind for this book.",
+    "pickNone": "No lesson this time"
   }
 }
