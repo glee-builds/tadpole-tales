@@ -19,10 +19,10 @@ test('upgradeBook needs a string id', () => {
   assert.throws(() => upgradeBook({ id: '', pages: [] }), { message: 'not a book' });
 });
 
-test('upgradeBook turns a title and page words that are not strings into strings', () => {
+test('upgradeBook keeps a title and page words only if they are text', () => {
   const book = upgradeBook({ id: 'b-1', title: 42, pages: [{ text: 7 }, null, { text: null }] });
-  assert.equal(book.title, '42');
-  assert.deepEqual(book.pages.map((page) => page.text), ['7', '', '']);
+  assert.equal(book.title, '');
+  assert.deepEqual(book.pages.map((page) => page.text), ['', '', '']);
   assert.ok(book.pages.every((page) => Array.isArray(page.stickers)));
 });
 

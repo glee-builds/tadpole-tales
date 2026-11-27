@@ -72,6 +72,16 @@ function bookCard(book) {
   return card;
 }
 
+/** A book's card, or none if it can't be drawn: one damaged book never hides the others. */
+function safeCard(book) {
+  try {
+    return [bookCard(book)];
+  } catch (error) {
+    console.warn('A book could not be drawn:', error);
+    return [];
+  }
+}
+
 let shelfMessage = ''; // a kind message for the shelf, set when a book is finished
 
 async function showShelf(token) {
@@ -92,7 +102,7 @@ async function showShelf(token) {
   // Unfinished books first, then the most recently changed.
   books.sort((a, b) => Number(a.finished) - Number(b.finished) || b.changed - a.changed);
   booksBox.replaceChildren(...(books.length
-    ? books.map(bookCard)
+    ? books.flatMap(safeCard)
     : [make('p', 'books-note', 'No books yet. Make your first one!')]));
   if (shelfMessage) booksBox.prepend(make('p', 'books-note shelf-message', `🎉 ${shelfMessage}`));
   shelfMessage = '';
