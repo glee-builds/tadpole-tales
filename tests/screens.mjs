@@ -1,8 +1,10 @@
 // screens.mjs: open the app in a real browser and check it draws and works.
 //
-// It starts the app, opens the home screen at a phone size and at two iPad
-// sizes, and fails if the page doesn't draw, logs an error, scrolls sideways,
-// or asks for anything from another site.
+// It starts the app and opens each of its screens (the bookshelf, the page
+// screen, the reading view, the finish step, the grown-up page) at a phone size
+// and at two iPad sizes. It fails if a page doesn't draw, logs an error,
+// scrolls sideways, or asks for anything from another site. It also taps the
+// writer's keys and picture area with real touches, and checks that books save.
 //
 // Run it with:  node tests/screens.mjs
 // It needs Google Chrome (GitHub's test computers have it) and nothing else.
@@ -1228,4 +1230,4 @@ if (problems.length) {
   console.error(`\n${problems.length} of ${checked} screens have a problem:\n- ${problems.join('\n- ')}`);
   process.exit(1);
 }
-console.log(`\nAll ${checked} checks pass: screens draw, fit, log no errors, and the keyboard works.`);
+console.log(`\nAll ${checked} checks pass: screens draw, fit, log no errors, and the writer's keys, pictures and saving work.`);

@@ -32,7 +32,8 @@ jobs:
       - name: Run the tests
         run: node --test
 
-      # Opens the home screen and every game in a real browser (Chrome is
-      # already on GitHub's computers) and checks each one draws and fits.
+      # Opens each screen of the app in a real browser (Chrome is already on
+      # GitHub's computers), tries the keys, pictures, books and saving, and
+      # checks each screen draws and fits.
       - name: Check every screen in a real browser
         run: node tests/screens.mjs

@@ -41,20 +41,32 @@ This project also adds:
 ## Repo layout
 
 ```
-index.html          the bookshelf (app.js draws the shelf, page screen and reading view)
-assets/             the tadpole, the icon and its PNGs (made with headless Chrome)
-styles.css
-src/typing.js       the text and the cursor, as plain functions
-src/keyboard.js     the app's keyboard and drawn writing area (mountWriter)
-src/book.js         a book as plain functions
-src/store.js        saving books on the device (the only file that uses IndexedDB)
-src/app.js          starts the app and picks the screen by location.hash
-src/reading.js      the reading view (showReading)
-src/finish.js       title, author name and cover after Finish (showFinish)
-src/grownup.js      the grown-up page: device check, backup and restore, delete a book, start over
-docs/decisions.md   decisions log
-docs/phase-1-plan.md  Phase 1 task notes and shared names
-.github/            pull request template
+index.html               the one page: the bookshelf's markup; app.js fills it in
+styles.css               all the app's styles except the picture area
+sw.js                    the service worker: lets the app open offline; lists every file to save (FILES)
+manifest.webmanifest     the home-screen install settings (name, icons, portrait)
+assets/                  the tadpole, the app icon and its PNGs (made with headless Chrome), the font files
+data/stickers.json       the sticker list: id, group, label and the device's own emoji
+src/app.js               starts the app; draws the bookshelf and the page screen (Write and Picture modes);
+                         picks the other screens by location.hash
+src/ui.js                small helpers: make, button, plural, the "not saved" mark (saveMark)
+src/typing.js            the writer's text and cursor, as plain functions
+src/keyboard.js          the app's own keyboard and drawn writing area (mountWriter)
+src/book.js              a book as plain functions: pages, title, cover, backup file
+src/store.js             saving books on the device (the only file that uses IndexedDB)
+src/stickers.js          the picture area: placing, moving and sizing stickers (mountPicture)
+src/stickers.css         styles for the picture area and the sticker tray
+src/reading.js           the reading view (showReading): one page at a time, with Read to me
+src/readaloud.js        "Read to me": speaks a book one sentence at a time with the device's voice
+src/sentences.js         cuts a page's text into sentences for reading aloud
+src/voice.js             picks the best English voice on the device; never an online one
+src/finish.js            title, author name and cover after Finish (showFinish)
+src/grownup.js           the grown-up page: device check, backup and restore, delete a book, start over
+tests/                   tests for the plain functions (node --test) and tests/screens.mjs (a real browser)
+docs/                    decisions.md (the decisions log), phase-1-plan.md (task notes), device-checks.md (the owner's checklist)
+.github/                 the tests workflow and the pull request template
+README.md                what the app does and how to run it and the tests
+.gitignore               files Git ignores (backup files hold the writer's books)
 ```
 
 ## Preview locally
