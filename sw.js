@@ -31,10 +31,16 @@ const FILES = [
   'src/finish.js',
   'src/voice.js',
   'src/sentences.js',
+<<<<<<< HEAD
   'src/lessons.js',
+=======
+  'src/polish.js',
+>>>>>>> b4059bc (Polish spelling logic: word lists, close-match rule, tests (4.2, 4.3))
   'src/readaloud.js',
   'src/stickers.js',
   'src/stickers.css',
+  'data/known-words.txt',
+  'data/common-words.txt',
   'assets/apple-touch-icon.png',
   'assets/icon-192.png',
   'assets/icon-512.png',

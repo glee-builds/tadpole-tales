@@ -48,3 +48,10 @@ node tests/screens.mjs
 GitHub runs both commands on every pull request, so a failing check shows on the pull request before it is merged.
 
 **Real devices:** at each phase gate, run the checklist in [docs/device-checks.md](docs/device-checks.md) on a phone and an iPad.
+
+## Word lists (for the spelling "Polish" step)
+
+Both lists are in `data/`, one word per line, and the app saves them once for offline use.
+
+- `data/known-words.txt` (about 198,000 words, 1.9 MB): the words the app treats as spelled right, so it never questions them. Made by `node tools/build-words.mjs` from Webster's Second International Dictionary (1934), the Mac's `/usr/share/dict/web2`. License: public domain. Only 3 to 12 letter words are kept, plus every word in the common list.
+- `data/common-words.txt` (about 3,100 words, 21 KB): friendly everyday words, sight words, story words, regular word endings, and contractions. Polish can only suggest words from this list. Written for this app, so no outside license applies.
