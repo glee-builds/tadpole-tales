@@ -244,20 +244,7 @@ function drawTopRow() {
   finish.setAttribute('aria-label', 'Finish the book');
 }
 
-/** After a Remove: a bar that brings back the latest removed page, until the writer leaves the book. */
-function drawPutBack(book) {
-  if (!open.removed.length) return;
-  screen.classList.add('has-putback');
-  const bar = screen.appendChild(make('div', 'putback-bar'));
-  const putBack = bar.appendChild(button('pill', '↩ Put page back', () => {
-    const removed = open.removed.pop();
-    changed(putBackPage(open.book, removed, Date.now()));
-    go(Math.min(removed.index, open.book.pages.length - 1));
-  }));
-  putBack.disabled = !canAddPage(book);
-}
-
-/** Prev, Add page, Remove, Next. Returns the "Add page" button so Write mode can light it up. */
+/** Prev, Add page, Remove, (after a Remove) put back, Next. Returns the "Add page" button so Write mode can light it up. */
 function drawPageTools(book, index) {
   const tools = screen.appendChild(make('div', 'page-tools'));
   const previous = tools.appendChild(button('pill', '‹ Prev', () => go(index - 1)));
@@ -277,6 +264,16 @@ function drawPageTools(book, index) {
   }));
   remove.setAttribute('aria-label', 'Remove this page');
   remove.disabled = book.pages.length <= 1;
+  if (open.removed.length) { // after a Remove: brings back the latest removed page, until the writer leaves the book
+    const putBack = tools.appendChild(button('pill put-back', '↩', () => {
+      const removed = open.removed.pop();
+      changed(putBackPage(open.book, removed, Date.now()));
+      go(Math.min(removed.index, open.book.pages.length - 1));
+    }));
+    putBack.append(make('span', 'sr-only', ' Put page back')); // the button is only an arrow, so the room stays for the words
+    putBack.setAttribute('aria-label', 'Put page back');
+    putBack.disabled = !canAddPage(book);
+  }
   const next = tools.appendChild(button('pill', 'Next ›', () => go(index + 1)));
   next.setAttribute('aria-label', 'Next page');
   next.disabled = index === book.pages.length - 1;
@@ -288,7 +285,10 @@ function drawWriteMode(book, index, title, lessons, tellOn) {
   title.classList.add('page-label');
   const lesson = lessons?.lessons.find((one) => one.id === book.lesson);
   const cards = ideaCards(lessons?.planning, book);
-  if (lesson || cards.length) screen.append(lessonBar({ lesson, cards, onLesson: () => { location.hash = `lesson/${book.id}/${lesson.id}/${index}`; } }));
+  if (lesson || cards.length) screen.classList.add('has-lesson');
+  const lessonRow = lesson || cards.length
+    ? screen.appendChild(lessonBar({ lesson, cards, onLesson: () => { location.hash = `lesson/${book.id}/${lesson.id}/${index}`; } }))
+    : null;
   const slot = screen.appendChild(make('div', 'picture-slot'));
   const openPictures = () => { mode = 'picture'; show(); };
   slot.addEventListener('click', openPictures);
@@ -300,12 +300,11 @@ function drawWriteMode(book, index, title, lessons, tellOn) {
   picture.node.addEventListener('keydown', (event) => {
     if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openPictures(); }
   });
-  drawPutBack(book);
   if (tellOn) {
     const here = open;
     // A recording keeps the book, even before it has words.
     const onSaved = () => { if (!here.stored) { here.stored = true; saveSoon(here.book); } };
-    tell = mountTellIt(screen, { bookId: book.id, pageId: book.pages[index].id, onSaved });
+    tell = mountTellIt(lessonRow?.querySelector('.lesson-row') ?? screen, { inRow: Boolean(lessonRow), bookId: book.id, pageId: book.pages[index].id, onSaved });
     screen.classList.add('has-tell');
   }
 
@@ -346,7 +345,6 @@ function drawPictureMode(book, index, title) {
     editable: true,
     onChange: (stickers) => changed(setPageStickers(open.book, index, stickers, Date.now())),
   });
-  drawPutBack(book);
   drawPageTools(book, index);
 }
 
