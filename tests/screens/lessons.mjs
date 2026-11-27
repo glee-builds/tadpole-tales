@@ -1,5 +1,5 @@
-// lessons.mjs: the lesson features, with the fixture wording served at /data/lessons.json and
-// /data/examples.json (tests/fixtures): the lesson card, "Plan your story", the reminder and idea
+// lessons.mjs: the lesson features, with the real data/lessons.json and
+// data/examples.json: the lesson card, "Plan your story", the reminder and idea
 // cards on the page screen, the example story with "Find it", and the second shelf; and the
 // no-lessons case (those two files are missing: the app behaves as it did before lessons).
 // Each tryX returns a problem, or '' when all is well. tests/screens.mjs runs them.
@@ -13,18 +13,8 @@ const width = () => evaluate('innerWidth');
 const books = () => evaluate(`(async () => { ${STORE} return (await store.loadBooks()).map((b) => ({ plan: b.plan, lesson: b.lesson, finished: b.finished })); })()`);
 const fresh = async () => { await open('', HOME); await evaluate(`(async () => { ${STORE} await store.startOver(); })()`); await open('', HOME); };
 
-/** Run `check` with the fixture lesson files being served. */
-export async function withLessons(check) {
-  lessonFiles.on = true;
-  try { return await check(); } finally {
-    lessonFiles.on = false;
-    // The service worker kept the fixtures like any file; the offline check must not find them.
-    await evaluate(`(async () => { for (const name of await caches.keys()) for (const file of ['lessons', 'examples']) await (await caches.open(name)).delete('/data/' + file + '.json'); })()`).catch(() => {});
-  }
-}
-
 /** The whole path: shelf, card, example, planning, page screen with reminder and ideas. */
-export const tryLessons = () => withLessons(async () => {
+export const tryLessons = async () => {
   await fresh();
   if (!await waitFor(`document.querySelector('.shelf-heading')?.textContent.includes("Tadpole's books")`, 3)) return 'no "Tadpole\'s books" shelf with lessons';
   if (!await waitFor(`document.querySelectorAll('.example-card').length === 1`, 3)) return 'only lesson 1\'s example should be on the second shelf at the start';
@@ -111,10 +101,10 @@ export const tryLessons = () => withLessons(async () => {
   if (!await waitFor(SHOWS('.keyboard'), 3)) return 'Try it did not return to the page';
   if (await typed() !== 'hi') return `the page holds "${await typed()}" after the lesson card`;
   return '';
-});
+};
 
 /** Skip planning, finish planning, the sentence kind of find, the second shelf with more lessons open. */
-export const tryLessonPaths = () => withLessons(async () => {
+export const tryLessonPaths = async () => {
   await fresh();
   const cards = () => evaluate(`document.querySelectorAll('.book-card.unfinished').length`);
   // "Skip planning": straight to writing, no idea cards, and no book saved until something is written.
@@ -187,10 +177,10 @@ export const tryLessonPaths = () => withLessons(async () => {
   await tapButton('Close');
   if (!await waitFor(`document.querySelector('.shelf-heading') !== null && !document.querySelector('.shelf').hidden`, 3)) return 'Close did not return to the shelf';
   return '';
-});
+};
 
 /** Every lesson screen fits (phone and tablets), with a saved plan on a book. */
-export const tryLessonFits = () => withLessons(async () => {
+export const tryLessonFits = async () => {
   await fresh();
   await evaluate(`(async () => { ${STORE}
     await store.setSetting('progress', { lessonsOpened: 4 });
@@ -219,11 +209,29 @@ export const tryLessonFits = () => withLessons(async () => {
     if (!await noFields()) return `${name} has a text field`;
   }
   return '';
-});
+};
+
+/** A writer who has finished all 4 books: no lesson card, but "Plan your story" is still offered. */
+export async function tryPlanAfterLessons() {
+  await fresh();
+  await evaluate(`(async () => { ${STORE} await store.setSetting('progress', { lessonsOpened: 5 }); })()`);
+  await open('', HOME);
+  await tapOn('.go');
+  if (!await waitFor(SHOWS('.plan-question'), 3)) return `after lesson 4, Make a new book did not open planning (the address is ${await evaluate('location.hash')})`;
+  if (await evaluate(`document.querySelector('.lesson-card') !== null`)) return 'a lesson card showed after the last lesson';
+  if (await fitProblem()) return `planning after lesson 4: ${await fitProblem()}`;
+  await tapButton('Skip planning');
+  if (!await waitFor(SHOWS('.keyboard'), 3)) return 'Skip planning did not go to writing';
+  if (await evaluate(`document.querySelector('.lesson-reminder') !== null`)) return 'a reminder showed on a book with no lesson';
+  return '';
+}
 
 /** The two files are missing (404): no card, no planning, no second shelf, no errors. */
 export async function tryNoLessons() {
-  lessonFiles.on = false;
+  lessonFiles.missing = true;
+  try { return await noLessons(); } finally { lessonFiles.missing = false; }
+}
+async function noLessons() {
   await fresh();
   await evaluate(`(async () => { ${STORE} await store.saveBook({ ...book.setPageText(book.newBook('made-up-none-1', 1000), 0, 'Hi', 1000), lesson: 'beginning-middle-end', plan: { who: 'Pip' } }); })()`);
   await open('', HOME);

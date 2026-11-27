@@ -1,5 +1,5 @@
 // Tests for the plain functions in src/finish.js (the steps after Finish). Run all tests with: node --test
-// The fixtures are copies of the draft lesson wording; the real file arrives with the wording pull request.
+// The lesson data is the real wording in data/.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import { finishLesson, lessonPlan, kindWords, stepsFor } from '../src/finish.js';
 import { currentLesson } from '../src/lessons.js';
 
-const data = JSON.parse(readFileSync(new URL('./fixtures/lessons.json', import.meta.url), 'utf8'));
+const data = JSON.parse(readFileSync(new URL('../data/lessons.json', import.meta.url), 'utf8'));
 const { lessons } = data;
 const book = (id, ...texts) => ({ id, finished: false, pages: texts.map((text) => ({ text, stickers: [] })) });
 

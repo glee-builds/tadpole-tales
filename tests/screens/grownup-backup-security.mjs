@@ -6,6 +6,7 @@ import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'n
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
+  reachPage,
   send, page, errors, evaluate, waitFor, until, origin, PHONE, problems, checkWith, stopServer,
   settle, HOME, open, touch, holdUntil, middleOf,
   press, tapOn, STORE, BREAK, MEND, spareKeys,
@@ -18,7 +19,7 @@ async function freshDemo() {
   await evaluate(`(async () => { ${STORE} await store.startOver(); })()`);
   const go = await middleOf('.go');
   await touch(go.x, go.y);
-  await waitFor('document.querySelector(".keyboard") !== null', 3);
+  await reachPage();
 }
 
 /** Save through the keyboard, reload, and find the book; break saving and see the mark. Returns a problem, or ''. */
@@ -257,8 +258,8 @@ export async function tryHostile() {
     const tx = db.transaction('books', 'readwrite');
     for (const record of ${JSON.stringify(bad)}) tx.objectStore('books').put(record);
     await new Promise((resolve) => { tx.oncomplete = resolve; }); db.close(); })()`);
-  if (!await open('', 'document.querySelectorAll(".book-card").length >= 1')) return 'the shelf drew no books';
-  const titles = await evaluate(`[...document.querySelectorAll('.book-card .cover-title')].map((node) => node.textContent).sort().join('|')`);
+  if (!await open('', 'document.querySelectorAll(".book-card:not(.example-card)").length >= 1')) return 'the shelf drew no books';
+  const titles = await evaluate(`[...document.querySelectorAll('.book-card:not(.example-card) .cover-title')].map((node) => node.textContent).sort().join('|')`);
   if (!titles.includes('Good book')) return `the good book is not on the shelf: ${titles}`;
   for (const address of ['#book/made-up-t1/0', '#read/made-up-c1', '#grown-ups']) {
     if (!await open(address, 'document.querySelector(".keyboard, .read-page, .gu-book") !== null')) return `${address} did not draw`;

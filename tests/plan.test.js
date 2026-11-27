@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import { PLAN_LIMIT, planOf, setPlanAnswer, ideaCards } from '../src/plan.js';
 import { newBook, upgradeBook, isBlank } from '../src/book.js';
 
-const { planning } = JSON.parse(readFileSync(new URL('fixtures/lessons.json', import.meta.url), 'utf8'));
+const { planning } = JSON.parse(readFileSync(new URL('../data/lessons.json', import.meta.url), 'utf8'));
 
 test('an answer is saved on a new book without changing the old one', () => {
   const book = newBook('b-1', 1);

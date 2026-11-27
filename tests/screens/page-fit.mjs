@@ -4,9 +4,8 @@
 // Returns a problem, or '' when all is well.
 
 import { evaluate, waitFor, settle, HOME, open, tapButton, fitProblem, STORE, shot } from './lib.mjs';
-import { withLessons } from './lessons.mjs';
 
-export const tryPageFits = (size = 'phone') => withLessons(async () => {
+export const tryPageFits = async (size = 'phone') => {
   await open('', HOME);
   // Removing a page changes the saved book, so every mix starts from two fresh full pages.
   const seed = () => evaluate(`(async () => { ${STORE} await store.startOver();
@@ -39,4 +38,4 @@ export const tryPageFits = (size = 'phone') => withLessons(async () => {
   }
   await evaluate(`(async () => { ${STORE} await store.setSetting('tellIt', false); await store.startOver(); })()`);
   return found.join('; ');
-});
+};

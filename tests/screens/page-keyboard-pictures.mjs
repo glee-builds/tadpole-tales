@@ -3,6 +3,7 @@
 // Each tryX returns a problem, or '' when all is well. tests/screens.mjs runs them.
 
 import {
+  reachPage,
   page, outside, evaluate, waitFor, frame, settle,
   HOME, open, touch, holdUntil, middleOf, press,
   typed, cursorAt, tapOn, tapButton, drag, noFields,
@@ -14,7 +15,7 @@ export async function tryKeyboard() {
   if (!await open('', HOME)) return 'home did not draw';
   const go = await middleOf('.go');
   await touch(go.x, go.y);
-  if (!await waitFor('document.querySelector(".keyboard") !== null', 3)) return 'the keyboard did not open';
+  if (!await reachPage()) return 'the keyboard did not open';
   if (await evaluate('document.querySelectorAll("input, textarea, [contenteditable]").length')) return 'a text field is on the screen';
 
   await press('shift', 'd', 'o', 't', 'space', 's', 'w', 'a', 'm');
@@ -267,7 +268,7 @@ export async function tryFits() {
   })()`);
   const width = await evaluate('innerWidth');
   for (const [name, address, ready] of [
-    ['the shelf', '', '[...document.querySelectorAll(".book-card")].length === 3'],
+    ['the shelf', '', '[...document.querySelectorAll(".book-card:not(.example-card)")].length === 3'],
     ['a full page', '#book/made-up-fit-1/0', 'document.querySelector(".keyboard") !== null'],
     ['a short page', '#book/made-up-fit-1/1', 'document.querySelector(".keyboard") !== null'],
     ['the reading view', '#read/made-up-fit-1', 'document.querySelector(".read-page") !== null'],

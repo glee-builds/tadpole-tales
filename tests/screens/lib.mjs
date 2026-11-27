@@ -24,9 +24,9 @@ const TYPES = {
 
 // ---------- A tiny web server for the app's files ----------
 
-// The lesson files are not in the app yet (the wording pull request adds them), so by default the
-// server answers 404 for them, as the real site does. lessons.mjs turns this on to serve the fixtures.
-export const lessonFiles = { on: false };
+// The real data/lessons.json and data/examples.json are served like any file. Only the "lesson files
+// missing" check sets `missing`, and then the server answers 404 for them, as it would if they were gone.
+export const lessonFiles = { missing: false };
 const LESSON_URL = /^\/data\/(lessons|examples)\.json$/;
 
 let serverIsOff = false;
@@ -34,8 +34,8 @@ export const server = createServer(async (request, response) => {
   let file;
   try {
     const path = decodeURIComponent(new URL(request.url, 'http://x').pathname);
-    file = resolve(ROOT, LESSON_URL.test(path)
-      ? (lessonFiles.on ? `tests/fixtures/${path.slice(6)}` : 'no-such-file') // /data/lessons.json -> tests/fixtures/lessons.json
+    file = resolve(ROOT, lessonFiles.missing && LESSON_URL.test(path)
+      ? 'no-such-file'
       : `.${path.endsWith('/') ? `${path}index.html` : path}`);
   } catch { /* a broken %-escape */ }
   if (!file || !file.startsWith(ROOT)) { // e.g. /..%2f..%2fetc/passwd: nothing outside the repo
@@ -373,3 +373,17 @@ export async function shutDown() {
   await stopServer();
   try { rmSync(profile, { recursive: true, force: true }); } catch { /* Chrome may still hold a file; the folder is temporary */ }
 }
+
+/** After "Make a new book" is tapped: click through the lesson card and "Plan your story" to the page screen. True when the keyboard shows. */
+export async function reachPage() {
+  for (const [shows, button] of [['.lesson-card', 'Try it in your book'], ['.plan-question', 'Skip planning']]) {
+    if (await waitFor(`document.querySelector('${shows}') !== null || document.querySelector('.keyboard') !== null`, 3) && await evaluate(`document.querySelector('${shows}') !== null`)) await tapButton(button);
+  }
+  return waitFor('document.querySelector(".keyboard") !== null', 3);
+}
+
+/** Run a check as the app was before lessons: the lesson files answer 404 (for checks of things that don't depend on them). */
+export const withoutLessons = (check) => async () => {
+  lessonFiles.missing = true;
+  try { return await check(); } finally { lessonFiles.missing = false; }
+};
