@@ -3,11 +3,14 @@
 // A book is { format, id, created, changed, finished, title, cover, pages }.
 // `title` is text (at most TITLE_LIMIT characters when typed); `cover` is null
 // or { stickers: [...] }, the same sticker shape as a page's.
-// `pages` is a list of { text, stickers }, 1 to 12 long (a hand-made backup
+// `pages` is a list of { id, text, stickers }, 1 to 12 long (a hand-made backup
 // can hold more: they are kept, and no page can be added). Every function
 // returns a new book and sets `changed` to `now`; none changes the one passed in.
 // A page's stickers are { id, x, y, size } (see stickers.js); the format number stays 1
 // because upgradeBook already fills `stickers` with [] on an older record.
+// A page's `id` never changes, so a Tell it recording (kept apart, by book id and
+// page id) stays with its page when pages move. A page saved before ids existed
+// gets 'p' + its place when read (upgradeBook), and keeps that once the book is saved.
 // The 300-character limit per page is kept by typing.js while the writer types.
 // setPageText stores whatever it is given, so a book's words are never cut.
 
@@ -16,7 +19,7 @@ export const MAX_PAGES = 12;
 export const TITLE_LIMIT = 40; // typed in the finish step; a longer restored title is trimmed to it
 export const NAME_LIMIT = 20;  // the author name, the same limit as the finish step's
 
-const newPage = () => ({ text: '', stickers: [] });
+const newPage = () => ({ id: newId(), text: '', stickers: [] });
 
 /** A new book with one empty page. The caller passes in the id and the time. */
 export function newBook(id, now) {
@@ -108,18 +111,22 @@ export const isNewer = (book) => book.format > BOOK_FORMAT;
  * wrong type (from a damaged or hand-edited backup) is mended: words and the
  * title that aren't text become '', a sticker without a string id and
  * numeric x, y and size is left out, `finished` is true or false, and the
- * dates are numbers. Throws 'not a book' without a good id (see ID).
+ * dates are numbers. Every page gets a unique id (see newPage). Throws
+ * 'not a book' without a good id (see ID).
  */
 export function upgradeBook(record) {
   if (!isObject(record) || typeof record.id !== 'string' || !ID.test(record.id)) throw new Error('not a book');
   if (isNewer(record)) return record;
   if (!Array.isArray(record.pages)) throw new Error('not a book');
   const created = time(record.created) ?? time(record.changed) ?? 0;
-  const pages = record.pages.map((page) => ({
-    ...(isObject(page) ? page : {}),
-    text: asText(page?.text),
-    stickers: stickersOf(page?.stickers),
-  }));
+  const ids = new Set();
+  const pages = record.pages.map((page, i) => {
+    // A page with no good id, or one another page has, gets 'p' + its place (made unique).
+    let id = typeof page?.id === 'string' && ID.test(page.id) && !ids.has(page.id) ? page.id : `p${i}`;
+    while (ids.has(id)) id += 'x';
+    ids.add(id);
+    return { ...(isObject(page) ? page : {}), id, text: asText(page?.text), stickers: stickersOf(page?.stickers) };
+  });
   return {
     ...record,
     format: BOOK_FORMAT,
@@ -128,11 +135,11 @@ export function upgradeBook(record) {
     finished: record.finished === true,
     title: asText(record.title).slice(0, TITLE_LIMIT),
     cover: isObject(record.cover) ? { ...record.cover, stickers: stickersOf(record.cover.stickers) } : null,
-    pages: pages.length ? pages : [newPage()],
+    pages: pages.length ? pages : [{ id: 'p0', text: '', stickers: [] }],
   };
 }
 
-/** A book id: short, letters, digits, '-' and '_' only (never '/' or '#', which the screen addresses use). */
+/** A book or page id: short, letters, digits, '-' and '_' only (never '/' or '#', which the screen addresses and recording keys use). */
 const ID = /^[\w-]{1,100}$/;
 const isObject = (value) => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 const asText = (value) => (typeof value === 'string' ? value : '');

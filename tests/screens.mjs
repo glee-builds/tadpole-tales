@@ -16,6 +16,7 @@
 //   page-keyboard-pictures.mjs       the page screen: keyboard, pictures, and "every screen fits"
 //   grownup-backup-security.mjs      saving, the grown-up page, backup, damaged books, the server lock, offline
 //   finish-lessons.mjs               after the cover: hear your book, the self-check, the job, the kind message
+//   tell-it.mjs                      Tell it: recording a page out loud, with a pretend microphone
 // To find a check, look for its label below, then for the function it runs.
 
 import { PHONE, TABLETS, page, problems, checked, checkScreen, checkWith, shutDown } from './screens/lib.mjs';
@@ -28,6 +29,7 @@ import {
 import {
   tryLessonSteps, tryLessonSkips, tryNotYet, tryCloseAtEachStep, tryOnePage, tryFinishNoLessons,
 } from './screens/finish-lessons.mjs';
+import { tryTellIt, tryTellItFits } from './screens/tell-it.mjs';
 
 try {
   await checkWith('Test server: nothing outside the repo', tryServerLock);
@@ -53,12 +55,15 @@ try {
   await checkWith('Lessons: every lesson screen fits (phone)', tryLessonFits);
   await checkWith('No lesson files: no card, no planning, no second shelf, no errors (phone)', tryNoLessons);
   await checkWith('Picture mode: add, drag, two-tap move, bigger, remove, 12 limit, save, reorder pages (phone)', tryStickers);
+  await checkWith('Tell it: switch, record, stop, limit, play, again, microphone off, delete with page and book, not in backups, refused, no recorder (phone)', tryTellIt);
+  await checkWith('Tell it fits: keys never move; full page, put-back bar, lesson row (phone)', tryTellItFits);
   for (const [tablet, size] of Object.entries(TABLETS)) {
     await page('Emulation.setDeviceMetricsOverride', { ...size, deviceScaleFactor: 2, mobile: true });
     await checkScreen(`Home (${tablet})`, '');
     await checkWith(`Keyboard (${tablet})`, tryKeyboard);
     await checkWith(`Picture mode (${tablet})`, tryStickers);
     await checkWith(`Every screen fits (${tablet})`, tryFits);
+    await checkWith(`Tell it fits (${tablet})`, tryTellItFits);
     await checkWith(`Finish (${tablet})`, tryFinish);
     await checkWith(`Lesson screens fit (${tablet})`, tryLessonFits);
     await checkWith(`Finish with lessons (${tablet})`, tryLessonSteps);

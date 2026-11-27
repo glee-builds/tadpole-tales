@@ -12,7 +12,7 @@ import { make, button, saveMark, plural } from './ui.js';
 import { mountWriter } from './keyboard.js';
 import { LIMIT, isFull } from './typing.js';
 import { newBook, newId, addPage, removePage, putBackPage, movePage, setPageText, setPageStickers, canAddPage, isBlank, isNewer, bookTitle } from './book.js';
-import { loadBooks, saveSoon, saveNow, onSaveState, getSetting, setSetting } from './store.js';
+import { loadBooks, saveSoon, saveNow, onSaveState, getSetting, setSetting, deleteRecordings } from './store.js';
 import { holdToOpen, showGrownup, isInstalled, INSTALL_NOTE } from './grownup.js';
 import { mountPicture } from './stickers.js';
 import { showReading } from './reading.js';
@@ -20,6 +20,7 @@ import { showFinish, startFinish } from './finish.js';
 import { loadLessonData, drawLessonRoute, lessonBar, tadpoleBooks } from './lesson-screens.js';
 import { currentLesson } from './lessons.js';
 import { planOf, setPlanAnswer, ideaCards } from './plan.js';
+import { tellItOn, mountTellIt } from './record.js';
 
 // The service worker (sw.js) saves the app's files so it opens without
 // internet. If the phone can't run one, the app works as before, online.
@@ -148,6 +149,7 @@ let open = null; // { book, removed, stored }: the book being written; `removed`
 let screen = null; // the writer screen on show, if any
 let writer = null;
 let picture = null; // the picture on show (editable in Picture mode)
+let tell = null; // the Tell it row on show, if any
 let mode = 'write'; // 'write' (keyboard, small picture) or 'picture' (big picture, sticker tray)
 let stopWatching = null;
 let shown = 0; // counts screens drawn, so a slow load for an old screen is ignored
@@ -157,6 +159,8 @@ function clearScreen() {
   writer = null;
   picture?.remove();
   picture = null;
+  tell?.remove(); // turns the microphone off
+  tell = null;
   stopWatching?.();
   stopWatching = null;
   screen?.remove();
@@ -195,7 +199,7 @@ async function showPage(id, wanted, token) {
   const { book } = open;
   const index = Math.min(Math.max(wanted, 0), book.pages.length - 1);
   if (index !== wanted || !Number.isInteger(wanted)) history.replaceState(null, '', `#book/${id}/${index}`);
-
+  const tellOn = mode === 'write' && await tellItOn();
   const lessons = await loadLessonData();
   if (token !== shown) return;
   screen = make('main', 'screen page-screen');
@@ -205,7 +209,7 @@ async function showPage(id, wanted, token) {
   screen.append(mark.node);
   const title = make('h1', 'screen-title', `Page ${index + 1} of ${book.pages.length}`);
   if (mode === 'picture') drawPictureMode(book, index, title);
-  else drawWriteMode(book, index, title, lessons);
+  else drawWriteMode(book, index, title, lessons, tellOn);
   shelf.hidden = true;
   document.body.append(screen);
 }
@@ -280,7 +284,7 @@ function drawPageTools(book, index) {
 }
 
 /** Write mode: a small picture (tap it for Picture mode), the page tools, the writing area and keys. */
-function drawWriteMode(book, index, title, lessons) {
+function drawWriteMode(book, index, title, lessons, tellOn) {
   title.classList.add('page-label');
   const lesson = lessons?.lessons.find((one) => one.id === book.lesson);
   const cards = ideaCards(lessons?.planning, book);
@@ -297,6 +301,13 @@ function drawWriteMode(book, index, title, lessons) {
     if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openPictures(); }
   });
   drawPutBack(book);
+  if (tellOn) {
+    const here = open;
+    // A recording keeps the book, even before it has words.
+    const onSaved = () => { if (!here.stored) { here.stored = true; saveSoon(here.book); } };
+    tell = mountTellIt(screen, { bookId: book.id, pageId: book.pages[index].id, onSaved });
+    screen.classList.add('has-tell');
+  }
 
   const add = drawPageTools(book, index);
   const showFull = (text) => {
@@ -420,7 +431,10 @@ async function show() {
   clearScreen();
   if (kind !== 'book') mode = 'write';
   const lessonScreen = ['lesson', 'plan', 'example'].includes(kind); // these keep the book that is open
-  if (!(kind === 'book' || lessonScreen) || (open && open.book.id !== id)) open = null; // leaving the book: the put-back is gone
+  if (!(kind === 'book' || lessonScreen) || (open && open.book.id !== id)) { // leaving the book: the put-back is gone, and so are removed pages' recordings
+    if (open) deleteRecordings(open.book.id, open.book.pages.map((one) => one.id)).catch(() => {});
+    open = null;
+  }
   const grownupsOpen = location.hash === '#grown-ups';
   grownups.hidden = !grownupsOpen;
   if (grownupsOpen) {
