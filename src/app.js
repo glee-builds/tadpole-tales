@@ -10,7 +10,7 @@
 import { make, button, saveMark, plural } from './ui.js';
 import { mountWriter } from './keyboard.js';
 import { LIMIT, isFull } from './typing.js';
-import { newBook, addPage, removePage, putBackPage, setPageText, canAddPage, isBlank } from './book.js';
+import { newBook, addPage, removePage, putBackPage, movePage, setPageText, setPageStickers, canAddPage, isBlank } from './book.js';
 import { loadBooks, saveSoon, saveNow, onSaveState, getSetting, setSetting } from './store.js';
 import { holdToOpen, showGrownup, isInstalled, INSTALL_NOTE } from './grownup.js';
 import { mountPicture } from './stickers.js';
@@ -92,7 +92,7 @@ async function showShelf(token) {
 
 shelf.querySelector('.go').addEventListener('click', () => {
   const book = newBook(crypto.randomUUID(), Date.now());
-  open = { book, removed: null, stored: false }; // saved at the first word, so backing out leaves no empty book
+  open = { book, removed: [], stored: false }; // saved at the first word, so backing out leaves no empty book
   location.hash = `book/${book.id}/0`;
 });
 
@@ -121,17 +121,21 @@ refresh.addEventListener('click', async () => {
   location.replace(location.pathname);
 });
 
-// ---------- The page screen (Write mode) ----------
+// ---------- The page screen (Write and Picture modes) ----------
 
-let open = null; // { book, removed, stored }: the book being written; `removed` is the page that can be put back
+let open = null; // { book, removed, stored }: the book being written; `removed` is a stack of pages that can be put back, the latest last
 let screen = null; // the writer screen on show, if any
 let writer = null;
+let picture = null; // the picture on show (editable in Picture mode)
+let mode = 'write'; // 'write' (keyboard, small picture) or 'picture' (big picture, sticker tray)
 let stopWatching = null;
 let shown = 0; // counts screens drawn, so a slow load for an old screen is ignored
 
 function clearScreen() {
   writer?.remove();
   writer = null;
+  picture?.remove();
+  picture = null;
   stopWatching?.();
   stopWatching = null;
   screen?.remove();
@@ -160,7 +164,7 @@ async function showPage(id, wanted, token) {
     try { book = (await loadBooks()).find((one) => one.id === id); } catch { /* shelf says so */ }
     if (token !== shown) return;
     if (!book) { location.hash = ''; return; }
-    open = { book, removed: null, stored: true };
+    open = { book, removed: [], stored: true };
   }
   const { book } = open;
   const index = Math.min(Math.max(wanted, 0), book.pages.length - 1);
@@ -168,9 +172,16 @@ async function showPage(id, wanted, token) {
 
   screen = make('main', 'screen page-screen');
   const top = screen.appendChild(make('div', 'screen-top'));
-  const back = top.appendChild(button('pill', '← Books', () => { location.hash = ''; }));
+  const back = top.appendChild(button('back', '←', () => { location.hash = ''; }));
   back.setAttribute('aria-label', 'Back to the bookshelf');
-  top.append(make('h1', 'screen-title', `Page ${index + 1} of ${book.pages.length}`));
+  const title = make('h1', 'screen-title', `Page ${index + 1} of ${book.pages.length}`);
+  const modes = top.appendChild(make('div', 'mode-switch'));
+  modes.setAttribute('role', 'group');
+  modes.setAttribute('aria-label', 'What to work on');
+  for (const [name, words] of [['write', '✏️ Write'], ['picture', '🖼 Picture']]) {
+    const choice = modes.appendChild(button('mode-choice', words, () => { mode = name; show(); }));
+    choice.setAttribute('aria-pressed', String(mode === name));
+  }
   const finish = top.appendChild(button('pill pill-go', '✓ Finish', async () => {
     if (isBlank(open.book)) { location.hash = ''; return; }
     changed({ ...open.book, finished: true, changed: Date.now() });
@@ -183,58 +194,98 @@ async function showPage(id, wanted, token) {
   stopWatching = onSaveState(mark.update);
   screen.append(mark.node);
 
-  const slot = screen.appendChild(make('div', 'picture-slot'));
-  slot.append(make('div', 'picture')); // the picture area, empty until stickers arrive (Phase 2)
-  slot.firstChild.setAttribute('aria-hidden', 'true');
-
-  const tools = screen.appendChild(make('div', 'page-tools'));
-  const previous = tools.appendChild(button('pill', '‹ Prev', () => go(index - 1)));
-  previous.setAttribute('aria-label', 'Previous page');
-  previous.disabled = index === 0;
-  const add = tools.appendChild(button('pill', '+ Add page', () => {
-    changed(addPage(open.book, index, Date.now()));
-    go(index + 1);
-  }));
-  add.disabled = !canAddPage(book);
-  if (open.removed) {
-    const putBack = tools.appendChild(button('pill', '↩ Put page back', () => {
-      const { removed } = open;
-      open.removed = null;
+  /** After a Remove: a bar that brings back the latest removed page, until the writer leaves the book. */
+  const makePutBack = () => {
+    if (!open.removed.length) return;
+    screen.classList.add('has-putback');
+    const bar = screen.appendChild(make('div', 'putback-bar'));
+    const putBack = bar.appendChild(button('pill', '↩ Put page back', () => {
+      const removed = open.removed.pop();
       changed(putBackPage(open.book, removed, Date.now()));
       go(Math.min(removed.index, open.book.pages.length - 1));
     }));
     putBack.disabled = !canAddPage(book);
-  } else {
+  };
+
+  /** Prev, Add page, Remove, Next. Returns the "Add page" button so Write mode can light it up. */
+  const makeTools = () => {
+    const tools = screen.appendChild(make('div', 'page-tools'));
+    const previous = tools.appendChild(button('pill', '‹ Prev', () => go(index - 1)));
+    previous.setAttribute('aria-label', 'Previous page');
+    previous.disabled = index === 0;
+    const add = tools.appendChild(button('pill', '+ Add page', () => {
+      changed(addPage(open.book, index, Date.now()));
+      go(index + 1);
+    }));
+    add.disabled = !canAddPage(book);
     const remove = tools.appendChild(button('pill', '✕ Remove', () => {
       const result = removePage(open.book, index, Date.now());
       if (!result.removed) return;
-      open.removed = result.removed;
+      open.removed.push(result.removed);
       changed(result.book);
       go(Math.min(index, result.book.pages.length - 1));
     }));
     remove.setAttribute('aria-label', 'Remove this page');
     remove.disabled = book.pages.length <= 1;
-  }
-  const next = tools.appendChild(button('pill', 'Next ›', () => go(index + 1)));
-  next.setAttribute('aria-label', 'Next page');
-  next.disabled = index === book.pages.length - 1;
-
-  const fullState = (text) => isFull({ text, limit: LIMIT });
-  const showFull = (text) => {
-    const full = fullState(text) && canAddPage(open.book);
-    add.classList.toggle('pill-go', full); // a full page: "Add a page" stands out
-    add.textContent = full ? '+ Add a page' : '+ Add page';
+    const next = tools.appendChild(button('pill', 'Next ›', () => go(index + 1)));
+    next.setAttribute('aria-label', 'Next page');
+    next.disabled = index === book.pages.length - 1;
+    return add;
   };
-  showFull(book.pages[index].text);
 
-  writer = mountWriter(screen, {
-    text: book.pages[index].text,
-    label: `Words for page ${index + 1}`,
-    onChange: (text) => {
-      changed(setPageText(open.book, index, text, Date.now()));
-      showFull(text);
-    },
-  });
+  if (mode === 'picture') {
+    title.classList.add('title-row');
+    screen.insertBefore(title, screen.children[2]); // above the big picture
+    picture = mountPicture(screen, {
+      stickers: book.pages[index].stickers,
+      editable: true,
+      onChange: (stickers) => changed(setPageStickers(open.book, index, stickers, Date.now())),
+    });
+    makePutBack();
+    makeTools();
+    const move = screen.appendChild(make('div', 'page-tools'));
+    move.setAttribute('role', 'group');
+    move.setAttribute('aria-label', 'Move this page');
+    for (const [words, label, step] of [['◀ Move earlier', 'Move this page earlier', -1], ['Move later ▶', 'Move this page later', 1]]) {
+      const moveButton = move.appendChild(button('pill', words, () => {
+        changed(movePage(open.book, index, index + step, Date.now()));
+        go(index + step);
+      }));
+      moveButton.setAttribute('aria-label', label);
+      moveButton.disabled = index + step < 0 || index + step >= book.pages.length;
+    }
+  } else {
+    // A small picture with this page's stickers; tapping it opens Picture mode.
+    const slot = screen.appendChild(make('div', 'picture-slot'));
+    const openPictures = () => { mode = 'picture'; show(); };
+    slot.addEventListener('click', openPictures);
+    slot.append(title); // a small badge on the picture area, so the page number takes no row
+    picture = mountPicture(slot, { stickers: book.pages[index].stickers });
+    picture.node.setAttribute('role', 'button'); // the whole picture is a button to Picture mode
+    picture.node.setAttribute('tabindex', '0');
+    picture.node.setAttribute('aria-label', 'Add stickers to this page');
+    picture.node.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openPictures(); }
+    });
+    makePutBack();
+
+    const add = makeTools();
+    const showFull = (text) => {
+      const full = isFull({ text, limit: LIMIT }) && canAddPage(open.book);
+      add.classList.toggle('pill-go', full); // a full page: "Add a page" stands out
+      add.textContent = full ? '+ Add a page' : '+ Add page';
+    };
+    showFull(book.pages[index].text);
+
+    writer = mountWriter(screen, {
+      text: book.pages[index].text,
+      label: `Words for page ${index + 1}`,
+      onChange: (text) => {
+        changed(setPageText(open.book, index, text, Date.now()));
+        showFull(text);
+      },
+    });
+  }
   shelf.hidden = true;
   document.body.append(screen);
 }
@@ -290,6 +341,7 @@ async function show() {
   const token = ++shown;
   const [kind, id, page] = location.hash.slice(1).split('/');
   clearScreen();
+  if (kind !== 'book') mode = 'write';
   if (kind !== 'book' || (open && open.book.id !== id)) open = null; // leaving the book: the put-back is gone
   const grownupsOpen = location.hash === '#grown-ups';
   grownups.hidden = !grownupsOpen;
@@ -299,7 +351,6 @@ async function show() {
     return;
   }
   grownups.replaceChildren();
-  if (kind === 'try-stickers') { shelf.hidden = true; return; } // the temporary demo below draws itself
   if (kind === 'book' && id) await showPage(id, Number(page) || 0, token);
   else if (kind === 'read' && id) await showRead(id, token);
   else if (kind === 'finish' && id) await showFinishScreen(id, token);
@@ -311,15 +362,3 @@ async function show() {
 
 addEventListener('hashchange', show);
 show();
-// Temporary: index.html#try-stickers opens the picture area to try stickers,
-// until the page screen (task 1.7) has a Picture mode. Nothing is saved.
-if (location.hash === '#try-stickers') {
-  const screen = make('main', 'screen try-stickers');
-  const top = screen.appendChild(make('div', 'screen-top'));
-  const back = top.appendChild(button('back', '←', () => { location.hash = ''; location.reload(); }));
-  back.setAttribute('aria-label', 'Back');
-  top.append(make('h2', '', 'Try the stickers'));
-  mountPicture(screen, { editable: true });
-  shelf.hidden = true;
-  document.body.append(screen);
-}

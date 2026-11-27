@@ -122,7 +122,7 @@ function addStyles() {
 
 /**
  * Add the picture area to `parent`. Editable: a tray to add stickers, drag to
- * move, tap a sticker for "bigger", "smaller" and "remove". Read-only: just
+ * move (or tap it, then tap an empty spot), tap a sticker for "bigger", "smaller" and "remove". Read-only: just
  * the picture. `onChange(stickers)` runs after every change. Returns
  * { node, getStickers(), setStickers(stickers), remove() }. The picture is as
  * wide as `parent` lets it be; set a width or max-width on .picture to shrink it.
@@ -192,7 +192,14 @@ export function mountPicture(parent, { stickers: start = [], onChange, editable 
     let drag = null;
     picture.addEventListener('pointerdown', (event) => {
       const node = event.target.closest('.sticker');
-      if (!node) { if (selected !== -1) select(-1); return; } // a tap on the empty picture hides the buttons
+      if (!node) {
+        // Two taps move a sticker: tap it, then tap an empty spot. (Tap the sticker again to let it go.)
+        if (stickers[selected]) {
+          const at = fractionOn(picture, event.clientX, event.clientY);
+          change(moveSticker(stickers, selected, at.x, at.y));
+        }
+        return;
+      }
       event.preventDefault();
       const index = Number(node.dataset.index);
       drag = { index, node, id: event.pointerId, sx: event.clientX, sy: event.clientY, moved: false, from: stickers[index], start: fractionOn(picture, event.clientX, event.clientY) };

@@ -93,3 +93,16 @@ test('a pointer becomes parts of the picture, with or without the tablet zoom co
   const { x, y } = pointerToFraction(box, 1.3, (100 + 400) * 1.3, (50 + 150) * 1.3);
   assert.ok(Math.abs(x - 1) < 1e-9 && Math.abs(y - 0.5) < 1e-9);
 });
+
+test('tap-to-move: a tapped spot becomes the sticker\'s middle, and the others stay', () => {
+  const two = addSticker(addSticker([], 'frog'), 'fish');
+  const tap = pointerToFraction({ left: 10, top: 20, width: 400, height: 300 }, 1, 110, 95); // 1/4 across, 1/4 down
+  const moved = moveSticker(two, 1, tap.x, tap.y);
+  assert.deepEqual([moved[1].x, moved[1].y], [0.25, 0.25]);
+  assert.deepEqual(moved[0], two[0]);
+});
+
+test('tap-to-move: a tap near an edge keeps the sticker wholly inside', () => {
+  const [one] = moveSticker(addSticker([], 'frog'), 0, 1, 0);
+  assert.ok(inside(one));
+});

@@ -15,6 +15,10 @@
   -webkit-touch-callout: none;
 }
 
+/* On the page screen: the water-blue picture. In Write mode it is as tall as its slot lets it be. */
+.page-screen .picture { border-color: #e3dccf; background: #cdeef5; }
+.picture-slot .picture { position: absolute; top: 0; bottom: 0; left: 50%; width: auto; max-width: 100%; transform: translateX(-50%); }
+
 /* A sticker's left and top are its middle; its width is set by stickers.js. */
 .sticker {
   position: absolute;
