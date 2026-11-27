@@ -83,12 +83,12 @@ const TIPS = {
   // No speech marks and none of the speaking words anywhere (a book with no words at all gets no tip).
   'no-talking': (book) => {
     const all = book.pages.map((page) => page.text).join(' ');
-    return all.trim() !== '' && !/["\u201C\u201D]|\b(said|asked|shouted|yelled|whispered|called)\b/i.test(all);
+    return all.trim() !== '' && !/["\u201C\u201D]|\b(said|says|tells?|told|asked|asks|replied|cried|laughed|shouted|yelled|whispered|called)\b/i.test(all);
   },
-  // The last page with words says it was a dream ("it was all/just/only a dream") or "(and) then ... woke up" (up to 3 words between).
+  // The last page with words says it was a dream ("it was a dream", "it was all/just/only a dream") or "(and) then ... woke up" (up to 3 words between).
   'dream-ending': (book) => {
     const last = book.pages.filter(hasWords).pop()?.text ?? '';
-    return /\bit\s+was\s+(?:(?:all|just|only)\s+)+(?:a\s+)?dream\b|\bthen\s+(?:\w+\s+){0,3}woke\s+up\b/i.test(last);
+    return /\bit\s+was\s+(?:(?:(?:all|just|only)\s+)+(?:a\s+)?|a\s+)dream\b|\bthen\s+(?:\w+\s+){0,3}woke\s+up\b/i.test(last);
   },
   'under-three-pages': (book) => book.pages.filter(hasWords).length < 3,
 };

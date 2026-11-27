@@ -33,7 +33,7 @@ import {
   tryLessonSteps, tryLessonSkips, tryNotYet, tryCloseAtEachStep, tryOnePage, tryFinishNoLessons,
 } from './screens/finish-lessons.mjs';
 import { tryTellIt, tryTellItFits, tryDeviceCheckRecord } from './screens/tell-it.mjs';
-import { tryPolish, tryPolishNoLists } from './screens/polish.mjs';
+import { tryPolish, tryPolishNoLists, tryPolishThrows } from './screens/polish.mjs';
 import { tryPageFits } from './screens/page-fit.mjs';
 import { tryLessonBook, tryShelfFits, tryFinishAndEdit, tryTapWithLessonRow } from './screens/real-lessons.mjs';
 
@@ -53,6 +53,7 @@ try {
   await checkWith('Finish with no lessons.json: as before lessons (phone)', tryFinishNoLessons);
   await checkWith('Polish: asked one word at a time, use it, Keep mine, Skip, close mid-way, names, no misspellings, 8 at most (phone)', tryPolish);
   await checkWith('Polish: word lists that can\'t load skip the step (phone)', tryPolishNoLists);
+  await checkWith('Polish: a throw while choosing words skips the step (phone)', tryPolishThrows);
   await checkWith('Saving: save, reload, spare copies per book, saveNow waits, retry once, "not saved" mark, unreadable books', trySaving);
   await checkWith('A book from a newer version: shown with a note, never opened or changed', tryNewer);
   await checkWith('Damaged books: the good book still shows; page, reading and grown-up screens draw', tryHostile);

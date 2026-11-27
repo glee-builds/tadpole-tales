@@ -22,7 +22,7 @@ export const PAIRS = {
   kno: 'know', nu: 'new', wher: 'where', tonite: 'tonight', elefant: 'elephant', snak: 'snake', brav: 'brave', thier: 'their',
 };
 
-const pairOf = (word) => (Object.hasOwn(PAIRS, word) ? PAIRS[word] : undefined);
+const pairOf = (word) => (Object.prototype.hasOwnProperty.call(PAIRS, word) ? PAIRS[word] : undefined);
 
 const lines = (text) => String(text ?? '').split('\n').map((line) => line.trim().toLowerCase()).filter(Boolean);
 
@@ -96,7 +96,7 @@ function bestMatch(word, lists) {
 function stems(w) {
   const out = [];
   const cut = (n, add = '') => { if (w.length - n >= 3) out.push(w.slice(0, -n) + add); };
-  const twice = (n) => { const b = w.slice(0, -n); if (b.length >= 3 && b.at(-1) === b.at(-2)) out.push(b.slice(0, -1)); };
+  const twice = (n) => { const b = w.slice(0, -n); if (b.length >= 3 && b[b.length - 1] === b[b.length - 2]) out.push(b.slice(0, -1)); };
   if (w.endsWith('s')) { cut(1); if (w.endsWith('es')) cut(2); if (w.endsWith('ies')) cut(3, 'y'); if (w.endsWith('ves')) { cut(3, 'f'); cut(3, 'fe'); } }
   if (w.endsWith('ed')) { cut(2); cut(1); twice(2); if (w.endsWith('ied')) cut(3, 'y'); }
   if (w.endsWith('ing')) { cut(3); cut(3, 'e'); twice(3); if (w.endsWith('ying')) cut(4, 'ie'); }

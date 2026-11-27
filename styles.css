@@ -61,7 +61,9 @@ body {
 button { font-family: inherit; }
 
 /* A clear ring for anyone using a keyboard or a switch (a tap doesn't show it). */
-:focus-visible { outline: 3px solid var(--words-ink); outline-offset: 2px; }
+:focus { outline: 3px solid var(--words-ink); outline-offset: 2px; }
+/* Safari 15.4+ hides the ring after a tap; older ones drop this rule (an unknown selector) and keep it. */
+:focus:not(:focus-visible) { outline: none; }
 
 /* ---------- Shared pieces ---------- */
 

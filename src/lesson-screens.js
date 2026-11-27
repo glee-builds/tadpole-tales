@@ -92,7 +92,6 @@ function showPick(root, { options, messages, onPick, onBack }) {
   root.append(make('h2', 'plan-question', messages?.pickLesson ?? 'Pick a lesson to keep in mind'));
   // Up to 8 lessons and None can be taller than a phone, so the list scrolls inside itself.
   const list = root.appendChild(make('div', 'lesson-actions pick-list'));
-  list.style.cssText = 'flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-bottom: 8px';
   for (const lesson of options) list.append(button('pill pick-lesson', `📖 ${lesson.title}`, () => onPick(lesson)));
   list.append(button('pill pick-none', `🚫 ${messages?.pickNone ?? 'No lesson this time'}`, () => onPick(null)));
 }
