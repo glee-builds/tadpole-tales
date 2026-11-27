@@ -757,7 +757,6 @@ chair
 chairs
 bed
 beds
-bedded
 bedding
 couch
 couches
@@ -776,7 +775,6 @@ bottles
 cup
 cups
 cupped
-cupping
 plate
 plates
 spoon
@@ -872,8 +870,6 @@ peas
 bread
 egg
 eggs
-eggged
-eggging
 cheese
 milk
 juice
@@ -991,8 +987,6 @@ arm
 arms
 hand
 hands
-handded
-handding
 finger
 fingers
 thumb
@@ -1022,8 +1016,6 @@ bones
 skin
 sun
 suns
-sunned
-sunning
 moon
 moons
 star
@@ -1071,8 +1063,6 @@ universe
 sand
 rock
 rocks
-rockked
-rockking
 stone
 stones
 dirt
@@ -1143,8 +1133,6 @@ november
 december
 hat
 hats
-hatted
-hatting
 coat
 coats
 jacket
@@ -1169,8 +1157,6 @@ scarf
 scarfs
 pocket
 pockets
-pocketted
-pocketting
 button
 buttons
 belt
@@ -1185,8 +1171,6 @@ shield
 shields
 wand
 wands
-wandded
-wandding
 cape
 capes
 key
@@ -1496,8 +1480,6 @@ opens
 opened
 opening
 closed
-closeder
-closedest
 high
 higher
 highest
@@ -1545,8 +1527,6 @@ horrible
 fantastic
 super
 special
-specialer
-specialest
 strange
 weird
 magical
@@ -1614,7 +1594,6 @@ climbing
 swing
 slide
 slides
-slided
 sliding
 roll
 rolls
@@ -1923,7 +1902,6 @@ stirred
 stirring
 drink
 drinks
-drinked
 drinking
 taste
 tastes
@@ -2148,7 +2126,6 @@ living
 die
 dies
 died
-diing
 dying
 work
 works
@@ -2243,8 +2220,6 @@ jewels
 diamond
 diamonds
 gems
-gemmed
-gemming
 coin
 coins
 chest
@@ -2261,7 +2236,6 @@ satellite
 satellites
 dino
 dinos
-trex
 fossil
 fossils
 tractor
@@ -2346,8 +2320,6 @@ squares
 triangle
 triangles
 kinds
-beautifuler
-beautifulest
 favorite
 parrot
 parrots
@@ -2361,14 +2333,11 @@ peacock
 peacocks
 hen
 hens
-henned
-henning
 rooster
 roosters
 polar
 dogged
 dogging
-musics
 piano
 pianos
 guitar
@@ -2431,7 +2400,6 @@ cuddle
 cuddles
 cuddled
 cuddling
-mousees
 ox
 age
 ago
@@ -2567,11 +2535,7 @@ bench
 benches
 bill
 bills
-billled
-billling
 bins
-binned
-binning
 block
 blocks
 blood
@@ -2609,8 +2573,6 @@ chimney
 chimneys
 chin
 chins
-chinned
-chinning
 clock
 clocks
 clown
@@ -2733,13 +2695,9 @@ lawns
 leash
 leashes
 lids
-lidded
-lidding
 lime
 limes
 lips
-lipped
-lipping
 list
 lists
 listed
@@ -2783,8 +2741,6 @@ newspapers
 nickel
 nickels
 nuts
-nutted
-nutting
 oars
 oven
 ovens
@@ -2794,7 +2750,6 @@ pail
 pails
 pans
 panned
-panning
 parent
 parents
 pasta
@@ -2825,7 +2780,6 @@ porch
 porches
 pots
 potted
-potting
 powder
 powders
 pumpkin
@@ -2855,7 +2809,6 @@ roasting
 roller
 rugs
 rugged
-rugging
 sack
 sacks
 saddle
@@ -2919,7 +2872,6 @@ straws
 suit
 suits
 suited
-suiting
 suitcase
 suitcases
 swings
@@ -2948,8 +2900,6 @@ trapping
 tray
 trays
 tubs
-tubbed
-tubbing
 turkey
 turkeys
 twin
@@ -2975,7 +2925,6 @@ winked
 winking
 wire
 wires
-wolfs
 wood
 woods
 wool
@@ -2991,11 +2940,7 @@ bare
 barer
 barest
 blind
-blinder
-blindest
 boring
-boringer
-boringest
 bossy
 broken
 cheerful
@@ -3072,8 +3017,6 @@ shaky
 shocked
 slippery
 sour
-sourer
-sourest
 spicy
 splendid
 squeaky

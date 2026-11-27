@@ -50,7 +50,7 @@ assets/                  the tadpole, the app icon and its PNGs (made with headl
 data/stickers.json       the sticker list: id, group, label and the device's own emoji
 data/lessons.json        the lesson wording: lessons, planning questions, self-check and kind messages (read by lesson-screens.js and finish.js)
 data/examples.json       the example story for each lesson, with its "Find it" prompt
-data/known-words.txt     words Polish never questions (built by tools/build-words.mjs); data/common-words.txt: the only words Polish may suggest
+data/known-words.txt     words Polish never questions (built by tools/build-words.mjs); data/extra-known.txt: everyday words it lacks (ok, gonna, wifi); data/common-words.txt: the only words Polish may suggest
 tools/build-words.mjs    rebuilds data/known-words.txt
 src/app.js               starts the app; draws the bookshelf and the page screen (Write and Picture modes);
                          picks the other screens by location.hash

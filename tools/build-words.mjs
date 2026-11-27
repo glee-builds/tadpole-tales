@@ -7,6 +7,7 @@
 // A few old web2 spellings that a child's slip can land on are left out (OLD
 // below), because a "known" word is never asked about.
 import { readFileSync, writeFileSync, statSync } from 'node:fs';
+import { PAIRS } from '../src/polish.js';
 
 const dictFile = process.argv[2] ?? '/usr/share/dict/web2';
 const MAX_LETTERS = 12; // lower to 10 if the file ever gets too big for an old iPad
@@ -14,9 +15,14 @@ const OLD = new Set(['wen', 'rok', 'wont', 'dont', 'agen', 'tho', 'mor', 'wer', 
 
 const common = readFileSync(new URL('../data/common-words.txt', import.meta.url), 'utf8').split('\n').filter(Boolean);
 const known = new Set(common);
+// Left out too: every slip in PAIRS (src/polish.js: "wen", "sed", "cum"...).
+// "didnt" and "wouldnt" are in web2 but are slips for "didn't" and "wouldn't": left out, except
+// where the letters spell a real word ("were", "well", "its").
+const REAL = new Set(['cant', 'hell', 'id', 'ill', 'its', 'shell', 'well', 'were']);
+const SLIPS = new Set([...Object.keys(PAIRS), ...common.filter((w) => w.includes("'")).map((w) => w.replace(/'/g, '')).filter((w) => !REAL.has(w))]);
 for (const raw of readFileSync(dictFile, 'latin1').split('\n')) {
   const word = raw.trim().toLowerCase();
-  if (/^[a-z]{3,}$/.test(word) && word.length <= MAX_LETTERS && !OLD.has(word)) known.add(word);
+  if (/^[a-z]{3,}$/.test(word) && word.length <= MAX_LETTERS && !OLD.has(word) && !SLIPS.has(word)) known.add(word);
 }
 const out = new URL('../data/known-words.txt', import.meta.url);
 writeFileSync(out, [...known].sort().join('\n') + '\n');
