@@ -9,8 +9,8 @@ What the app does:
 - **Bookshelf:** every book is a card. Unfinished books come first. A finished book opens to read.
 - **Writing:** the writer types on the app's own keyboard, so the phone's keyboard never appears. A page holds up to 300 characters, and a book up to 12 pages.
 - **Stickers:** the writer adds emoji stickers to a page's picture, moves them, and sizes them.
-- **Lessons:** four lessons, one per finished book. Each has a lesson card, a "Plan your story" step, and an example story to read and find the idea in. The example stories collect on a second shelf, "Tadpole's books".
-- **Finish:** the writer gives the book a title and a cover, and types an author name once. Once the lesson wording is in, Finish also opens the next lesson, then offers "Hear your book", a self-check (tap a page or a sentence; never right or wrong), one "make it better" job and a kind message. Every step can be skipped.
+- **Lessons:** eight lessons, one per finished book. Each has a lesson card and an example story to read, with a "Find it" step that shows where the idea is. Before writing, "Plan your story" asks five questions; "💡 Ideas" on a page shows the answers. The example stories collect on a second shelf, "Tadpole's books". After the last lesson, each new book starts with a pick: one lesson to keep in mind, or none.
+- **Finish:** the writer gives the book a title, an author name (the first time only) and a cover. Then "Hear your book", a self-check (tap a page or a sentence; "I don't have one yet" is allowed; never right or wrong), one "make it better" job, a spelling check, and a kind message. Every step can be skipped.
 - **Read to me:** the device's own English voice reads the book aloud, one sentence at a time. It is hidden if the device has no English voice.
 - **Tell it:** the writer records a page out loud (up to 2 minutes), then plays it back while typing. Off until a grown-up turns it on; hidden on a device that can't record. Recordings stay on the device and are never in a backup.
 - **Grown-up page:** hold "For grown-ups" on the bookshelf for 2 seconds to back up all books, restore them, delete a book, start over, or turn on Tell it.
@@ -53,7 +53,8 @@ GitHub runs both commands on every pull request, so a failing check shows on the
 
 ## Word lists (for the spelling "Polish" step)
 
-Both lists are in `data/`, one word per line, and the app saves them once for offline use.
+All three lists are in `data/`, one word per line, and the app saves them once for offline use.
 
 - `data/known-words.txt` (about 198,000 words, 1.9 MB): the words the app treats as spelled right, so it never questions them. Made by `node tools/build-words.mjs` from Webster's Second International Dictionary (1934), the Mac's `/usr/share/dict/web2`. License: public domain. Only 3 to 12 letter words are kept, plus every word in the common list.
 - `data/common-words.txt` (about 3,100 words, 21 KB): friendly everyday words, sight words, story words, regular word endings, and contractions. Polish can only suggest words from this list. Written for this app, so no outside license applies.
+- `data/extra-known.txt` (53 words): a short hand-written list of words the app treats as spelled right, such as "ok" and "um", which the dictionary list leaves out. Written for this app, so no outside license applies.
