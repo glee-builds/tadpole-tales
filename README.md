@@ -17,3 +17,21 @@ python3 -m http.server 8020
 Then open http://localhost:8020 in a browser. Press `Ctrl+C` in the terminal to stop the server.
 
 To preview on your phone, connect it to the same Wi-Fi as your Mac and open `http://[your-mac-name].local:8020`.
+
+## Run the tests
+
+From this folder, run:
+
+```bash
+node --test
+```
+
+This uses Node's built-in test runner. It finds every `*.test.js` file in `tests/` and reports which checks pass.
+
+To open the home screen in a real browser at phone and iPad sizes (needs Google Chrome):
+
+```bash
+node tests/screens.mjs
+```
+
+GitHub runs both commands on every pull request, so a failing check shows on the pull request before it is merged.
