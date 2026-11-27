@@ -10,7 +10,7 @@
 
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join, extname } from 'node:path';
@@ -445,6 +445,69 @@ async function tryGrownup() {
   return '';
 }
 
+// ---------- Backup and restore (src/grownup.js, src/book.js) ----------
+
+const downloads = mkdtempSync(join(tmpdir(), 'tadpole-tales-downloads-'));
+
+/** Pick `path` in the grown-up page's restore file picker, and wait for what it says. */
+async function restoreFrom(path) {
+  const { result } = await page('Runtime.evaluate', { expression: `document.querySelector('.gu-pick input')` });
+  await page('DOM.setFileInputFiles', { files: [path], objectId: result.objectId });
+  await waitFor(`/^[✓⚠]/.test(document.querySelector('.gu-pick + .gu-note').textContent)`, 5);
+  return evaluate(`document.querySelector('.gu-pick + .gu-note').textContent`);
+}
+
+/** Back up two books, start over, restore them, restore again, and try a broken file. Returns a problem, or ''. */
+async function tryBackup() {
+  if (!await open('', 'document.querySelector(".hold-button") !== null')) return 'home did not draw';
+  await evaluate(`(async () => { ${STORE} await store.startOver();
+    await store.saveBook(book.setPageText(book.newBook('made-up-3', 3), 0, 'A snail raced a leaf.', 3));
+    await store.saveBook(book.setPageText(book.newBook('made-up-4', 4), 0, 'Two fish had a party.', 4));
+    await store.setSetting('author', 'Pip'); })()`);
+  await evaluate(`location.hash = 'grown-ups'`);
+  if (!await waitFor(`[...document.querySelectorAll('.grownups button')].some((b) => b.textContent === 'Back up all books' && !b.disabled)`)) return 'the Back up button never became ready';
+  if (!await evaluate(`document.querySelector('.grownups').textContent.includes('No backup yet.')`)) return 'the page does not say there is no backup yet';
+
+  // Headless Chrome has no share sheet on every computer: use the download, as an older iPad would.
+  await evaluate(`navigator.canShare = undefined`);
+  await send('Browser.setDownloadBehavior', { behavior: 'allow', downloadPath: downloads });
+  const backupIndex = await evaluate(`[...document.querySelectorAll('.grownups button')].findIndex((b) => b.textContent === 'Back up all books')`);
+  await tapOn('.grownups button', backupIndex);
+  let name;
+  for (let i = 0; i < 50 && !name; i++) {
+    await sleep(100);
+    name = readdirSync(downloads).find((file) => file.endsWith('.json'));
+  }
+  if (!name) return 'Back up did not save a file';
+  if (!/^tadpole-tales-backup-\d{4}-\d\d-\d\d\.json$/.test(name)) return `the backup is called ${name}`;
+  if (!await waitFor(`document.querySelector('.grownups').textContent.includes('Last backup:')`)) return 'the page does not show the date of the last backup';
+  const file = join(downloads, name);
+
+  // Start over (it offers a backup first), then restore: both books come back, with the name.
+  await tapOn('.grownups > .gu-ask .plain-button');
+  if (!await evaluate(`[...document.querySelectorAll('.grownups > .gu-ask button')].some((b) => b.textContent === 'Back up first')`)) return 'start over does not offer a backup first';
+  await tapOn('.grownups > .gu-ask .gu-danger');
+  if (!await waitFor(`document.querySelector('.gu-books').textContent === 'No books yet.'`)) return 'start over did not empty the shelf';
+  let said = await restoreFrom(file);
+  if (!said.startsWith('✓ Added 2 books.')) return `restoring said "${said}"`;
+  const texts = (await savedTexts()).sort();
+  if (JSON.stringify(texts) !== '["A snail raced a leaf.","Two fish had a party."]') return `after restoring the books are ${JSON.stringify(texts)}`;
+  if (await evaluate(`(async () => { ${STORE} return store.getSetting('author'); })()`) !== 'Pip') return 'the name did not come back';
+
+  // Restoring the same file again adds nothing.
+  said = await restoreFrom(file);
+  if (!said.startsWith('✓ Added 0 books. 2 books already on the shelf')) return `restoring twice said "${said}"`;
+  if ((await savedTexts()).length !== 2) return `restoring twice left ${(await savedTexts()).length} books`;
+
+  // A cut-short file is turned away and changes nothing.
+  const broken = join(downloads, 'broken.json');
+  writeFileSync(broken, readFileSync(file, 'utf8').slice(0, 40));
+  said = await restoreFrom(broken);
+  if (!said.startsWith('⚠ This file is damaged')) return `a broken file said "${said}"`;
+  if ((await savedTexts()).length !== 2) return 'a broken file changed the shelf';
+  return '';
+}
+
 /** Run a check that returns a problem (or ''), and note it. */
 async function checkWith(label, check) {
   checked++;
@@ -464,6 +527,7 @@ try {
   await checkScreen('Home (phone)', '');
   await checkWith('Saving: save, reload, spare copy, retry once, "not saved" mark, unreadable books', trySaving);
   await checkWith('Grown-up page: hold to open, every device check, delete a book, start over', tryGrownup);
+  await checkWith('Backup: back up, start over, restore, restore again, broken file', tryBackup);
   await checkKeyboard('Keyboard: type, tap to move the cursor, hold backspace, 300 fit (phone)');
   for (const [tablet, size] of Object.entries(TABLETS)) {
     await page('Emulation.setDeviceMetricsOverride', { ...size, deviceScaleFactor: 2, mobile: true });
@@ -477,6 +541,7 @@ try {
   chrome.kill();
   await new Promise((resolve) => { server.close(resolve); server.closeAllConnections(); });
   await sleep(300);
+  rmSync(downloads, { recursive: true, force: true });
   try { rmSync(profile, { recursive: true, force: true }); } catch { /* Chrome may still hold a file; the folder is temporary */ }
 }
 

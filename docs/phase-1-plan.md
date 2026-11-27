@@ -114,11 +114,11 @@ Done when: every screen fits 375 x 667 with no scrolling at all three sizes.
 
 ## 1.8 Backup and restore (Opus)
 
-Files: `src/book.js` (add), `tests/backup.test.js`, `src/grownup.js`, `sw.js`.
+Files: `src/book.js` (add), `tests/backup.test.js`, `src/grownup.js`, `styles.css`, `tests/screens.mjs`, `docs/decisions.md`. (`sw.js` needs nothing new: no new file.)
 
-Exports added to `src/book.js`: `BACKUP_FORMAT = 1`, `makeBackup({ books, author, progress }, now)` returns the backup object, `backupName(now)` returns `tadpole-tales-backup-YYYY-MM-DD.json`, `readBackup(text)` returns `{ books, author, progress }` (every book through `upgradeBook`) or throws `Error` with a short grown-up message for bad JSON, another app's file, or a newer format; `mergeBooks(shelf, incoming)` returns `{ add: Book[], skipped: number }`: only books whose `id` is not on the shelf; it never changes or removes a shelf book.
+Exports added to `src/book.js`: `BACKUP_FORMAT = 1`, `makeBackup({ books, author, progress }, now)` returns the backup object, `backupName(now)` returns `tadpole-tales-backup-YYYY-MM-DD.json`, `readBackup(text)` returns `{ books, author, progress, unreadable }` (every book through `upgradeBook`; `unreadable` counts books in the file that failed it, so one bad book doesn't block the rest; added to the first plan) or throws `Error` with a short grown-up message for bad JSON, another app's file, or a newer format; `mergeBooks(shelf, incoming)` returns `{ add: Book[], skipped: number }`: only books whose `id` is not on the shelf; it never changes or removes a shelf book.
 
-Grown-up page: "Back up" saves with `navigator.share({ files })` when `navigator.canShare` accepts the file, else a download link; then `setSetting('lastBackup', …)` and shows that date. "Restore" uses `<input type="file" accept=".json,application/json">`, `readBackup`, `mergeBooks`, then `saveBook` each added book and says how many were added. Delete a book and start over, each asking a second time; start over offers a backup first.
+Grown-up page: the backup file is made ahead, when the page draws and after each change, so the share sheet opens inside the tap (iOS refuses it after a wait). "Back up" saves with `navigator.share({ files })` when `navigator.canShare` accepts the file, else a download link; then `setSetting('lastBackup', …)` and shows that date. "Restore" uses `<input type="file" accept=".json,application/json">`, `readBackup`, `mergeBooks`, then `saveBook` each added book and says how many were added. Delete a book and start over, each asking a second time; start over offers a backup first.
 
 Done when: tests restore twice (second adds nothing), restore an old-format file, and reject a broken file without touching the shelf.
 

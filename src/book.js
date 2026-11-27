@@ -80,3 +80,64 @@ export function upgradeBook(record) {
     pages: pages.length ? pages : [newPage()],
   };
 }
+
+// ---------- The backup file ----------
+//
+// { app: 'tadpole-tales', backup: 1, made, author, progress, books }
+// No recordings, ever. Restoring only adds books that aren't on the shelf.
+
+export const BACKUP_FORMAT = 1; // bump only with a matching step in readBackup
+
+/** The backup object for these books, made at `now` (ms). */
+export function makeBackup({ books, author = '', progress = {} }, now) {
+  return { app: 'tadpole-tales', backup: BACKUP_FORMAT, made: new Date(now).toISOString(), author, progress, books };
+}
+
+/** tadpole-tales-backup-YYYY-MM-DD.json, with the device's own date. */
+export function backupName(now) {
+  const date = new Date(now);
+  const two = (n) => String(n).padStart(2, '0');
+  return `tadpole-tales-backup-${date.getFullYear()}-${two(date.getMonth() + 1)}-${two(date.getDate())}.json`;
+}
+
+/**
+ * Read a backup file's text. Returns { books, author, progress, unreadable }
+ * (`unreadable` counts books in the file that couldn't be read), or throws
+ * an Error whose message is a short sentence for a grown-up.
+ */
+export function readBackup(text) {
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error('This file is damaged or cut short. Try another backup.');
+  }
+  if (data?.app !== 'tadpole-tales') throw new Error('This isn\'t a Tadpole Tales backup.');
+  if (data.backup > BACKUP_FORMAT) throw new Error('This backup is from a newer Tadpole Tales. Open the app online to update it, then try again.');
+  if (!Array.isArray(data.books)) throw new Error('This file is damaged or cut short. Try another backup.');
+  const books = [];
+  for (const record of data.books) {
+    try { books.push(upgradeBook(record)); } catch { /* counted below */ }
+  }
+  return {
+    books,
+    author: typeof data.author === 'string' ? data.author : '',
+    progress: data.progress && typeof data.progress === 'object' ? data.progress : {},
+    unreadable: data.books.length - books.length,
+  };
+}
+
+/**
+ * The books to add from a backup: only those whose id isn't on the shelf
+ * (or earlier in the file). Never changes or removes a shelf book.
+ */
+export function mergeBooks(shelf, incoming) {
+  const ids = new Set(shelf.map((book) => book.id));
+  const add = [];
+  for (const book of incoming) {
+    if (ids.has(book.id)) continue;
+    ids.add(book.id);
+    add.push(book);
+  }
+  return { add, skipped: incoming.length - add.length };
+}

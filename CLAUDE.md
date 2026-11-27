@@ -48,7 +48,7 @@ src/typing.js       the text and the cursor, as plain functions
 src/keyboard.js     the app's keyboard and drawn writing area (mountWriter)
 src/book.js         a book as plain functions
 src/store.js        saving books on the device (the only file that uses IndexedDB)
-src/grownup.js      the grown-up page: device check, delete a book, start over
+src/grownup.js      the grown-up page: device check, backup and restore, delete a book, start over
 docs/decisions.md   decisions log
 docs/phase-1-plan.md  Phase 1 task notes and shared names
 .github/            pull request template
