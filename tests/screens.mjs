@@ -1,4 +1,4 @@
-// screens.mjs: open the home screen in a real browser and check it draws.
+// screens.mjs: open the app in a real browser and check it draws and works.
 //
 // It starts the app, opens the home screen at a phone size and at two iPad
 // sizes, and fails if the page doesn't draw, logs an error, scrolls sideways,
@@ -100,6 +100,7 @@ await page('Runtime.enable');
 await page('Log.enable');
 await page('Network.enable');
 await page('Emulation.setDeviceMetricsOverride', { ...PHONE, deviceScaleFactor: 2, mobile: true });
+await page('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 }); // taps arrive as a finger's, like on a phone
 
 // Problems the page reports while a screen is open.
 let errors = [];
@@ -172,11 +173,127 @@ async function checkScreen(label, address) {
   console.log(`${problem ? '✗' : '✓'} ${label}`);
 }
 
+// ---------- The app's keyboard ----------
+
+/** Touch the screen at (x, y) for `ms` milliseconds, like a finger. */
+async function touch(x, y, ms = 40) {
+  await page('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+  await sleep(ms);
+  await page('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await sleep(30);
+}
+
+/** The middle of the first element matching `selector`, in screen pixels. */
+const middleOf = (selector) => evaluate(`(() => {
+  const box = document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect();
+  return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+})()`);
+
+/** Tap each of the app's keys in turn, by its data-key. */
+async function press(...keys) {
+  for (const key of keys) {
+    const { x, y } = await middleOf(`[data-key=${JSON.stringify(key)}]`);
+    await touch(x, y);
+  }
+}
+
+// The words in the writing area, and which gap the cursor is in.
+const typed = () => evaluate(`[...document.querySelectorAll('.writing .ch')].map((span) => span.textContent).join('')`);
+const cursorAt = () => evaluate(`(() => {
+  const all = [...document.querySelector('.writing').children];
+  return all.slice(0, all.indexOf(document.querySelector('.writing .cursor'))).filter((span) => span.matches('.ch')).length;
+})()`);
+
+/** Open the keyboard from the home screen and try it with real taps. Returns a problem, or ''. */
+async function tryKeyboard() {
+  if (!await open('', 'document.querySelector(".go") !== null')) return 'home did not draw';
+  await sleep(200);
+  const go = await middleOf('.go');
+  await touch(go.x, go.y);
+  await sleep(200);
+  if (!await evaluate('document.querySelector(".keyboard") !== null')) return 'the keyboard did not open';
+  if (await evaluate('document.querySelectorAll("input, textarea, [contenteditable]").length')) return 'a text field is on the screen';
+
+  await press('shift', 'd', 'o', 't', 'space', 's', 'w', 'a', 'm');
+  if (await typed() !== 'Dot swam') return `typing "Dot swam" gave "${await typed()}"`;
+  if (await evaluate('document.querySelector(".writing").textContent.replace(/\\u200b/g, "")') !== 'Dot swam') return 'the words are not in the writing area for a screen reader';
+
+  // Tap just right of the "t": the cursor goes after it.
+  const t = await evaluate(`(() => { const box = document.querySelectorAll('.writing .ch')[2].getBoundingClientRect(); return { x: box.right - 2, y: box.top + box.height / 2 }; })()`);
+  await touch(t.x, t.y);
+  await press('s');
+  if (await typed() !== 'Dots swam') return `tapping after "Dot" then "s" gave "${await typed()}"`;
+  // Tap the left part of the "D": the cursor goes before it.
+  const d = await evaluate(`(() => { const box = document.querySelector('.writing .ch').getBoundingClientRect(); return { x: box.left + box.width * 0.3, y: box.top + box.height / 2 }; })()`);
+  await touch(d.x, d.y);
+  if (await cursorAt() !== 0) return `tapping the left of the first letter put the cursor at ${await cursorAt()}`;
+  // Tap the empty space below the words: the cursor goes to the end.
+  const below = await evaluate(`(() => { const box = document.querySelector('.writing').getBoundingClientRect(); return { x: box.left + box.width - 10, y: box.bottom - 10 }; })()`);
+  await touch(below.x, below.y);
+  if (await cursorAt() !== 9) return `tapping below the words put the cursor at ${await cursorAt()}, not the end`;
+
+  // One short tap on backspace deletes one letter; holding it keeps deleting.
+  await press('backspace');
+  if (await typed() !== 'Dots swa') return `one tap on backspace gave "${await typed()}"`;
+  const back = await middleOf('[data-key="backspace"]');
+  await touch(back.x, back.y, 1500);
+  if (await typed() !== '') return `holding backspace left "${await typed()}"`;
+
+  // A full page (300 characters) fits in the writing area without scrolling.
+  await evaluate(`(() => {
+    const words = 'The frog hops to the big rock, and sees a tiny fish! "Hello," says the frog. ';
+    for (const char of words.repeat(5).slice(0, 305)) {
+      const key = char === ' ' ? 'space' : /[A-Z]/.test(char) ? 'shift' : char;
+      document.querySelector('[data-key="' + (key === '"' ? '\\\\"' : key) + '"]').click();
+      if (key === 'shift') document.querySelector('[data-key="' + char.toLowerCase() + '"]').click();
+    }
+  })()`);
+  if ((await typed()).length !== 300) return `the 300 limit let ${(await typed()).length} characters in`;
+  // Tap the left edge of letter 150, in the middle of the page: the cursor goes before it.
+  const mid = await evaluate(`(() => { const box = document.querySelectorAll('.writing .ch')[150].getBoundingClientRect(); return { x: box.left + 1, y: box.top + box.height / 2 }; })()`);
+  await touch(mid.x, mid.y);
+  if (await cursorAt() !== 150) return `tapping letter 150 put the cursor at ${await cursorAt()}`;
+
+  const fit = await evaluate(`(() => {
+    const writing = document.querySelector('.writing');
+    const keys = [...document.querySelectorAll('.key')];
+    const bottom = document.querySelector('.keyboard').getBoundingClientRect().bottom;
+    return {
+      scrolls: document.documentElement.scrollHeight > innerHeight || document.documentElement.scrollWidth > innerWidth,
+      offScreen: bottom > innerHeight + 0.5,
+      short: keys.filter((key) => key.offsetHeight < 48).length,
+      overflow: writing.scrollHeight > writing.clientHeight + 1,
+    };
+  })()`);
+  if (fit.scrolls) return 'the page scrolls';
+  if (fit.offScreen) return 'the keyboard goes off the bottom of the screen';
+  if (fit.short) return `${fit.short} keys are less than 48px tall`;
+  if (fit.overflow) return '300 characters do not fit in the writing area';
+  return '';
+}
+
+/** Run tryKeyboard at the current size and note any problem. */
+async function checkKeyboard(label) {
+  checked++;
+  let problem;
+  try {
+    problem = await tryKeyboard();
+  } catch (error) {
+    problem = `broke: ${String(error.message).split('\n')[0]}`;
+  }
+  for (const error of errors) problem += `${problem ? '; ' : ''}logged an error: ${String(error).split('\n')[0]}`;
+  for (const url of outside) problem += `${problem ? '; ' : ''}asked another site for ${url}`;
+  if (problem) problems.push(`${label}: ${problem}`);
+  console.log(`${problem ? '✗' : '✓'} ${label}`);
+}
+
 try {
   await checkScreen('Home (phone)', '');
+  await checkKeyboard('Keyboard: type, tap to move the cursor, hold backspace, 300 fit (phone)');
   for (const [tablet, size] of Object.entries(TABLETS)) {
     await page('Emulation.setDeviceMetricsOverride', { ...size, deviceScaleFactor: 2, mobile: true });
     await checkScreen(`Home (${tablet})`, '');
+    await checkKeyboard(`Keyboard (${tablet})`);
   }
 } catch (error) {
   problems.push(`stopped early: ${String(error.message).split('\n')[0]}`);
@@ -192,4 +309,4 @@ if (problems.length) {
   console.error(`\n${problems.length} of ${checked} screens have a problem:\n- ${problems.join('\n- ')}`);
   process.exit(1);
 }
-console.log(`\nAll ${checked} screens draw, fit the screen, and log no errors.`);
+console.log(`\nAll ${checked} checks pass: screens draw, fit, log no errors, and the keyboard works.`);

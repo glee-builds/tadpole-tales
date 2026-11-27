@@ -23,6 +23,7 @@ const FILES = [
   'src/app.js',
   'src/ui.js',
   'src/typing.js',
+  'src/keyboard.js',
   'assets/apple-touch-icon.png',
   'assets/icon-192.png',
   'assets/icon-512.png',
