@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="duck">
+<ellipse cx="46" cy="66" rx="36" ry="20" fill="#ffd166"/>
+<ellipse cx="40" cy="62" rx="16" ry="8" fill="#f2b84b"/>
+<path d="M36 84 V92 M52 84 V92" stroke="#ff9f5a" stroke-width="4" stroke-linecap="round"/>
+<circle cx="70" cy="36" r="18" fill="#ffd166"/>
+<path d="M85 33 L98 40 L85 46 Z" fill="#ff9f5a"/>
+<circle cx="74" cy="31" r="4" fill="#2b2440"/>
+</svg>

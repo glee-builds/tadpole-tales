@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="house">
+<rect x="62" y="20" width="9" height="20" fill="#b5835a"/>
+<rect x="20" y="46" width="60" height="42" fill="#ffd166"/>
+<path d="M12 50 L50 16 L88 50 Z" fill="#ff9aa2"/>
+<rect x="42" y="64" width="16" height="24" rx="2" fill="#7a5230"/>
+<rect x="26" y="56" width="11" height="11" fill="#8fd3f4"/>
+<rect x="63" y="56" width="11" height="11" fill="#8fd3f4"/>
+</svg>

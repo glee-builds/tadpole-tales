@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="key">
+<path fill-rule="evenodd" d="M30 26 A24 24 0 1 0 30 74 A24 24 0 1 0 30 26 Z M30 40 A10 10 0 1 1 30 60 A10 10 0 1 1 30 40 Z" fill="#ffd166"/>
+<rect x="50" y="44" width="36" height="12" fill="#ffd166"/>
+<rect x="74" y="56" width="8" height="10" fill="#ffd166"/>
+<rect x="84" y="56" width="8" height="14" fill="#ffd166"/>
+</svg>
