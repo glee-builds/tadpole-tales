@@ -21,6 +21,11 @@ you're we're they're i'm i'll you'll he'll she'll we'll they'll it'll that'll wh
 she's he's it's that's what's where's who's there's here's let's how's one's
 isn't aren't wasn't weren't don't doesn't didn't won't wouldn't couldn't shouldn't can't haven't hasn't hadn't mustn't
 ok okay um hmm yeah nope oops gonna wanna kinda gotta tv wifi
+ribbit boing splish splash splosh boom bang zoom whoosh crash pop buzz hiss oink moo baa woof meow quack tweet honk
+vroom beep ding dong thud plop drip kaboom achoo yum yuck eek ow ouch hooray uh oh
+coming happened because beautiful favorite friend friends family school everyone something together suddenly finally
+believe different through thought laughed cried scared surprised excited wanted decided started tried opened played
+jumped looked walked asked answered princess rabbit
 dog's cat's mom's dad's friend's teacher's mommy's grandma's
 mommy daddy mom dad grandma grandpa grandmother grandfather sister brother baby babies family
 friend friends friendly friendship neighbor neighbors teacher teachers student students classmate classmates
@@ -104,6 +109,7 @@ taking takes took taken making makes made
 // Real slips as "what was typed=what was meant" ("a|b": either is right). Quiet is always allowed; a wrong offer never is.
 const SLIPS = `
 aple=apple sno=snow brane=brain|brave elefant=elephant drinkd=drank|drink|drinks cameing=coming|came nite=night
+comming=coming happend=happened lookt=looked prinses=princess
 wen=when teh=the wus=was thay=they sed=said frum=from cum=come agen=again wich=which wat=what hav=have luv=love
 gud=good wud=would cud=could shud=should woud=would coud=could rok=rock wont=won't dont=don't isnt=isn't
 evry=every eny=any sory=sorry funy=funny hapy=happy pupy=puppy juse=juice enuf=enough piza=pizza bik=bike kno=know
@@ -190,6 +196,13 @@ test("the review's examples: the right suggestion or quiet", () => {
     assert.ok(got === null || got === want, `${word} -> ${got}`);
   }
   for (const word of ['drinked', 'slided', 'eggged', 'closeder', 'mousees']) assert.ok(!lists.common.includes(word), word);
+});
+
+test('the review fixes: each misspelling gets exactly the right word', () => {
+  assert.equal(suggest('comming'), 'coming');
+  assert.equal(suggest('happend'), 'happened');
+  assert.equal(suggest('lookt'), 'looked');
+  assert.equal(suggest('prinses'), 'princess');
 });
 
 test('a tie between equally close words stays quiet', () => {
