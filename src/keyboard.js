@@ -103,13 +103,13 @@ export function mountWriter(parent, { text = '', limit = LIMIT, label = 'Your wo
   // click, and letters were lost. The click that follows a touch is skipped;
   // a click with no touch before it (Enter or Space on a focused key, or a
   // screen reader) still presses the key.
-  let touched = null; // the key the last touch went down on, until its click
+  const pressed = new Set(); // keys a touch went down on, each until its click (touches overlap, so clicks can come in any order)
   let holding;
   const stopHold = () => clearTimeout(holding);
   keyboard.addEventListener('pointerdown', (event) => {
     const node = event.target.closest('[data-key]');
-    touched = node;
     if (!node || event.button > 0) return;
+    pressed.add(node);
     event.preventDefault(); // no mouse events, focus or text selection from the touch
     press(node.dataset.key);
     if (node.dataset.key !== 'backspace') return;
@@ -121,10 +121,10 @@ export function mountWriter(parent, { text = '', limit = LIMIT, label = 'Your wo
   keyboard.addEventListener('click', (event) => {
     const node = event.target.closest('[data-key]');
     if (!node) return;
-    if (node === touched) { touched = null; return; } // already pressed on touch-down
+    if (pressed.delete(node)) return; // already pressed on touch-down
     press(node.dataset.key);
   });
-  keyboard.addEventListener('keydown', () => { touched = null; }); // a key press is never the end of a touch
+  keyboard.addEventListener('keydown', () => pressed.clear()); // a key press is never the end of a touch
   for (const type of ['pointerup', 'pointercancel', 'pointerleave']) keyboard.addEventListener(type, stopHold);
   // A finger sliding off the backspace key also stops it.
   keyboard.addEventListener('pointerout', (event) => { if (event.target.closest('.key-backspace')) stopHold(); });

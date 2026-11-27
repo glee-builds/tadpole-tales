@@ -2,18 +2,16 @@
 // read it, "Read to me", Refresh, and a book from a newer version.
 // Each tryX returns a problem, or '' when all is well. tests/screens.mjs runs them.
 
-import { mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import {
-  page, evaluate, sleep, waitFor, until, settle,
+  page, evaluate, sleep, waitFor, settle,
   HOME, open, touch, middleOf, press, typed,
   tapOn, tapButton, heading, noFields, isDisabled, fitProblem,
-  STORE, BREAK, MEND, STALL, savedTexts, markShows,
-  saveNow,
+  STORE, BREAK, MEND, STALL, savedTexts, markShows, MARK_SHOWS,
+  saveNow, shot,
 } from './lib.mjs';
 
-const reloaded = () => waitFor('window.__same === undefined', 5);
+// The new page has started too: its first save and its shelf are done, so a broken database can't catch the start-up save.
+const reloaded = () => waitFor(`window.__same === undefined && document.readyState === 'complete' && (${HOME})`, 10);
 
 /** Make a 3-page book on the app's keys, then find it, finish it, read it, and refresh. Returns a problem, or ''. */
 export async function tryBooks() {
@@ -38,7 +36,15 @@ export async function tryBooks() {
   if (await heading() !== 'Page 1 of 1') return `the page screen says "${await heading()}"`;
   if (!await noFields()) return 'a text field is on the page screen';
   if (!await isDisabled('Prev') || !await isDisabled('Remove')) return 'Prev and Remove should be off on a one-page book';
-  await press('p', 'i', 'p');
+  // Overlapping touches whose clicks come late (p down, i down, then p's click, then i's): each key types once.
+  await evaluate(`(() => {
+    const key = (name) => document.querySelector('[data-key="' + name + '"]');
+    for (const name of ['p', 'i']) key(name).dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerType: 'touch' }));
+    key('p').click();
+    key('i').click();
+  })()`);
+  if (await typed() !== 'pi') return `overlapping touches with late clicks typed "${await typed()}", not "pi"`;
+  await press('p');
   await tapButton('Add page');
   if (!await waitFor(`document.querySelector('.screen-title')?.textContent === 'Page 2 of 2'`, 3)) return 'Add page did not open page 2';
   await press('h', 'o', 'p', 's');
@@ -148,6 +154,26 @@ export async function tryBooks() {
   if (!gaveUp) return 'Refresh waited for ever on a save the database never answered';
   if (!await markShows()) return 'no "not saved" mark after the database never answered';
   await evaluate(MEND);
+
+  // One book can't be saved: another book saving does not hide the "not saved" mark. It goes once that book saves.
+  await open('', HOME);
+  const marks = await evaluate(`(async () => { ${STORE}
+    const real = IDBObjectStore.prototype.put;
+    IDBObjectStore.prototype.put = function (record) {
+      if (record.id === 'made-up-fails') throw new DOMException('test: disk full', 'QuotaExceededError');
+      return real.call(this, record);
+    };
+    await store.saveBook(book.newBook('made-up-fails', 1)).catch(() => {});
+    await store.saveBook(book.newBook('made-up-saves', 1));
+    const afterOther = ${MARK_SHOWS};
+    IDBObjectStore.prototype.put = real;
+    await store.saveBook(book.newBook('made-up-fails', 1));
+    const afterSame = ${MARK_SHOWS};
+    await store.deleteBook('made-up-fails');
+    await store.deleteBook('made-up-saves');
+    return afterOther + '|' + afterSame;
+  })()`);
+  if (marks !== 'true|false') return `the "not saved" mark showed ${marks} (after another book saved | after the failed book saved), not true|false`;
   return '';
 }
 
@@ -170,8 +196,7 @@ export async function tryNewer() {
 }
 
 
-const SHOTS_AT = (name) => process.env.SHOTS && page('Page.captureScreenshot', { format: 'png' })
-  .then(({ data }) => writeFileSync(join(process.env.SHOTS, `${name}-${PHONE_NOW}.png`), Buffer.from(data, 'base64')));
+const SHOTS_AT = (name) => shot(name, PHONE_NOW);
 let PHONE_NOW = 0;
 
 /** Finish a book: title, author name (first time only), cover; skip on a second book; closing mid-step; Edit. Returns a problem, or ''. */
