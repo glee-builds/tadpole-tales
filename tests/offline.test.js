@@ -24,6 +24,19 @@ test('sw.js saves every file the app needs for offline', () => {
   assert.deepEqual(missing, [], `add these to FILES in sw.js: ${missing.join(', ')}`);
 });
 
+test('every data/ file the app loads is in the sw.js list', () => {
+  // The app names a data file in its code, e.g. new URL('../data/stickers.json', import.meta.url).
+  const loaded = readdirSync(new URL('src/', root))
+    .filter((name) => name.endsWith('.js'))
+    .flatMap((name) => readFileSync(new URL(`src/${name}`, root), 'utf8').match(/\.\.\/data\/[\w.-]+/g) ?? [])
+    .map((path) => path.slice(3));
+  assert.ok(loaded.length > 0, 'found no data/ file loaded by src/, so this test checks nothing');
+  const missing = [...new Set(loaded)].filter((path) => !listed.includes(path));
+  assert.deepEqual(missing, [], `add these to FILES in sw.js: ${missing.join(', ')}`);
+  const unused = readdirSync(new URL('data/', root)).map((name) => `data/${name}`).filter((path) => !loaded.includes(path));
+  assert.deepEqual(unused, [], `these data/ files are loaded by no file in src/: ${unused.join(', ')}`);
+});
+
 test('every file in the sw.js list exists', () => {
   const gone = listed.filter((path) => path !== './' && !existsSync(new URL(path, root)));
   assert.deepEqual(gone, [], `these are in FILES in sw.js but don't exist: ${gone.join(', ')}`);
