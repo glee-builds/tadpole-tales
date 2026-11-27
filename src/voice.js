@@ -28,7 +28,7 @@ export function scoreVoice(voice) {
   return score;
 }
 
-/** The best voice in a list (from speechSynthesis.getVoices()), or null to use the device's default. */
+/** The best voice in a list (from speechSynthesis.getVoices()), or null if the device has none that is good enough (the app then says nothing). */
 export function pickVoice(voices) {
   let best = null;
   let bestScore = 0;

@@ -6,6 +6,7 @@ Shared rules for all coding projects are in `../CLAUDE.md`, and they apply here.
 
 - **Never commit directly to `main`.** The first commit was the only exception. All work goes on a branch and reaches `main` through a pull request.
 - **Claude merges its own pull requests once the GitHub checks pass.** The owner reviews afterwards. If a check fails, fix it on the same branch; never merge a red pull request.
+- **`main` is protected on GitHub:** a pull request with the passing `test` check is required, and force-pushing is not allowed.
 - One pull request does one thing.
 - This repo is public. Write "the writer", never a name, age, grade, or pronoun, in files, commit messages, branch names, and pull requests. Before pushing, scan with `grep -rn -w -i -E "he|him|his|she|her|son|daughter|year-old" . --exclude-dir=.git`.
 - The planning brief lives in `../_briefs/tadpole-tales/` and is never copied into this repo.
@@ -41,7 +42,7 @@ This project also adds:
 ## Repo layout
 
 ```
-index.html               the one page: the bookshelf's markup; app.js fills it in
+index.html               the one page: the bookshelf's markup; app.js fills it in; links styles.css and src/stickers.css
 styles.css               all the app's styles except the picture area
 sw.js                    the service worker: lets the app open offline; lists every file to save (FILES)
 manifest.webmanifest     the home-screen install settings (name, icons, portrait)
@@ -49,19 +50,19 @@ assets/                  the tadpole, the app icon and its PNGs (made with headl
 data/stickers.json       the sticker list: id, group, label and the device's own emoji
 src/app.js               starts the app; draws the bookshelf and the page screen (Write and Picture modes);
                          picks the other screens by location.hash
-src/ui.js                small helpers: make, button, plural, the "not saved" mark (saveMark)
+src/ui.js                small helpers: make, button, plural, tapScale (taps under tablet zoom), the "not saved" mark (saveMark)
 src/typing.js            the writer's text and cursor, as plain functions
 src/keyboard.js          the app's own keyboard and drawn writing area (mountWriter)
-src/book.js              a book as plain functions: pages, title, cover, backup file
+src/book.js              a book as plain functions: pages, title (bookTitle), cover, backup file
 src/store.js             saving books on the device (the only file that uses IndexedDB)
 src/stickers.js          the picture area: placing, moving and sizing stickers (mountPicture)
-src/stickers.css         styles for the picture area and the sticker tray
+src/stickers.css         styles for the picture area and the sticker tray (linked from index.html)
 src/reading.js           the reading view (showReading): one page at a time, with Read to me
 src/readaloud.js        "Read to me": speaks a book one sentence at a time with the device's voice
 src/sentences.js         cuts a page's text into sentences for reading aloud
 src/voice.js             picks the best English voice on the device; never an online one
 src/finish.js            title, author name and cover after Finish (showFinish)
-src/grownup.js           the grown-up page: device check, backup and restore, delete a book, start over
+src/grownup.js           the grown-up page, one function per section: device check, backup and restore, books, start over
 tests/                   tests for the plain functions (node --test) and tests/screens.mjs (a real browser)
 docs/                    decisions.md (the decisions log), phase-1-plan.md (task notes), device-checks.md (the owner's checklist)
 .github/                 the tests workflow and the pull request template

@@ -9,7 +9,7 @@
 //   const writer = mountWriter(box, { text: page.text, onChange: (text) => ... });
 //   writer.getText(); writer.setText('...'); writer.remove();
 
-import { make, button } from './ui.js';
+import { make, button, tapScale } from './ui.js';
 import { LIMIT, startTyping, typeKey, backspace, toggleShift, moveCursor, newLine } from './typing.js';
 
 const ROWS = [
@@ -142,21 +142,12 @@ export function mountWriter(parent, { text = '', limit = LIMIT, label = 'Your wo
   };
 }
 
-/** How much CSS zoom (the tablet rule in styles.css) enlarges `node` on the screen. */
-function zoomOf(node) {
-  let zoom = 1;
-  for (let at = node; at; at = at.parentElement) zoom *= Number(getComputedStyle(at).zoom) || 1;
-  return zoom;
-}
-
 /**
  * The gap between letters nearest a tap at (x, y): 0 is before the first
- * letter. A tap is in screen pixels; under CSS zoom old Safari measures boxes
- * in un-zoomed pixels and newer browsers in screen pixels, so the tap is
- * scaled to match the boxes (the same sum as `across` in Little Pond).
+ * letter. A tap is in screen pixels, so it is scaled to match the boxes (tapScale).
  */
 export function nearestGap(area, x, y) {
-  const scale = (zoomOf(area) * area.offsetWidth) / area.getBoundingClientRect().width;
+  const scale = tapScale(area);
   const tapX = x / scale;
   const tapY = y / scale;
   // Each gap sits at the left edge of the character after it; the end marker is the last gap.

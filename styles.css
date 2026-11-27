@@ -6,17 +6,22 @@
   --muted: #6b6280;      /* 5.2:1 on the page, 5.6:1 on white */
   --surface: #ffffff;
   --border: #e3dccf;
+  --edge: #e3d6c3;       /* the darker line around the writing area, picture and small buttons */
+  --edge-deep: #d9cbb6;  /* the shadow line under keys and sticker tiles */
+  --warn: #9a3412;       /* warning text (7:1 on white) */
   --go: #ff8a5c;
   --on-go: #2b2440;      /* dark text on orange (white would be too faint) */
   --words-ink: #5644c4;  /* purple text on cream or white (6:1) */
   --size-ink: #12705f;   /* teal text (5.9:1 on white) */
   --water: #cdeef5;
   --star: #ffb627;
-  --vh: 100vh;           /* the screen's height; the tablet rule below changes it */
+  --full: 100vh;         /* the screen's height */
+  --zoom: 1;             /* the tablet rule below makes it 1.3 */
+  --vh: calc(var(--full) / var(--zoom));
 }
 
 @supports (height: 100dvh) {
-  :root { --vh: 100dvh; } /* the part of the screen not hidden by the browser's bars (Safari 15.4 has it) */
+  :root { --full: 100dvh; } /* the part of the screen not hidden by the browser's bars (Safari 15.4 has it) */
 }
 
 /* Andika: a font made for children learning to read. The files live in
@@ -139,7 +144,7 @@ button { font-family: inherit; }
   overflow-y: auto; /* only if many new lines; 300 letters fit without it */
   margin: 0 4px;
   padding: 10px 12px;
-  border: 2px solid #e3d6c3;
+  border: 2px solid var(--edge);
   border-radius: 16px;
   background: #fff;
   font-size: 20px;
@@ -151,10 +156,10 @@ button { font-family: inherit; }
 
 .writing .cursor {
   display: inline-block;
-  width: 0;
+  width: 3px;
   height: 1.2em;
   margin-right: -3px;
-  border-left: 3px solid #e0622f; /* a darker --go: 3.5:1 on the white writing area */
+  background: #e0622f; /* a darker --go: 3.5:1 on the white writing area */
   vertical-align: text-bottom;
 }
 
@@ -184,7 +189,7 @@ button { font-family: inherit; }
   border: 0;
   border-radius: 8px;
   background: #fff;
-  box-shadow: 0 2px 0 #d9cbb6;
+  box-shadow: 0 2px 0 var(--edge-deep);
   color: var(--text);
   font-size: 1.3rem;
 }
@@ -203,15 +208,9 @@ button { font-family: inherit; }
 /* ---------- Tablets (iPad) ---------- */
 /* Held upright, the phone column is shown bigger, the way Little Pond does it. */
 @media (min-width: 700px) and (min-height: 900px) {
-  :root { --vh: calc(100vh / 1.3); }
+  :root { --zoom: 1.3; }
   .shelf,
-  .screen { zoom: 1.3; }
-}
-
-@supports (height: 100dvh) {
-  @media (min-width: 700px) and (min-height: 900px) {
-    :root { --vh: calc(100dvh / 1.3); }
-  }
+  .screen { zoom: var(--zoom); }
 }
 
 /* "Not saved": shown only while a save has failed (src/ui.js saveMark). */
@@ -221,7 +220,7 @@ button { font-family: inherit; }
   border: 2px solid #c2410c;
   border-radius: 12px;
   background: #fff;
-  color: #9a3412;
+  color: var(--warn);
   font-weight: 700;
 }
 
@@ -253,7 +252,7 @@ button { font-family: inherit; }
 }
 
 .books-note { grid-column: 1 / -1; margin: 12px 0; color: var(--muted); text-align: center; font-size: 1.05rem; }
-.books-problem { color: #9a3412; font-weight: 700; }
+.books-problem { color: var(--warn); font-weight: 700; }
 
 /* A book on the shelf: Lily Pad's card, with the cover title inside. */
 .book-card {
@@ -289,7 +288,6 @@ button { font-family: inherit; }
   line-height: 1.25;
 }
 
-.cover .picture { border-width: 1px; border-radius: 8px; }
 .card-edit { margin-top: 8px; min-height: 48px; font-size: 0.95rem; }
 
 .cover-title {
@@ -330,17 +328,7 @@ button { font-family: inherit; }
 .shelf-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; }
 
 /* Refresh, at the very bottom of the shelf: quiet, but easy to tap (as in Lily Pad). */
-.refresh-button {
-  min-height: 48px;
-  padding: 0 14px;
-  border: 2px solid var(--border);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--muted);
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-}
+.refresh-button { background: transparent; color: var(--muted); }
 
 /* ---------- The page screen (writing) ---------- */
 
@@ -361,22 +349,7 @@ button { font-family: inherit; }
 /* Write | Picture: two big buttons with an icon and words, in the top row. */
 .mode-switch { flex: 1 1 0; display: flex; gap: 4px; min-width: 0; }
 
-.mode-choice {
-  flex: 1 1 0;
-  min-width: 0;
-  min-height: 48px;
-  padding: 0 4px;
-  border: 2px solid var(--border);
-  border-radius: 24px;
-  background: var(--surface);
-  color: var(--text);
-  font: inherit;
-  font-size: 0.95rem;
-  font-weight: 700;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
+.mode-choice { flex: 1 1 0; min-width: 0; padding: 0 4px; font-size: 0.95rem; }
 .mode-choice[aria-pressed="true"] { border-color: var(--go); background: var(--go); color: var(--on-go); font-weight: 800; box-shadow: 0 3px 0 #c9602f; }
 
 .page-tools { display: flex; gap: 6px; padding: 0 4px; }
@@ -403,7 +376,7 @@ button { font-family: inherit; }
 }
 
 /* The picture sits in the middle above the words; src/reading.js sets its height and width so the page always fits. */
-.read-art .picture { position: relative; top: auto; bottom: auto; left: auto; flex: none; transform: none; background: #fff; border-color: #e3d6c3; }
+.read-art .picture { position: relative; top: auto; bottom: auto; left: auto; flex: none; transform: none; background: #fff; border-color: var(--edge); }
 .read-art { display: flex; justify-content: center; align-items: flex-start; overflow: hidden; }
 .read-text { margin: 0; font-size: 24px; white-space: pre-wrap; overflow-wrap: break-word; }
 
@@ -423,16 +396,16 @@ button { font-family: inherit; }
 
 .read-text.read-empty { color: var(--muted); font-size: 1.1rem !important; }
 .read-nav { display: flex; align-items: center; gap: 8px; padding: 0 4px; }
-.read-count { flex: 1; text-align: center; color: var(--muted); font-weight: 700; }
+.read-count { flex: 1; margin: 0; text-align: center; color: var(--muted); font-weight: 700; }
 .read-nav .pill { min-width: 104px; }
 
 /* Fills from left to right while held (src/grownup.js holdToOpen). */
 .hold-button {
   min-height: 48px;
   padding: 0 12px;
-  border: 2px solid #e3d6c3;
+  border: 2px solid var(--edge);
   border-radius: 24px;
-  background: linear-gradient(to right, #e3d6c3 50%, transparent 50%) right / 200% 100%;
+  background: linear-gradient(to right, var(--edge) 50%, transparent 50%) right / 200% 100%;
   color: var(--muted);
   font-size: 0.85rem;
   -webkit-user-select: none;
@@ -456,34 +429,26 @@ button { font-family: inherit; }
 .grownups h1 { font-size: 1.4rem; }
 .grownups h2 { margin: 24px 0 8px; font-size: 1.15rem; }
 .gu-note { margin: 8px 0; color: var(--muted); }
-.gu-warn { color: #9a3412; font-weight: 700; }
+.gu-warn { color: var(--warn); font-weight: 700; }
 
-.plain-button {
-  min-height: 48px;
-  margin: 4px 8px 4px 0;
-  padding: 0 16px;
-  border: 2px solid #e3d6c3;
-  border-radius: 12px;
-  background: #fff;
-  color: var(--text);
-  font-size: 1rem;
-}
+/* A quieter pill for the grown-up page. */
+.plain-button { margin: 4px 8px 4px 0; padding: 0 16px; border-radius: 12px; font-weight: 400; white-space: normal; }
 
-.gu-danger { border-color: #c2410c; color: #9a3412; font-weight: 700; }
+.gu-danger { border-color: #c2410c; color: var(--warn); font-weight: 700; }
 
 .gu-checks,
 .gu-books { margin: 0; padding: 0; list-style: none; }
 .gu-check,
 .gu-book { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 4px 0; border-bottom: 1px solid #eee2d2; }
-.gu-check .plain-button { min-width: 150px; text-align: left; }
+.gu-check .plain-button { min-width: 150px; justify-content: flex-start; text-align: left; }
 .gu-result { flex: 1 1 160px; overflow-wrap: anywhere; }
 .gu-yes { color: #166534; }
-.gu-no { color: #9a3412; }
+.gu-no { color: var(--warn); }
 
 .gu-copy {
   margin: 12px 0 4px;
   padding: 8px;
-  border: 1px solid #e3d6c3;
+  border: 1px solid var(--edge);
   background: #fff;
   font-size: 0.8rem;
   white-space: pre-wrap;
@@ -495,9 +460,8 @@ button { font-family: inherit; }
 .gu-confirm p { margin: 8px 0; }
 
 /* The restore file picker: the label looks like a button; the input inside is hidden but still works. */
-.gu-pick { display: inline-flex; align-items: center; position: relative; }
+.gu-pick { position: relative; }
 .gu-pick input { position: absolute; width: 1px; height: 1px; opacity: 0; }
-.plain-button:disabled { opacity: 0.5; }
 
 /* ---------- Finish: title, author name, cover ---------- */
 
@@ -506,13 +470,14 @@ button { font-family: inherit; }
 .finish-cover { display: flex; flex: 1; flex-direction: column; align-items: center; gap: 6px; min-height: 0; }
 .finish-title { margin: 0; max-width: 100%; font-size: 1.4rem; font-weight: 800; line-height: 1.2; text-align: center; overflow-wrap: anywhere; }
 .finish-by { margin: 0; color: var(--muted); font-weight: 700; }
-.finish-cover .picture { width: min(100%, 280px); border-width: 3px; }
 .finish-cover .sticker-tray { width: 100%; }
 .shelf-message { color: var(--size-ink); font-weight: 800; }
 
-/* The page screen's picture is placed in a slot; here it simply sits in the flow. */
+/* The page screen's picture is placed in a slot; on a cover it simply sits in the flow. */
 .cover .picture,
 .finish-cover .picture { top: auto; bottom: auto; left: auto; max-width: none; transform: none; }
+.cover .picture { border-width: 1px; border-radius: 8px; }
+.finish-cover .picture { width: min(100%, 280px); border-width: 3px; }
 
 /* The page screen has many rows; tighter gaps leave the words and keys their room at 375 x 667. */
 .page-screen { gap: 4px; padding-top: max(4px, env(safe-area-inset-top)); padding-bottom: max(4px, env(safe-area-inset-bottom)); }
