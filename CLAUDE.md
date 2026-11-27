@@ -44,7 +44,10 @@ This project also adds:
 index.html          the bookshelf (empty for now)
 assets/             the tadpole, the icon and its PNGs (made with headless Chrome)
 styles.css
+src/typing.js       the text and the cursor, as plain functions
+src/keyboard.js     the app's keyboard and drawn writing area (mountWriter)
 docs/decisions.md   decisions log
+docs/phase-1-plan.md  Phase 1 task notes and shared names
 .github/            pull request template
 ```
 
