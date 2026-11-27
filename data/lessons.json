@@ -116,7 +116,7 @@
       "reminder": "What do your characters say?",
       "selfCheck": {
         "kind": "sentence",
-        "prompt": "Tap a line where someone talks.",
+        "prompt": "Tap a sentence where someone talks.",
         "notYet": "I don't have one yet",
         "notYetOffer": "That's okay! Want to go back and add it?"
       },
@@ -140,16 +140,16 @@
         "notYetOffer": "That's okay! Want to go back and add it?"
       },
       "praise": "On page {page}, readers can tell how your character feels.",
-      "job": "Add how your character feels at the end.",
+      "job": "Show how your character feels at the end.",
       "tip": null
     },
     {
       "id": "change-ending",
       "number": 8,
       "title": "Endings that change someone",
-      "idea": "By the end, your character is different or learned something.",
+      "idea": "By the end, your character is different. Maybe braver, kinder, or smarter.",
       "before": "Bo found the way home.",
-      "after": "Bo found the way home. Now Bo isn't scared of the dark woods.",
+      "after": "Bo found the way home. Now Bo always takes a map.",
       "tryIt": "Try it in your book: show how your character changed.",
       "reminder": "How is your character different now?",
       "selfCheck": {
@@ -167,7 +167,7 @@
     "finished": "You finished your book. You're an author!",
     "readItToSomeone": "Read it to someone!",
     "noLessonYet": "Tadpole is still writing the next lesson. Keep making books!",
-    "pickLesson": "Pick one lesson to keep in mind for this book.",
+    "pickLesson": "Pick one lesson to use in this book.",
     "pickNone": "No lesson this time"
   }
 }

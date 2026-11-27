@@ -168,7 +168,7 @@
         ]
       },
       {
-        "text": "Ollie followed the smell to a tall tree. Bzzz! The bees buzzed loud and cross. Ollie felt a little scared.",
+        "text": "Ollie followed the smell to a tall tree. Bzzz! The bees buzzed loud and grumpy. Ollie felt a little scared.",
         "stickers": [
           { "id": "tree", "x": 0.6, "y": 0.58, "size": 2 },
           { "id": "bee", "x": 0.55, "y": 0.25, "size": 0.75 },
@@ -184,7 +184,7 @@
         ]
       }
     ],
-    "find": { "kind": "sentence", "prompt": "Tap a sentence where Ollie smells something.", "page": 1, "sentence": "Something smelled sweet, like flowers in the sun." }
+    "find": { "kind": "sentence", "prompt": "Tap the sentence that tells what the smell is like.", "page": 1, "sentence": "Something smelled sweet, like flowers in the sun." }
   },
   {
     "lesson": "talking",
@@ -275,15 +275,16 @@
         ]
       },
       {
-        "text": "Olo's friends flew off to see the moon. Olo wanted to go too. But the woods were so dark and so quiet.",
+        "text": "Olo's friends flew off to see the moon. Olo wanted to go too. So Olo held the lantern tight and flew out slowly.",
         "stickers": [
           { "id": "evergreen", "x": 0.25, "y": 0.62, "size": 2 },
           { "id": "owl", "x": 0.55, "y": 0.6, "size": 1 },
+          { "id": "lantern", "x": 0.68, "y": 0.68, "size": 0.5 },
           { "id": "moon", "x": 0.82, "y": 0.2, "size": 1 }
         ]
       },
       {
-        "text": "Then the lantern blew out! Olo shivered. But slowly, Olo's big eyes could see. The moon made the leaves shine silver.",
+        "text": "Then, puff! The wind blew the lantern out. Olo shivered. But slowly, Olo's big eyes could see. The moon made the leaves shine silver.",
         "stickers": [
           { "id": "owl", "x": 0.45, "y": 0.6, "size": 1.25 },
           { "id": "evergreen", "x": 0.78, "y": 0.62, "size": 1.5 },
