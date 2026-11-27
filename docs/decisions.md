@@ -22,3 +22,6 @@ Every project decision, when it was made, and why. When a decision changes, don'
 | 2026-11-27 | Look | Always light; does not follow dark mode | Same as the sibling apps |
 | 2026-11-27 | Backups | Backup files (`tadpole-tales-backup-*.json`) are ignored by Git | They hold the writer's books |
 | 2026-11-27 | Testing on GitHub | Every pull request runs `node --test` and `node tests/screens.mjs` | A broken change is caught before merging |
+| 2026-11-27 | Phase 1 plan | Task notes, shared data shapes and exact function names for Phase 1 are in `docs/phase-1-plan.md` | Later tasks are built by other models that read only that note and `CLAUDE.md` |
+| 2026-11-27 | Book record | One record per book with `format: 1`, an `id` from `crypto.randomUUID()`, and `stickers: []` and `cover: null` already in place | Phase 2 fills them in without needing a new format |
+| 2026-11-27 | Screens | Screens are picked by `location.hash` (`#book/<id>/<page>`, `#read/<id>`, `#grown-ups`) | Same as Little Pond; the back button works |
