@@ -39,12 +39,15 @@ Every task: `node --test tests/` and `node tests/screens.mjs` pass, the privacy 
 
 ## 1.1 Grown-up page and device check (Opus)
 
-Files: `src/grownup.js` (new), `src/app.js`, `index.html`, `styles.css`, `sw.js`, `tests/screens.mjs`, `docs/decisions.md`.
+Files: `src/grownup.js` (new), `src/app.js`, `index.html`, `styles.css`, `sw.js`, `tests/screens.mjs`, `docs/decisions.md`, `README.md`.
 
 Exports from `src/grownup.js`:
 - `holdToOpen(button, onOpen, ms = 2000)`: copy Little Pond's hold (pointerdown starts a timer; up, leave or cancel stops it; no context menu; a keyboard click with `event.detail === 0` opens it).
 - `showGrownup(root, { onBack })`: draws the page into `root`. Phase 1 shows the device check and a back button. 1.8 adds backup and restore here.
-- `runDeviceCheck()` returns `Promise<Array<{ name: string, ok: boolean, detail: string }>>`, one item each: save and reread a record in a throwaway IndexedDB database (then delete it); `navigator.storage.persist()`; speak one sentence with `speechSynthesis` and count `boundary` events with `name === 'word'`; record 3 seconds with `MediaRecorder` and play it back (only after a grown-up taps a button, never on its own); `navigator.canShare({ files: [new File(['x'], 'x.json')] })`; the browser's version from `navigator.userAgent`. Each item catches its own errors and reports them as `ok: false`. Never throws.
+- `DEVICE_CHECKS`: a list of `{ name, run }`, and `runCheck(check)` resolves `{ name, ok, detail }` and never rejects (it catches errors and gives up after 30 seconds). Each check is started by its own tap on the page, because speech and sound only work inside a tap (changed from the first plan's single `runDeviceCheck()`, which would have run speech and playback outside the tap on iOS). The checks: save and reread a record in a throwaway IndexedDB database (then delete it); `navigator.storage.persist()`; Home Screen or browser tab; speak one sentence with `speechSynthesis` and count `boundary` events with `name === 'word'`; record 3 seconds with `MediaRecorder` (and which audio types it supports); play that recording back; `navigator.canShare({ files: [new File(['x'], 'x.json')] })`; the browser's `navigator.userAgent`. The page shows each result as ✓ or ✗ with words, and a "Copy results" text block.
+- `INSTALL_NOTE` ("Add to Home Screen to keep books safe.") and `isInstalled()`: the bookshelf shows the note when `!isInstalled()`.
+- `askFirst(label, question, yesLabel, onYes, extras = [])`: a button that asks a second time; `extras` are put in the question (1.8 puts "Back up first" in start over's).
+- The page also deletes a book (`deleteBook`) and starts over (`startOver`), each through `askFirst`.
 
 Hold button: a small corner button on the bookshelf. The page is not a writer screen, so `<input type="file">` is allowed there later.
 

@@ -4,6 +4,7 @@ import { make, button, saveMark } from './ui.js';
 import { mountWriter } from './keyboard.js';
 import { newBook, setPageText } from './book.js';
 import { saveSoon, saveNow, onSaveState } from './store.js';
+import { holdToOpen, showGrownup, isInstalled, INSTALL_NOTE } from './grownup.js';
 
 // The service worker (sw.js) saves the app's files so it opens without
 // internet. If the phone can't run one, the app works as before, online.
@@ -39,3 +40,19 @@ document.querySelector('.go').addEventListener('click', () => {
   shelf.hidden = true;
   document.body.append(screen);
 });
+
+// Not opened from the Home Screen: tell a grown-up the books may not be safe.
+if (!isInstalled()) shelf.querySelector('.install-note').textContent = INSTALL_NOTE;
+
+// The grown-up page (#grown-ups) opens when its button is held for 2 seconds.
+const grownups = document.querySelector('.grownups');
+holdToOpen(document.querySelector('.hold-button'), () => { location.hash = 'grown-ups'; });
+function show() {
+  const open = location.hash === '#grown-ups';
+  grownups.hidden = !open;
+  shelf.hidden = open;
+  if (open) showGrownup(grownups, { onBack: () => { location.hash = ''; } });
+  else grownups.replaceChildren();
+}
+addEventListener('hashchange', show);
+show();

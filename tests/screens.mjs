@@ -373,6 +373,78 @@ async function trySaving() {
   return unread;
 }
 
+// ---------- The grown-up page (src/grownup.js) ----------
+
+/** Scroll `selector` into view and tap its middle (the nth match). */
+async function tapOn(selector, n = 0, ms = 40) {
+  const { x, y } = await evaluate(`(() => {
+    const node = document.querySelectorAll(${JSON.stringify(selector)})[${n}];
+    node.scrollIntoView({ block: 'center' });
+    const box = node.getBoundingClientRect();
+    return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+  })()`);
+  await touch(x, y, ms);
+}
+
+/** Wait up to `seconds` for a JavaScript test to be true. */
+async function waitFor(test, seconds = 5) {
+  for (let i = 0; i < seconds * 10; i++) {
+    if (await evaluate(test)) return true;
+    await sleep(100);
+  }
+  return false;
+}
+
+const grownupOpen = 'location.hash === "#grown-ups" && !document.querySelector(".grownups").hidden';
+
+/** A tap doesn't open the grown-up page, a 2-second hold does; every check reports; delete and start over ask first. */
+async function tryGrownup() {
+  if (!await open('', 'document.querySelector(".hold-button") !== null')) return 'home did not draw';
+  await evaluate(`(async () => { ${STORE} await store.startOver();
+    await store.saveBook(book.setPageText(book.newBook('made-up-1', 1), 0, 'A duck found a hat.', 1));
+    await store.saveBook(book.setPageText(book.newBook('made-up-2', 2), 0, 'The moon fell in the pond.', 2)); })()`);
+  if (!await evaluate(`document.querySelector('.install-note').textContent.includes('Home Screen')`)) return 'no "Add to Home Screen" note in a browser tab';
+
+  await tapOn('.hold-button', 0, 300);
+  await sleep(300);
+  if (await evaluate(grownupOpen)) return 'a short tap opened the grown-up page';
+  await tapOn('.hold-button', 0, 2300);
+  if (!await waitFor(grownupOpen, 2)) return 'holding for 2 seconds did not open the grown-up page';
+  const wide = await evaluate('document.documentElement.scrollWidth - innerWidth');
+  if (wide > 0) return `the grown-up page is ${wide}px wider than the screen`;
+
+  // Every check, each started by its own tap, gives an answer (headless Chrome has no microphone or voice).
+  const count = await evaluate('document.querySelectorAll(".gu-check button").length');
+  if (count !== 8) return `${count} device checks, not 8`;
+  for (let n = 0; n < count; n++) {
+    await tapOn('.gu-check button', n);
+    if (!await waitFor(`/^[✓✗]/.test(document.querySelectorAll('.gu-result')[${n}].textContent)`, 35)) {
+      return `check ${n + 1} gave no answer: "${await evaluate(`document.querySelectorAll('.gu-result')[${n}].textContent`)}"`;
+    }
+  }
+  const lines = await evaluate(`document.querySelector('.gu-copy').textContent.split('\\n').length`);
+  if (lines !== 8) return `the results to copy have ${lines} lines, not 8`;
+  if (!await evaluate(`document.querySelector('.gu-copy').textContent.includes('✓ Save and reread')`)) return 'save and reread did not pass';
+
+  // Delete one book: it asks first, then only that book goes.
+  if (!await waitFor(`document.querySelectorAll('.gu-book').length === 2`)) return 'the page does not list the 2 books';
+  await tapOn('.gu-book .plain-button');
+  if (await evaluate(`document.querySelectorAll('.gu-book').length`) !== 2) return 'Delete did not ask first';
+  await tapOn('.gu-book .gu-danger');
+  if (!await waitFor(`document.querySelectorAll('.gu-book').length === 1`)) return 'Yes, delete did not delete the book';
+  if (JSON.stringify(await savedTexts()) !== '["A duck found a hat."]') return `the wrong book was deleted: ${JSON.stringify(await savedTexts())}`;
+
+  // Start over: asks first, then the shelf is empty.
+  await tapOn('.grownups > .gu-ask .plain-button');
+  await tapOn('.grownups > .gu-ask .gu-danger');
+  if (!await waitFor(`document.querySelector('.gu-books').textContent === 'No books yet.'`)) return 'start over left books on the page';
+  if ((await savedTexts()).length) return 'start over left books in the database';
+
+  await tapOn('.grownups .back');
+  if (!await waitFor('location.hash === "" && !document.querySelector(".shelf").hidden', 2)) return 'Back did not go to the bookshelf';
+  return '';
+}
+
 /** Run a check that returns a problem (or ''), and note it. */
 async function checkWith(label, check) {
   checked++;
@@ -391,6 +463,7 @@ async function checkWith(label, check) {
 try {
   await checkScreen('Home (phone)', '');
   await checkWith('Saving: save, reload, spare copy, retry once, "not saved" mark, unreadable books', trySaving);
+  await checkWith('Grown-up page: hold to open, every device check, delete a book, start over', tryGrownup);
   await checkKeyboard('Keyboard: type, tap to move the cursor, hold backspace, 300 fit (phone)');
   for (const [tablet, size] of Object.entries(TABLETS)) {
     await page('Emulation.setDeviceMetricsOverride', { ...size, deviceScaleFactor: 2, mobile: true });

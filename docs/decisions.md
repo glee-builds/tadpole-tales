@@ -39,3 +39,8 @@ Every project decision, when it was made, and why. When a decision changes, don'
 | 2026-11-27 | Saving | `loadBooks` rejects when the books can't be read, so a screen says so instead of showing an empty shelf. A record that isn't a readable book stays in the database | An empty shelf would look like the books were lost |
 | 2026-11-27 | Saving | No `takeSpare()` (it was in the plan): `loadBooks` puts the spare back itself and clears it only after it is saved | Clearing first could lose the spare if that save failed |
 | 2026-11-27 | Keyboard demo | The demo saves what is typed as a one-page book (nothing is saved until the first key) | So saving can be tried on a device before the page screen exists |
+| 2026-11-27 | Grown-up page | Opened by holding "For grown-ups: press and hold" on the bookshelf for 2 seconds, as in Little Pond. Shown at `#grown-ups` | A writer's quick taps never land on delete or start over |
+| 2026-11-27 | Device check | Each check has its own button and starts only when tapped; results show as ✓ or ✗ with words, plus a "Copy results" block | iOS only lets a page speak, use the microphone and play sound inside a tap |
+| 2026-11-27 | Device check results | Waiting for results: the owner runs the check on the phone and the iPad and pastes "Copy results" here | Chrome can't prove what Safari 15.4 does |
+| 2026-11-27 | Delete and start over | Both ask a second time. Start over empties books, recordings and settings | Books are precious |
+| 2026-11-27 | Install first | In a browser tab the bookshelf shows "Add to Home Screen to keep books safe." The grown-up page and README say that removing the app's icon deletes its books | On iOS a tab and the Home Screen app keep separate storage, and Safari can clear a tab's storage |

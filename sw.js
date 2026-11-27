@@ -26,6 +26,7 @@ const FILES = [
   'src/book.js',
   'src/keyboard.js',
   'src/store.js',
+  'src/grownup.js',
   'assets/apple-touch-icon.png',
   'assets/icon-192.png',
   'assets/icon-512.png',
