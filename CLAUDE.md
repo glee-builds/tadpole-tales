@@ -1,0 +1,52 @@
+# tadpole-tales: working rules for Claude Code
+
+Shared rules for all coding projects are in `../CLAUDE.md`, and they apply here. This file adds this project's rules. The full decision history is in `docs/decisions.md`; when a decision changes, update that file and note why.
+
+## Workflow
+
+- **Never commit directly to `main`.** The first commit was the only exception. All work goes on a branch and reaches `main` through a pull request.
+- **Claude merges its own pull requests once the GitHub checks pass.** The owner reviews afterwards. If a check fails, fix it on the same branch; never merge a red pull request.
+- One pull request does one thing.
+- This repo is public. Write "the writer", never a name, age, grade, or pronoun, in files, commit messages, branch names, and pull requests. Before pushing, scan with `grep -rn -w -i -E "he|him|his|she|her|son|daughter|year-old" . --exclude-dir=.git`.
+- The planning brief lives in `../_briefs/tadpole-tales/` and is never copied into this repo.
+
+## Locked decisions
+
+- **Code:** plain HTML, CSS, and JavaScript ES modules. No framework, no build step, no npm packages.
+- **Repo:** public, named `tadpole-tales`. Writers see "Tadpole Tales".
+- **Hosting:** GitHub Pages from the root of `main`. Installable to the home screen; works offline.
+- **Data:** books are kept in IndexedDB on the device. One writer, no accounts, no network requests.
+- **Testing:** Node's built-in test runner (`node --test`).
+- **Devices:** a phone, and an older iPad mini (7.9-inch). The app must run on Safari 15.4. Nothing newer in CSS or JavaScript without a fallback.
+- **Always light:** the app does not follow the device's dark mode.
+- **Writing:** the writer makes up the story and writes the words themself. Spelling never interrupts writing. Offering spelling corrections is only ever at the end of a book.
+- **No grammar:** grammar and punctuation are never taught, checked, or corrected.
+- **No AI** in the app for now.
+- **Pictures:** stickers only. No freehand drawing.
+
+## Design rules
+
+Kids' app rules in `../CLAUDE.md` apply, with three exceptions for this project:
+
+1. **Letter keys are 48px tall but narrower than 48px.** Ten letters cannot be 48px wide on a phone. Keys are as wide as the phone allows (about 34px).
+2. **Books are kept in IndexedDB, not `localStorage`.** Books can be large and must not be lost. (A spare copy of the page being typed may sit in `localStorage`.)
+3. **Backup and restore use the device's own file screens, on the grown-up page only.**
+
+This project also adds:
+
+- **No text field on writer screens.** No `<input>`, `<textarea>`, or `contenteditable` on any screen the writer uses. The app draws the writing area and keeps the text and cursor itself, with its own on-screen keyboard. This keeps the system keyboard, autocorrect, and paste bubble away.
+- Every screen fits a 375 x 667 phone with no scrolling. If room is short, shrink the picture, never the keys.
+- No text the writer must read for a game to work, but short on-screen words are fine.
+
+## Repo layout
+
+```
+index.html          the bookshelf (empty for now)
+styles.css
+docs/decisions.md   decisions log
+.github/            pull request template
+```
+
+## Preview locally
+
+`python3 -m http.server 8020`, then open http://localhost:8020.

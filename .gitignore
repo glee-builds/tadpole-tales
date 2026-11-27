@@ -1,0 +1,8 @@
+# macOS folder metadata
+.DS_Store
+
+# Node packages (we do not use any, but keep them out just in case)
+node_modules/
+
+# Grown-up backup files. They hold the writer's books, so they never go in the repo.
+tadpole-tales-backup-*.json
