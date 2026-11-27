@@ -53,7 +53,7 @@ test('gives the place of the word, reading order, each misspelling once', () => 
 test('quotes, apostrophes and a trailing s do not confuse it', () => {
   assert.deepEqual(ask('"frend," said it. \'rok\' dogs\' dog\'s'), [
     { pageIndex: 0, start: 1, end: 6, word: 'frend', suggestion: 'friend' },
-    { pageIndex: 0, start: 20, end: 23, word: 'rok', suggestion: 'rock' },
+    { pageIndex: 0, start: 19, end: 22, word: 'rok', suggestion: 'rock' },
   ]);
   assert.equal(suggest('wont'), "won't");
   assert.equal(suggest('dont'), "don't");
