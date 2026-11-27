@@ -1,5 +1,7 @@
 # Phase 1 plan: write and keep a book
 
+Note: where this plan and the code or `docs/decisions.md` differ, the code and `docs/decisions.md` are the source of truth.
+
 One note per task. Each task is one pull request, built in this order: 1.1, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10 (1.2, tests on GitHub, is done). Read `CLAUDE.md` first; its rules win. A task touches only the files listed for it. Names below are exact: other tasks call them, so don't rename them. If a task needs something not listed here, add it in the same pull request and update this file.
 
 Every task: `node --test tests/` and `node tests/screens.mjs` pass, the privacy scan in `CLAUDE.md` finds nothing about a person, any new file the app loads is in `FILES` in `sw.js`, and new decisions go in `docs/decisions.md`.
@@ -22,11 +24,11 @@ Every task: `node --test tests/` and `node tests/screens.mjs` pass, the privacy 
   created: 1764200000000,    // ms since 1970 (Date.now())
   changed: 1764200000000,
   finished: false,
-  title: '',                 // set at "Finish" (Phase 2)
-  cover: null,               // Phase 2: { sticker: 'frog' }
+  title: '',                 // typed at "Finish"
+  cover: null,               // null, or { stickers: [ ...same sticker shape as a page... ] }, set at "Finish"
   pages: [ { text: '', stickers: [] } ],   // 1 to 12 pages
 }
-// a sticker (Phase 2): { id: 'frog', x: 0.5, y: 0.5, size: 1 }, x and y are parts of the 4:3 picture
+// a sticker: { id: 'frog', x: 0.5, y: 0.5, size: 1 }, id from data/stickers.json; x and y are parts of the 4:3 picture
 ```
 
 **Backup file** (task 1.8): `tadpole-tales-backup-YYYY-MM-DD.json`.
@@ -87,7 +89,7 @@ Done when: tests cover each function, including the 1 and 12 page edges and that
 
 ## 1.6 Store and saving (Opus)
 
-Files: `src/store.js`, `src/ui.js` (`saveMark`), `src/app.js` (the 1.4 demo saves what is typed), `styles.css`, `sw.js`, `tests/screens.mjs`. No `tests/store.test.js`: nothing in `store.js` runs without IndexedDB, so the screen test covers it.
+Files: `src/store.js`, `src/ui.js` (`saveMark`), `src/app.js` (the 1.4 demo saves what is typed), `styles.css`, `sw.js`, `tests/screens.mjs`. No `tests/store.test.js` was planned, and none exists: nothing in `store.js` runs without IndexedDB, so the screen test covers it.
 
 Database `tadpole-tales`, version 1, stores: `books` (keyPath `id`), `recordings` (keyPath `id`, empty until Phase 4), `settings` (keyPath `key`, records `{ key, value }`).
 

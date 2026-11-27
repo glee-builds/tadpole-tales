@@ -2,7 +2,16 @@
 
 **Tadpole Tales** is the name the writer sees. The repo and web address are `tadpole-tales`.
 
-A place for a young writer to make picture books and learn how stories work. The writer tells a story, writes it in their own words on the app's own keyboard, adds stickers as pictures, and keeps finished books on a bookshelf. It runs on a phone and an older iPad, installs to the home screen, and is meant to work offline. It is a sibling of [Lily Pad](https://github.com/glee-builds/kids-puzzles) and [Little Pond](https://github.com/glee-builds/little-pond) and is built the same way: plain HTML, CSS, and JavaScript, with no framework, no build step, no accounts, and no network requests. Books are saved on the device.
+A place for a young writer to make picture books and learn how stories work. It runs on a phone and an older iPad, installs to the home screen, and works offline. It is a sibling of [Lily Pad](https://github.com/glee-builds/kids-puzzles) and [Little Pond](https://github.com/glee-builds/little-pond) and is built the same way: plain HTML, CSS, and JavaScript, with no framework, no build step, no accounts, and no network requests. Books are saved on the device.
+
+What the app does:
+
+- **Bookshelf:** every book is a card. Unfinished books come first. A finished book opens to read.
+- **Writing:** the writer types on the app's own keyboard, so the phone's keyboard never appears. A page holds up to 300 characters, and a book up to 12 pages.
+- **Stickers:** the writer adds emoji stickers to a page's picture, moves them, and sizes them.
+- **Finish:** the writer gives the book a title and a cover, and types an author name once.
+- **Read to me:** the device's own English voice reads the book aloud, one sentence at a time. It is hidden if the device has no English voice.
+- **Grown-up page:** hold "For grown-ups" on the bookshelf for 2 seconds to back up all books, restore them, delete a book, or start over.
 
 **Keep books safe:** add Tadpole Tales to the Home Screen and open it from there. Books are kept only on the device; removing the app's icon from the Home Screen deletes its books. Back them up from the grown-up page (hold "For grown-ups" on the bookshelf for 2 seconds).
 
@@ -30,7 +39,7 @@ node --test
 
 This uses Node's built-in test runner. It finds every `*.test.js` file in `tests/` and reports which checks pass.
 
-To open the home screen in a real browser at phone and iPad sizes (needs Google Chrome):
+To open each screen in a real browser at phone and iPad sizes, and try the keys and saving (needs Google Chrome):
 
 ```bash
 node tests/screens.mjs
