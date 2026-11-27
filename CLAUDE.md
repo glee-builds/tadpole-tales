@@ -8,7 +8,7 @@ Shared rules for all coding projects are in `../CLAUDE.md`, and they apply here.
 - **Claude merges its own pull requests once the GitHub checks pass.** The owner reviews afterwards. If a check fails, fix it on the same branch; never merge a red pull request.
 - **`main` is protected on GitHub:** a pull request with the passing `test` check is required, and force-pushing is not allowed.
 - One pull request does one thing.
-- This repo is public. Write "the writer", never a name, age, grade, or pronoun, in files, commit messages, branch names, and pull requests. Before pushing, scan with `grep -rn -w -i -E "he|him|his|she|her|son|daughter|year-old" . --exclude-dir=.git --exclude-dir=data --exclude-dir=tools --exclude=*.txt`. It skips the word lists (`data/*.txt`, `tools/`) because they naturally hold ordinary English words like "her" and "son".
+- This repo is public. Write "the writer", never a name, age, grade, or pronoun, in files, commit messages, branch names, and pull requests. Before pushing, scan with `grep -rn -w -i -E "he|him|his|she|her|son|daughter|year-old" . --exclude-dir=.git --exclude-dir=data --exclude-dir=tools '--exclude=*.txt'`. It skips the word lists (`data/*.txt`, `tools/`) because they naturally hold ordinary English words like "her" and "son".
 - The planning brief lives in `../_briefs/tadpole-tales/` and is never copied into this repo.
 
 ## Locked decisions

@@ -19,6 +19,7 @@
 //   page-fit.mjs                     the page screen fits in every mix of lesson row, Tell it, Ideas and put-back bar
 //   tell-it.mjs                      Tell it: recording a page out loud, with a pretend microphone
 //   polish.mjs                       the spelling check before the kind message
+//   real-lessons.mjs                 the real lesson files on: a book made through the lesson card, the shelf with both shelves, finish and Edit, the lesson row
 // To find a check, look for its label below, then for the function it runs.
 
 import { PHONE, TABLETS, page, problems, checked, checkScreen, checkWith, shutDown, withoutLessons } from './screens/lib.mjs';
@@ -34,6 +35,7 @@ import {
 import { tryTellIt, tryTellItFits, tryDeviceCheckRecord } from './screens/tell-it.mjs';
 import { tryPolish, tryPolishNoLists } from './screens/polish.mjs';
 import { tryPageFits } from './screens/page-fit.mjs';
+import { tryLessonBook, tryShelfFits, tryFinishAndEdit, tryTapWithLessonRow } from './screens/real-lessons.mjs';
 
 try {
   await checkWith('Test server: nothing outside the repo', tryServerLock);
@@ -67,6 +69,10 @@ try {
   await checkWith('Device check: Record 3 seconds and Play it back use Tell it\'s own recorder, microphone off at once (phone)', tryDeviceCheckRecord);
   await checkWith('Tell it fits: keys never move; full page, put-back bar, lesson row (phone)', tryTellItFits);
   await checkWith('Page screen fits in every mix: lesson row, Tell it, Ideas, put-back bar, full page (phone)', () => tryPageFits('phone'));
+  await checkWith('Real lessons: make a 3-page book through the lesson card and planning, reload, shelf, read, Refresh (phone)', tryLessonBook);
+  await checkWith('Real lessons: the shelf with both shelves and six books fits (375x667)', tryShelfFits);
+  await checkWith('Real lessons: finish with author name and cover, Edit, close mid-title, reopen: nothing lost (phone)', tryFinishAndEdit);
+  await checkWith('Real lessons: tap the writing area with the lesson row showing moves the cursor (phone)', tryTapWithLessonRow);
   for (const [tablet, size] of Object.entries(TABLETS)) {
     await page('Emulation.setDeviceMetricsOverride', { ...size, deviceScaleFactor: 2, mobile: true });
     await checkScreen(`Home (${tablet})`, '');
