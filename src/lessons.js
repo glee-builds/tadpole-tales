@@ -18,7 +18,7 @@ const opened = (progress, lessons) => Math.min(Math.max(Math.floor(progress?.les
 /** A number for a book id (a progress entry can't hold text). Two ids sharing one is very unlikely. */
 const idNumber = (id) => [...String(id)].reduce((sum, ch) => (Math.imul(sum, 31) + ch.charCodeAt(0)) | 0, 7);
 
-/** The lesson for the next book, or null after the last lesson (Phase 5 adds picking). */
+/** The lesson for the next book, or null after the last lesson (then the writer picks, see pickOptions). */
 export const currentLesson = (progress, lessons) => lessons[opened(progress, lessons) - 1] ?? null;
 
 /**
@@ -50,6 +50,18 @@ export function mergeProgress(device = {}, backup = {}) {
 /** The lessons the writer can reread, in order. */
 export const openedLessons = (progress, lessons) => lessons.slice(0, opened(progress, lessons));
 
+/**
+ * After the last lesson (every lesson opened, none current) a new book first asks which
+ * lesson to keep in mind: the opened lessons to choose from, or [] when no pick is asked for.
+ */
+export const pickOptions = (progress, lessons) => (lessons.length && !currentLesson(progress, lessons) ? openedLessons(progress, lessons) : []);
+
+/** The book with the picked lesson id as its `lesson`, or with none (a null id, or an id not in `options`). */
+export function withPickedLesson(book, id, options) {
+  const { lesson, ...rest } = book;
+  return options.some((l) => l.id === id) ? { ...rest, lesson: id } : rest;
+}
+
 const hasWords = (page) => page.text.trim() !== '';
 
 /**
@@ -68,6 +80,16 @@ export function selfCheckFor(lesson, book) {
 const TIPS = {
   // "and then" three or more times in the whole book (a phrase never runs across two pages).
   'and-then': (book) => book.pages.reduce((n, page) => n + (page.text.match(/\band\s+then\b/gi) ?? []).length, 0) >= 3,
+  // No speech marks and none of the speaking words anywhere (a book with no words at all gets no tip).
+  'no-talking': (book) => {
+    const all = book.pages.map((page) => page.text).join(' ');
+    return all.trim() !== '' && !/["\u201C\u201D]|\b(said|asked|shouted|yelled|whispered|called)\b/i.test(all);
+  },
+  // The last page with words says it was a dream ("it was all/just/only a dream") or "(and) then ... woke up" (up to 3 words between).
+  'dream-ending': (book) => {
+    const last = book.pages.filter(hasWords).pop()?.text ?? '';
+    return /\bit\s+was\s+(?:(?:all|just|only)\s+)+(?:a\s+)?dream\b|\bthen\s+(?:\w+\s+){0,3}woke\s+up\b/i.test(last);
+  },
   'under-three-pages': (book) => book.pages.filter(hasWords).length < 3,
 };
 

@@ -7,6 +7,7 @@
 // Screens, by location.hash (the book id is '-' when no book is open):
 //   lesson/<book>/<lesson>/<from>   the lesson card. <from> is where it was opened:
 //                                   'new' (a new book: "Try it" goes on to planning), 'shelf', or a page number
+//   pick/<book>                     after the last lesson: which lesson to keep in mind (then its card, or planning)
 //   plan/<book>/<n>                 "Plan your story", question n (from 0)
 //   example/<book>/<lesson>/<from>  the example story, then "Find it"; <from> as above, or 'direct' from the shelf
 // Nothing here says right or wrong: a tap only lights up a place.
@@ -15,7 +16,7 @@ import { make, button } from './ui.js';
 import { mountWriter } from './keyboard.js';
 import { mountPicture } from './stickers.js';
 import { showReading } from './reading.js';
-import { sentencesOf, openedLessons, checkFind } from './lessons.js';
+import { sentencesOf, openedLessons, checkFind, pickOptions } from './lessons.js';
 import { PLAN_LIMIT, planOf } from './plan.js';
 
 let loaded; // the one load of the lesson files, for this visit to the app
@@ -50,7 +51,13 @@ const backButton = (onClick, label) => {
  * go(hash, replace) }. Returns false if the address names nothing that can be drawn,
  * else an object with remove() (or null).
  */
-export function drawLessonRoute(root, [kind, bookId, extra, from], { data, book, onAnswer, go }) {
+export function drawLessonRoute(root, [kind, bookId, extra, from], { data, book, progress, onAnswer, onPick, go }) {
+  if (kind === 'pick') {
+    const options = pickOptions(progress, data.lessons);
+    if (!book || !options.length) return false;
+    showPick(root, { options, messages: data.messages, onPick: (lesson) => { onPick(lesson?.id ?? null); go(lesson ? `lesson/${bookId}/${lesson.id}/new` : `plan/${bookId}/0`, true); }, onBack: () => go('') });
+    return null;
+  }
   const lesson = data.lessons.find((one) => one.id === extra);
   if (kind === 'plan') {
     const index = Number(extra) || 0;
@@ -75,6 +82,19 @@ export function drawLessonRoute(root, [kind, bookId, extra, from], { data, book,
     onTry: () => go(from === 'new' ? `plan/${bookId}/0` : page === null ? '' : `book/${bookId}/${page}`, true),
   });
   return null;
+}
+
+// ---------- Pick a lesson (after the last lesson) ----------
+
+function showPick(root, { options, messages, onPick, onBack }) {
+  const top = root.appendChild(make('div', 'screen-top'));
+  top.append(backButton(onBack, 'Back to the bookshelf'), make('h1', 'screen-title', 'Your new book'), make('span', 'top-balance'));
+  root.append(make('h2', 'plan-question', messages?.pickLesson ?? 'Pick a lesson to keep in mind'));
+  // Up to 8 lessons and None can be taller than a phone, so the list scrolls inside itself.
+  const list = root.appendChild(make('div', 'lesson-actions pick-list'));
+  list.style.cssText = 'flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-bottom: 8px';
+  for (const lesson of options) list.append(button('pill pick-lesson', `📖 ${lesson.title}`, () => onPick(lesson)));
+  list.append(button('pill pick-none', `🚫 ${messages?.pickNone ?? 'No lesson this time'}`, () => onPick(null)));
 }
 
 // ---------- The lesson card ----------

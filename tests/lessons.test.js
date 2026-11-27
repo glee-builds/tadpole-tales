@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
-  currentLesson, openLessonAfterFinish, openedLessons, selfCheckFor, tipFor, jobFor, praiseFor, sentencesOf, checkFind,
+  currentLesson, openLessonAfterFinish, openedLessons, selfCheckFor, tipFor, jobFor, praiseFor, sentencesOf, checkFind, pickOptions, withPickedLesson,
 } from '../src/lessons.js';
 import { readBackup, makeBackup } from '../src/book.js';
 
@@ -29,7 +29,7 @@ test('each finished book opens the next lesson, and the last one ends the path',
   }
   progress = openLessonAfterFinish(progress, lessons, 'last');
   assert.equal(currentLesson(progress, lessons), null);
-  assert.deepEqual(ids(openedLessons(progress, lessons)), [1, 2, 3, 4]);
+  assert.deepEqual(ids(openedLessons(progress, lessons)), lessons.map((l) => l.number));
   progress = openLessonAfterFinish(progress, lessons, 'more'); // never goes past "all done"
   assert.equal(currentLesson(progress, lessons), null);
   assert.equal(progress.lessonsOpened, lessons.length + 1);
@@ -134,4 +134,55 @@ test('restore merges lesson progress: the larger lessonsOpened, the device\'s ow
   // The merge comes out of a real backup file unchanged by readBackup.
   const { progress } = readBackup(JSON.stringify(makeBackup({ books: [], progress: { lessonsOpened: 3, lastFinished: -5 } }, 0)));
   assert.deepEqual(mergeProgress({ lessonsOpened: 1 }, progress), { lessonsOpened: 3, lastFinished: -5 });
+});
+
+// Tip checks and the picker use made-up lessons, so they pass with any number of real ones.
+const made = (id, check) => ({ id, tip: check && { check, job: `job ${id}` }, job: 'plain' });
+const talk = made('talk', 'no-talking');
+const dream = made('dream', 'dream-ending');
+
+test('tip no-talking: fires with no speech marks and no speaking words, in any case', () => {
+  const opened = [made('a'), talk];
+  assert.equal(tipFor(talk, book('Pip sat.', 'Pip slept.'), opened).check, 'no-talking');
+  assert.equal(tipFor(talk, book('"Hi," Pip said.'), opened), null);
+  assert.equal(tipFor(talk, book('Pip sat.', '\u201CHi!\u201D'), opened), null); // curly marks
+  for (const w of ['said', 'ASKED', 'Shouted', 'yelled', 'whispered', 'called']) assert.equal(tipFor(talk, book(`Pip ${w} hello`), opened), null, w);
+  assert.equal(tipFor(talk, book('Pip sat. Salad.'), opened).check, 'no-talking'); // a word only has to not be one of them
+  assert.equal(tipFor(talk, book('', ' '), opened), null); // nothing written yet
+});
+
+test('tip dream-ending: looks only at the last page with words', () => {
+  const opened = [dream];
+  for (const end of ['It was all a dream.', 'It was just a dream!', 'it was only a dream', 'It was all just a dream.', 'And then I woke up.', 'Then Pip woke up in bed.', 'and then Pip suddenly woke up'])
+    assert.equal(tipFor(dream, book('Pip hopped.', end, ''), opened).check, 'dream-ending', end);
+  assert.equal(tipFor(dream, book('It was all a dream.', 'Pip hopped home.'), opened), null); // not the last page
+  assert.equal(tipFor(dream, book('Pip woke up.', 'Pip ate.'), opened), null);
+  assert.equal(tipFor(dream, book('Pip had a dream about frogs.'), opened), null);
+});
+
+test('new tips fire only for lessons already opened, and the newest lesson wins', () => {
+  const b = book('Pip sat. It was all a dream.');
+  assert.equal(tipFor(made('a'), b, [made('a')]), null);
+  assert.equal(tipFor(dream, b, [made('a'), talk]), null); // dream not opened: book's lesson not in the list
+  assert.equal(tipFor(talk, b, [made('a'), talk]).check, 'no-talking');
+  assert.equal(tipFor(talk, b, [made('a'), talk, dream]).check, 'dream-ending');
+  assert.equal(jobFor(talk, b, [talk, dream]), 'job dream');
+});
+
+test('picker: asked only when every lesson is open and none is current', () => {
+  const all = lessons.length + 1;
+  assert.deepEqual(pickOptions({}, lessons), []);
+  assert.deepEqual(pickOptions({ lessonsOpened: lessons.length }, lessons), []);
+  assert.deepEqual(ids(pickOptions({ lessonsOpened: all }, lessons)), lessons.map((l) => l.number));
+  assert.deepEqual(pickOptions({ lessonsOpened: all }, []), []);
+});
+
+test('picker: the choice becomes book.lesson, None leaves it off, an unknown id is none', () => {
+  const options = openedLessons({ lessonsOpened: lessons.length + 1 }, lessons);
+  const blank = { id: 'b', pages: [] };
+  assert.equal(withPickedLesson(blank, options[1].id, options).lesson, options[1].id);
+  assert.equal(withPickedLesson({ ...blank, lesson: options[0].id }, null, options).lesson, undefined);
+  assert.equal('lesson' in withPickedLesson(blank, 'nope', options), false);
+  assert.equal(withPickedLesson(blank, options[0].id, options).id, 'b');
+  assert.equal(blank.lesson, undefined); // the book passed in is not changed
 });
