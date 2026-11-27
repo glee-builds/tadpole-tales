@@ -258,3 +258,8 @@ html { touch-action: manipulation; }
 }
 
 .gu-confirm p { margin: 8px 0; }
+
+/* The restore file picker: the label looks like a button; the input inside is hidden but still works. */
+.gu-pick { display: inline-flex; align-items: center; position: relative; }
+.gu-pick input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.plain-button:disabled { opacity: 0.5; }

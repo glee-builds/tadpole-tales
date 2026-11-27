@@ -1,11 +1,12 @@
 // grownup.js: the grown-up page, opened by holding its button for 2 seconds.
 //
-// It has a device check (what this phone or iPad can really do), a way to
-// delete a book, and "start over". Backup and restore come in task 1.8.
-// This is not a writer screen, so a file picker is allowed here later.
+// It has a device check (what this phone or iPad can really do), backup and
+// restore, a way to delete a book, and "start over". This is not a writer
+// screen, so the file picker for restoring is allowed here (and only here).
 
-import { make, button } from './ui.js';
-import { loadBooks, deleteBook, startOver } from './store.js';
+import { make, button, plural } from './ui.js';
+import { loadBooks, saveBook, deleteBook, startOver, getSetting, setSetting } from './store.js';
+import { makeBackup, backupName, readBackup, mergeBooks } from './book.js';
 
 // ---------- Install first ----------
 
@@ -260,6 +261,48 @@ export function showGrownup(root, { onBack }) {
   drawCopy();
   root.append(copyText, copy, copied);
 
+  // Back up and restore.
+  root.append(
+    make('h2', '', 'Back up and restore'),
+    make('p', 'gu-note', 'A backup is one file with every book. Save it somewhere safe, such as Files or iCloud Drive. Restoring only adds books that aren\'t on the shelf; it never changes or removes one.'),
+  );
+  const last = root.appendChild(make('p', 'gu-note'));
+  const showLast = (when) => { last.textContent = when ? `Last backup: ${shortDate(when)}` : 'No backup yet.'; };
+  getSetting('lastBackup').then(showLast, () => showLast());
+  let file = null; // the backup, made ahead so the share sheet opens inside the tap (iOS needs that)
+  const backUp = async () => {
+    if (!file) return;
+    try {
+      if (navigator.canShare?.({ files: [file] })) await navigator.share({ files: [file] });
+      else download(file);
+    } catch (error) {
+      if (error.name === 'AbortError') { backupSaid.textContent = 'The backup was not saved.'; return; } // the share sheet was closed
+      download(file); // the share sheet refused: download instead
+    }
+    const when = new Date().toISOString();
+    await setSetting('lastBackup', when).catch(() => {});
+    showLast(when);
+    backupSaid.textContent = `✓ Backup made: ${file.name}`;
+  };
+  const backupButton = button('plain-button', 'Back up all books', backUp);
+  backupButton.disabled = true;
+  // The file picker sits inside a label, so a tap opens it without help from script.
+  const pick = make('label', 'plain-button gu-pick', 'Restore from a file…');
+  const chooser = pick.appendChild(make('input'));
+  chooser.type = 'file';
+  chooser.accept = '.json,application/json';
+  chooser.addEventListener('change', async () => {
+    const chosen = chooser.files[0];
+    chooser.value = ''; // so the same file can be picked again
+    if (!chosen) return;
+    backupSaid.textContent = '… restoring';
+    backupSaid.textContent = await restore(chosen);
+    drawBooks();
+  });
+  const backupSaid = make('p', 'gu-note');
+  backupSaid.setAttribute('role', 'status');
+  root.append(backupButton, pick, backupSaid);
+
   // Delete a book.
   root.append(make('h2', '', 'Books'));
   const shelf = root.appendChild(make('ul', 'gu-books'));
@@ -274,6 +317,8 @@ export function showGrownup(root, { onBack }) {
       shelf.replaceChildren(make('li', 'gu-warn', '⚠ Couldn\'t open the books on this device.'));
       return;
     }
+    file = await backupFile(books).catch(() => null);
+    backupButton.disabled = !file;
     books.sort((a, b) => b.changed - a.changed);
     shelf.replaceChildren(...books.map((book) => {
       const row = make('li', 'gu-book');
@@ -310,5 +355,59 @@ export function showGrownup(root, { onBack }) {
       }
       drawBooks();
     },
+    [button('plain-button', 'Back up first', backUp)],
   ));
+}
+
+/** Every book and setting a backup holds, as a file ready to share. */
+async function backupFile(books) {
+  const now = Date.now();
+  const backup = makeBackup({ books, author: await getSetting('author'), progress: await getSetting('progress') }, now);
+  return new File([JSON.stringify(backup)], backupName(now), { type: 'application/json' });
+}
+
+/** Save `file` with the browser's download, where there is no share sheet. */
+function download(file) {
+  const url = URL.createObjectURL(file);
+  const link = make('a');
+  link.href = url;
+  link.download = file.name;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000); // the browser reads the file after click() returns
+}
+
+/** Add the books in a backup file that aren't on the shelf. Resolves a sentence saying what happened. */
+async function restore(chosen) {
+  let found;
+  try {
+    found = readBackup(await chosen.text());
+  } catch (error) {
+    return `⚠ ${error.message} Nothing was changed.`;
+  }
+  let shelf;
+  try {
+    shelf = await loadBooks();
+  } catch {
+    return '⚠ Couldn\'t open the books on this device, so nothing was restored.';
+  }
+  const { add, skipped } = mergeBooks(shelf, found.books);
+  let added = 0;
+  try {
+    for (const book of add) {
+      await saveBook(book);
+      added++;
+    }
+    // The name and lesson progress come back only if this device has none.
+    if (found.author && !(await getSetting('author'))) await setSetting('author', found.author);
+    if (Object.keys(found.progress).length && !(await getSetting('progress'))) await setSetting('progress', found.progress);
+  } catch {
+    return `⚠ Added ${plural(added, 'book')}, then saving stopped. Try again: books already added are skipped.`;
+  }
+  return [
+    `✓ Added ${plural(added, 'book')}.`,
+    skipped ? `${plural(skipped, 'book')} already on the shelf ${skipped === 1 ? 'was' : 'were'} left as ${skipped === 1 ? 'it was' : 'they were'}.` : '',
+    found.unreadable ? `${plural(found.unreadable, 'book')} in the file couldn't be read.` : '',
+  ].filter(Boolean).join(' ');
 }
