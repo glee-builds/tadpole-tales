@@ -20,6 +20,7 @@ export const MAX_STICKERS = 12;
 export const SIZES = [0.75, 1, 1.5, 2, 3]; // the "smaller" and "bigger" steps
 export const BASE = 0.2; // a size-1 sticker is this part of the picture's width
 const RATIO = 4 / 3; // the picture's width over its height
+const GROUP_NAMES = { characters: 'Characters', animals: 'Animals', places: 'Places', things: 'Things', weather: 'Weather and sky', feelings: 'Feelings' };
 const DRAG_START = 8; // screen pixels a finger moves before a tap becomes a drag
 
 const round = (n) => Math.round(n * 1000) / 1000; // keeps saved books tidy
@@ -127,9 +128,11 @@ export function mountPicture(parent, { stickers: start = [], onChange, editable 
   picture.setAttribute('role', editable ? 'group' : 'img'); // an "img" would hide the sticker buttons from screen readers
   const parts = [picture];
 
-  let bar, tools, hint, tray, full, bigger, smaller;
-  if (editable) {
-    bar = make('div', 'sticker-bar'); // the tools show for a tapped sticker; otherwise a hint takes their place
+  let tools, hint, tray, full, bigger, smaller;
+
+  /** The selection tools (Bigger, Smaller, Remove), the "page full" line and the empty tray. */
+  function buildTools() {
+    const bar = make('div', 'sticker-bar'); // the tools show for a tapped sticker; otherwise a hint takes their place
     tools = bar.appendChild(make('div', 'sticker-tools'));
     hint = bar.appendChild(make('p', 'sticker-hint', 'Tap a sticker to change it'));
     bigger = tools.appendChild(toolButton('+', 'Bigger', () => change(resizeSticker(stickers, selected, 1))));
@@ -139,6 +142,22 @@ export function mountPicture(parent, { stickers: start = [], onChange, editable 
     tray = make('div', 'sticker-tray');
     tray.setAttribute('aria-label', 'Stickers');
     parts.push(bar, full, tray);
+  }
+
+  /** Fill the tray with the sticker list, a heading and a row of buttons for each group, in the list's order. */
+  function fillTray(all) {
+    const groups = new Map();
+    for (const s of all) {
+      if (!groups.has(s.group)) {
+        const group = tray.appendChild(make('section', 'tray-group'));
+        group.append(make('h3', 'tray-heading', GROUP_NAMES[s.group] ?? s.group));
+        groups.set(s.group, group.appendChild(make('div', 'tray-row')));
+      }
+      const node = groups.get(s.group).appendChild(button('pill tray-sticker'));
+      node.dataset.sticker = s.id;
+      node.setAttribute('aria-label', s.label);
+      node.append(emoji(s));
+    }
   }
 
   function change(next) {
@@ -179,7 +198,8 @@ export function mountPicture(parent, { stickers: start = [], onChange, editable 
     full.hidden = canAddSticker(stickers);
   }
 
-  if (editable) {
+  /** Drag a sticker to move it, tap it for its tools, or tap it and then an empty spot. */
+  function listenForDrags() {
     // Drag a sticker to move it; a tap without moving shows or hides its buttons.
     let drag = null;
     picture.addEventListener('pointerdown', (event) => {
@@ -221,7 +241,10 @@ export function mountPicture(parent, { stickers: start = [], onChange, editable 
       if (node && event.detail === 0) select(selected === Number(node.dataset.index) ? -1 : Number(node.dataset.index));
     });
     picture.addEventListener('contextmenu', (event) => event.preventDefault());
+  }
 
+  /** A tap on a tray sticker adds it (or wiggles the "full" line). */
+  function listenForTray() {
     tray.addEventListener('click', (event) => {
       const id = event.target.closest('[data-sticker]')?.dataset.sticker;
       if (!id) return;
@@ -230,6 +253,8 @@ export function mountPicture(parent, { stickers: start = [], onChange, editable 
       change(addSticker(stickers, id));
     });
   }
+
+  if (editable) { buildTools(); listenForDrags(); listenForTray(); }
 
   // Emoji are text, so their size comes from the picture's width (--picture-width,
   // in the picture's own pixels). Container units would do this, but Safari 15.4 has none.
@@ -240,14 +265,7 @@ export function mountPicture(parent, { stickers: start = [], onChange, editable 
   draw();
   loadStickerList().then((all) => {
     byId = new Map(all.map((s) => [s.id, s]));
-    if (editable) {
-      for (const s of all) {
-        const node = tray.appendChild(button('pill tray-sticker'));
-        node.dataset.sticker = s.id;
-        node.setAttribute('aria-label', s.label);
-        node.append(emoji(s));
-      }
-    }
+    if (editable) fillTray(all);
     draw();
   }).catch((error) => console.error('Could not load the stickers:', error));
 

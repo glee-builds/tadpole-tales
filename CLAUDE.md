@@ -58,7 +58,7 @@ src/keyboard.js          the app's own keyboard and drawn writing area (mountWri
 src/book.js              a book as plain functions: pages, title (bookTitle), cover, backup file
 src/store.js             saving books on the device (the only file that uses IndexedDB)
 src/stickers.js          the picture area: placing, moving and sizing stickers (mountPicture)
-src/stickers.css         styles for the picture area and the sticker tray (linked from index.html)
+src/stickers.css         styles for the picture area and the sticker tray, grouped by kind (linked from index.html)
 src/reading.js           the reading view (showReading): one page at a time, with Read to me
 src/readaloud.js        "Read to me": speaks a book one sentence at a time with the device's voice
 src/sentences.js         cuts a page's text into sentences for reading aloud

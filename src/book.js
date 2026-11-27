@@ -13,7 +13,8 @@
 
 export const BOOK_FORMAT = 1; // bump only with an upgrade step in upgradeBook
 export const MAX_PAGES = 12;
-export const TITLE_LIMIT = 40; // typed in the finish step; a longer saved title is kept whole
+export const TITLE_LIMIT = 40; // typed in the finish step; a longer restored title is trimmed to it
+export const NAME_LIMIT = 20;  // the author name, the same limit as the finish step's
 
 const newPage = () => ({ text: '', stickers: [] });
 
@@ -125,8 +126,8 @@ export function upgradeBook(record) {
     created,
     changed: time(record.changed) ?? created,
     finished: record.finished === true,
-    title: asText(record.title),
-    cover: Array.isArray(record.cover?.stickers) ? { ...record.cover, stickers: stickersOf(record.cover.stickers) } : null,
+    title: asText(record.title).slice(0, TITLE_LIMIT),
+    cover: isObject(record.cover) ? { ...record.cover, stickers: stickersOf(record.cover.stickers) } : null,
     pages: pages.length ? pages : [newPage()],
   };
 }
@@ -195,7 +196,7 @@ export function readBackup(text) {
   }
   return {
     books,
-    author: typeof data.author === 'string' ? data.author : '',
+    author: asText(data.author).slice(0, NAME_LIMIT),
     progress: progressOf(data.progress),
     unreadable: data.books.length - books.length,
   };

@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   BOOK_FORMAT, MAX_PAGES, newBook, addPage, canAddPage, removePage, putBackPage,
-  setPageText, setPageStickers, movePage, isBlank, upgradeBook, setTitle, setCoverStickers,
+  setPageText, setPageStickers, movePage, isBlank, upgradeBook, setTitle, setCoverStickers, readBackup, TITLE_LIMIT, NAME_LIMIT,
 } from '../src/book.js';
 
 /** A made-up book with pages "a", "b", "c"... */
@@ -162,9 +162,21 @@ test('title and cover are set without changing the book passed in', () => {
   assert.deepEqual([book.title, book.cover], ['', null]);
 });
 
+test('upgradeBook keeps a cover without stickers, with its other fields', () => {
+  const cover = upgradeBook({ id: 'b-9', pages: [], cover: { colour: 'green' } }).cover;
+  assert.deepEqual(cover, { colour: 'green', stickers: [] });
+  assert.equal(upgradeBook({ id: 'b-9', pages: [], cover: [1] }).cover, null);
+});
+
+test('a restored title and author name are trimmed to the finish step limits', () => {
+  assert.equal(upgradeBook({ id: 'b-9', pages: [], title: 'x'.repeat(100) }).title, 'x'.repeat(TITLE_LIMIT));
+  const back = readBackup(JSON.stringify({ app: 'tadpole-tales', backup: 1, author: 'y'.repeat(100), books: [] }));
+  assert.equal(back.author, 'y'.repeat(NAME_LIMIT));
+});
+
 test('upgradeBook mends a title and cover that are the wrong shape, and keeps good ones', () => {
   const odd = upgradeBook({ id: 'b-9', pages: [], title: 7, cover: { stickers: 'x' } });
-  assert.deepEqual([odd.title, odd.cover], ['', null]); // only text is kept as a title
+  assert.deepEqual([odd.title, odd.cover], ['', { stickers: [] }]); // only text is kept as a title; a bad sticker list is cleaned
   assert.equal(upgradeBook({ id: 'b-9', pages: [], title: { x: 1 } }).title, '');
   const good = { id: 'b-9', pages: [], title: 'Pip', cover: { stickers: [{ id: 'frog', x: 0.5, y: 0.5, size: 1 }] } };
   const kept = upgradeBook(good);
