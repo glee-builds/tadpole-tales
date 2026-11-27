@@ -1,11 +1,19 @@
-// app.js: starts Tadpole Tales.
+// app.js: starts Tadpole Tales and shows the screen the address asks for.
+//
+// Screens, by location.hash:
+//   ''                    the bookshelf
+//   '#book/<id>/<page>'   the page screen (Write mode); <page> counts from 0
+//   '#read/<id>'          the reading view
+//   '#grown-ups'          the grown-up page
 
-import { make, button, saveMark } from './ui.js';
+import { make, button, saveMark, plural } from './ui.js';
 import { mountWriter } from './keyboard.js';
-import { newBook, setPageText } from './book.js';
-import { saveSoon, saveNow, onSaveState } from './store.js';
+import { LIMIT, isFull } from './typing.js';
+import { newBook, addPage, removePage, putBackPage, setPageText, canAddPage, isBlank } from './book.js';
+import { loadBooks, saveSoon, saveNow, onSaveState, getSetting } from './store.js';
 import { holdToOpen, showGrownup, isInstalled, INSTALL_NOTE } from './grownup.js';
 import { mountPicture } from './stickers.js';
+import { showReading } from './reading.js';
 
 // The service worker (sw.js) saves the app's files so it opens without
 // internet. If the phone can't run one, the app works as before, online.
@@ -13,48 +21,252 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch((error) => console.warn('Offline mode is off:', error));
 }
 
-// Temporary: "Make a new book" opens the keyboard to try it out, until the
-// real page screen arrives (task 1.7 in docs/phase-1-plan.md removes this).
-// What is typed is saved as a one-page book, so saving can be tried too.
 const shelf = document.querySelector('.shelf');
-document.querySelector('.go').addEventListener('click', () => {
-  let book = newBook(crypto.randomUUID(), Date.now());
-  const screen = make('main', 'screen try-keys');
-  const top = screen.appendChild(make('div', 'screen-top'));
-  const mark = saveMark();
-  const stopWatching = onSaveState(mark.update);
-  const back = top.appendChild(button('back', '←', () => {
-    saveNow();
-    stopWatching();
-    screen.remove();
-    shelf.hidden = false;
-  }));
-  back.setAttribute('aria-label', 'Back');
-  top.append(make('h2', '', 'Try the keys'), mark.node);
-  mountWriter(screen, {
-    label: 'Your words',
-    onChange: (text) => {
-      book = setPageText(book, 0, text, Date.now());
-      saveSoon(book);
-    },
-  });
-  shelf.hidden = true;
-  document.body.append(screen);
+const grownups = document.querySelector('.grownups');
+const booksBox = shelf.querySelector('.books');
+
+// What the last save said, so Refresh and Finish know whether it worked.
+let saveState = 'saved';
+onSaveState((state) => { saveState = state; });
+
+// The "not saved" mark on the shelf.
+const shelfMark = saveMark();
+shelf.querySelector('.shelf-top').append(shelfMark.node);
+onSaveState(shelfMark.update);
+
+// ---------- The bookshelf ----------
+
+/** The words on a book's cover: its title, else its first words. */
+function coverTitle(book) {
+  const words = (book.title || book.pages[0].text).replace(/\s+/g, ' ').trim();
+  if (!words) return 'A new book';
+  return words.length > 50 ? `${words.slice(0, 50)}…` : words;
+}
+
+function bookCard(book) {
+  const card = make('a', `book-card ${book.finished ? 'finished' : 'unfinished'}`);
+  card.href = book.finished ? `#read/${book.id}` : `#book/${book.id}/0`;
+  // A cover color from the id, so a book keeps its color.
+  const color = [...book.id].reduce((sum, char) => sum + char.charCodeAt(0), 0) % 4;
+  const cover = card.appendChild(make('div', `cover cover-${color}`));
+  cover.append(make('span', 'cover-title', coverTitle(book)));
+  const info = card.appendChild(make('div', 'card-info'));
+  info.append(book.finished
+    ? make('span', 'card-status', '✓ Finished')
+    : make('span', 'card-status keep-going', '✎ Keep going'));
+  info.append(make('span', 'card-pages', plural(book.pages.length, 'page')));
+  return card;
+}
+
+async function showShelf(token) {
+  await saveNow(); // coming back from a book: what was typed is saved before the shelf reads it
+  if (token !== shown) return;
+  shelf.hidden = false;
+  let books;
+  let author;
+  try {
+    books = await loadBooks();
+  } catch {
+    booksBox.replaceChildren(make('p', 'books-note books-problem', '⚠ Couldn\'t open your books on this device.'));
+    return;
+  }
+  try { author = await getSetting('author'); } catch { /* the heading just says "Your books" */ }
+  if (token !== shown) return;
+  shelf.querySelector('h1').textContent = author ? `Books by ${author}` : 'Your books';
+  // Unfinished books first, then the most recently changed.
+  books.sort((a, b) => Number(a.finished) - Number(b.finished) || b.changed - a.changed);
+  booksBox.replaceChildren(...(books.length
+    ? books.map(bookCard)
+    : [make('p', 'books-note', 'No books yet. Make your first one!')]));
+}
+
+shelf.querySelector('.go').addEventListener('click', () => {
+  const book = newBook(crypto.randomUUID(), Date.now());
+  open = { book, removed: null, stored: false }; // saved at the first word, so backing out leaves no empty book
+  location.hash = `book/${book.id}/0`;
 });
 
 // Not opened from the Home Screen: tell a grown-up the books may not be safe.
 if (!isInstalled()) shelf.querySelector('.install-note').textContent = INSTALL_NOTE;
 
-// The grown-up page (#grown-ups) opens when its button is held for 2 seconds.
-const grownups = document.querySelector('.grownups');
-holdToOpen(document.querySelector('.hold-button'), () => { location.hash = 'grown-ups'; });
-function show() {
-  const open = location.hash === '#grown-ups';
-  grownups.hidden = !open;
-  shelf.hidden = open;
-  if (open) showGrownup(grownups, { onBack: () => { location.hash = ''; } });
-  else grownups.replaceChildren();
+// The grown-up page opens when its button is held for 2 seconds.
+holdToOpen(shelf.querySelector('.hold-button'), () => { location.hash = 'grown-ups'; });
+
+// Refresh: save first, and only then load the app again (which gets the newest version).
+const refresh = shelf.querySelector('.refresh-button');
+refresh.addEventListener('click', async () => {
+  refresh.disabled = true;
+  refresh.textContent = 'Refreshing…';
+  await saveNow();
+  if (saveState === 'not-saved') { // never reload with words that are not saved
+    shelfMark.update('not-saved');
+    refresh.disabled = false;
+    refresh.textContent = '↻ Refresh';
+    return;
+  }
+  try {
+    // Ask for the newest service worker too, so the offline copy is up to date.
+    await (await navigator.serviceWorker?.getRegistration())?.update();
+  } catch { /* offline, or no service worker: loading again still works */ }
+  location.replace(location.pathname);
+});
+
+// ---------- The page screen (Write mode) ----------
+
+let open = null; // { book, removed, stored }: the book being written; `removed` is the page that can be put back
+let screen = null; // the writer screen on show, if any
+let writer = null;
+let stopWatching = null;
+let shown = 0; // counts screens drawn, so a slow load for an old screen is ignored
+
+function clearScreen() {
+  writer?.remove();
+  writer = null;
+  stopWatching?.();
+  stopWatching = null;
+  screen?.remove();
+  screen = null;
 }
+
+/** Go to a page. Draws again even if the address is the same. */
+function go(index) {
+  const target = `#book/${open.book.id}/${index}`;
+  if (location.hash === target) show();
+  else location.hash = target;
+}
+
+/** The book changed: keep it, and save it (but never an empty book nobody wrote in). */
+function changed(next) {
+  open.book = next;
+  if (open.stored || !isBlank(next)) {
+    open.stored = true;
+    saveSoon(next);
+  }
+}
+
+async function showPage(id, wanted, token) {
+  if (!open || open.book.id !== id) {
+    let book;
+    try { book = (await loadBooks()).find((one) => one.id === id); } catch { /* shelf says so */ }
+    if (token !== shown) return;
+    if (!book) { location.hash = ''; return; }
+    open = { book, removed: null, stored: true };
+  }
+  const { book } = open;
+  const index = Math.min(Math.max(wanted, 0), book.pages.length - 1);
+  if (index !== wanted || !Number.isInteger(wanted)) history.replaceState(null, '', `#book/${id}/${index}`);
+
+  screen = make('main', 'screen page-screen');
+  const top = screen.appendChild(make('div', 'screen-top'));
+  const back = top.appendChild(button('pill', '← Books', () => { location.hash = ''; }));
+  back.setAttribute('aria-label', 'Back to the bookshelf');
+  top.append(make('h1', 'screen-title', `Page ${index + 1} of ${book.pages.length}`));
+  const finish = top.appendChild(button('pill pill-go', '✓ Finish', async () => {
+    if (isBlank(open.book)) { location.hash = ''; return; }
+    changed({ ...open.book, finished: true, changed: Date.now() });
+    await saveNow();
+    if (saveState !== 'not-saved') location.hash = ''; // if it didn't save, stay and show the mark
+  }));
+  finish.setAttribute('aria-label', 'Finish the book');
+
+  const mark = saveMark();
+  stopWatching = onSaveState(mark.update);
+  screen.append(mark.node);
+
+  const slot = screen.appendChild(make('div', 'picture-slot'));
+  slot.append(make('div', 'picture')); // the picture area, empty until stickers arrive (Phase 2)
+  slot.firstChild.setAttribute('aria-hidden', 'true');
+
+  const tools = screen.appendChild(make('div', 'page-tools'));
+  const previous = tools.appendChild(button('pill', '‹ Prev', () => go(index - 1)));
+  previous.setAttribute('aria-label', 'Previous page');
+  previous.disabled = index === 0;
+  const add = tools.appendChild(button('pill', '+ Add page', () => {
+    changed(addPage(open.book, index, Date.now()));
+    go(index + 1);
+  }));
+  add.disabled = !canAddPage(book);
+  if (open.removed) {
+    const putBack = tools.appendChild(button('pill', '↩ Put page back', () => {
+      const { removed } = open;
+      open.removed = null;
+      changed(putBackPage(open.book, removed, Date.now()));
+      go(Math.min(removed.index, open.book.pages.length - 1));
+    }));
+    putBack.disabled = !canAddPage(book);
+  } else {
+    const remove = tools.appendChild(button('pill', '✕ Remove', () => {
+      const result = removePage(open.book, index, Date.now());
+      if (!result.removed) return;
+      open.removed = result.removed;
+      changed(result.book);
+      go(Math.min(index, result.book.pages.length - 1));
+    }));
+    remove.setAttribute('aria-label', 'Remove this page');
+    remove.disabled = book.pages.length <= 1;
+  }
+  const next = tools.appendChild(button('pill', 'Next ›', () => go(index + 1)));
+  next.setAttribute('aria-label', 'Next page');
+  next.disabled = index === book.pages.length - 1;
+
+  const fullState = (text) => isFull({ text, limit: LIMIT });
+  const showFull = (text) => {
+    const full = fullState(text) && canAddPage(open.book);
+    add.classList.toggle('pill-go', full); // a full page: "Add a page" stands out
+    add.textContent = full ? '+ Add a page' : '+ Add page';
+  };
+  showFull(book.pages[index].text);
+
+  writer = mountWriter(screen, {
+    text: book.pages[index].text,
+    label: `Words for page ${index + 1}`,
+    onChange: (text) => {
+      changed(setPageText(open.book, index, text, Date.now()));
+      showFull(text);
+    },
+  });
+  shelf.hidden = true;
+  document.body.append(screen);
+}
+
+// ---------- The reading view ----------
+
+async function showRead(id, token) {
+  await saveNow();
+  let book;
+  try { book = (await loadBooks()).find((one) => one.id === id); } catch { /* the shelf says so */ }
+  if (token !== shown) return;
+  if (!book) { location.hash = ''; return; }
+  screen = make('main', 'screen reading');
+  showReading(screen, book, { onClose: () => { location.hash = ''; } });
+  shelf.hidden = true;
+  document.body.append(screen);
+}
+
+// ---------- Choosing the screen ----------
+
+async function show() {
+  const token = ++shown;
+  const [kind, id, page] = location.hash.slice(1).split('/');
+  clearScreen();
+  if (kind !== 'book' || (open && open.book.id !== id)) open = null; // leaving the book: the put-back is gone
+  const grownupsOpen = location.hash === '#grown-ups';
+  grownups.hidden = !grownupsOpen;
+  if (grownupsOpen) {
+    shelf.hidden = true;
+    showGrownup(grownups, { onBack: () => { location.hash = ''; } });
+    return;
+  }
+  grownups.replaceChildren();
+  if (kind === 'try-stickers') { shelf.hidden = true; return; } // the temporary demo below draws itself
+  if (kind === 'book' && id) await showPage(id, Number(page) || 0, token);
+  else if (kind === 'read' && id) await showRead(id, token);
+  else {
+    shelf.hidden = true; // until the books are read, so an old shelf is never shown
+    await showShelf(token);
+  }
+}
+
 addEventListener('hashchange', show);
 show();
 // Temporary: index.html#try-stickers opens the picture area to try stickers,

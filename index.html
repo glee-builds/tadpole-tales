@@ -13,13 +13,24 @@
 </head>
 <body>
   <main class="shelf">
-    <img class="mascot" src="assets/tadpole.svg" alt="" width="96" height="88">
-    <h1>Tadpole Tales</h1>
-    <p class="empty">Your bookshelf is empty.</p>
-    <button type="button" class="go">Make a new book</button>
+    <header class="shelf-top">
+      <img class="mascot" src="assets/tadpole.svg" alt="" width="60" height="55">
+      <div>
+        <p class="brand-name">Tadpole Tales</p>
+        <h1>Your books</h1>
+      </div>
+      <!-- The "not saved" mark is added here by app.js. -->
+    </header>
+    <!-- The book cards are drawn here by app.js. -->
+    <div class="books" aria-live="polite"></div>
+    <button type="button" class="pill pill-go go"><span aria-hidden="true">+</span> Make a new book</button>
     <p class="install-note"></p>
-    <!-- Opens the grown-up page when held for 2 seconds. -->
-    <button type="button" class="hold-button">For grown-ups: press and hold</button>
+    <footer class="shelf-foot">
+      <!-- Opens the grown-up page when held for 2 seconds. -->
+      <button type="button" class="hold-button">For grown-ups: press and hold</button>
+      <!-- Saves, then loads the app again (the newest version). -->
+      <button type="button" class="refresh-button">↻ Refresh</button>
+    </footer>
   </main>
   <main class="grownups" hidden></main>
   <script type="module" src="src/app.js"></script>
