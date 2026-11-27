@@ -99,7 +99,7 @@ export function showPolish(screen, { book, names, onBook, onExit }) {
     busy = false;
     if (dead) return;
     at++;
-    ask();
+    try { ask(); } catch { exit(); } // a word that can't be drawn ends the step, never a blank screen
   }
 
   const slow = setTimeout(() => { if (!dead && !items.length) { frame(); box.append(make('p', 'polish-wait', 'Getting ready…')); } }, SLOW);
@@ -108,7 +108,7 @@ export function showPolish(screen, { book, names, onBook, onExit }) {
     if (dead) return;
     items = one ? wordsToAsk(book, one, names) : [];
     if (items.length) ask(); else exit(); // nothing to ask, or no lists: skip quietly
-  });
+  }).catch(exit); // anything that throws still ends the step
 
   return { remove: () => { dead = true; clearTimeout(slow); box.remove(); } };
 }

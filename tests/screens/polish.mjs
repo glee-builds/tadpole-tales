@@ -127,3 +127,14 @@ export async function tryPolishNoLists() {
       return (await savedPages('made-up-nolists')).join('|') === `${TEXT0}|${TEXT1}` ? '' : 'the book changed';
   });
 }
+
+/** wordsToAsk throwing must still leave the step (Skip or the kind message), never a blank screen. */
+export async function tryPolishThrows() {
+  // Only the spelling check's own word pattern throws; the rest of the app uses matchAll normally.
+  const block = `(() => { const real = String.prototype.matchAll; String.prototype.matchAll = function (re) { if (re && String(re.source).includes('\\p{N}')) throw new Error('boom'); return real.call(this, re); }; })()`;
+  return await withScript(`${NO_VOICE}; ${block}`, async () => {
+      await fresh('made-up-throws', [TEXT0, TEXT1]);
+      if (await toPolish('made-up-throws') !== 'kind message') return 'when the spelling check throws the step was not skipped';
+      return (await savedPages('made-up-throws')).join('|') === `${TEXT0}|${TEXT1}` ? '' : 'the book changed';
+  });
+}

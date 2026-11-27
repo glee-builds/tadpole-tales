@@ -127,3 +127,5 @@
 .shelf-heading { grid-column: 1 / -1; margin: 8px 0 0; font-size: 1.15rem; }
 .example-card { border-color: var(--border); }
 .example-card .card-status { color: var(--words-ink); }
+
+.pick-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-bottom: 8px; }

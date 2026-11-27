@@ -5,6 +5,7 @@
 //   '#book/<id>/<page>'   the page screen (Write or Picture mode); <page> counts from 0
 //   '#read/<id>'          the reading view
 //   '#finish/<id>'        after "Finish": title, author name, cover, then the lesson steps (finish.js)
+//   '#pick/<id>'          pick a lesson to keep in mind, once every lesson is done
 //   '#grown-ups'          the grown-up page
 //   '#lesson/...', '#plan/...', '#example/...'   the lesson screens (src/lesson-screens.js)
 
@@ -112,11 +113,12 @@ async function showShelf(token) {
 
 shelf.querySelector('.go').addEventListener('click', async () => {
   const lessons = await loadLessonData();
-  const lesson = lessons && currentLesson(await getProgress(), lessons.lessons);
+  const progress = await getProgress();
+  const lesson = lessons && currentLesson(progress, lessons.lessons);
   const book = { ...newBook(newId(), Date.now()), ...(lesson && { lesson: lesson.id }) }; // a book remembers its lesson
   open = { book, removed: [], stored: false }; // saved at the first word, so backing out leaves no empty book
   // The lesson card (while lessons remain), then planning; every book is offered planning once lessons load.
-  const pick = lessons && !lesson && pickOptions(await getProgress(), lessons.lessons).length > 0; // after the last lesson: pick one first
+  const pick = lessons && !lesson && pickOptions(progress, lessons.lessons).length > 0; // after the last lesson: pick one first
   location.hash = lesson ? `lesson/${book.id}/${lesson.id}/new` : pick ? `pick/${book.id}` : `${lessons ? 'plan' : 'book'}/${book.id}/0`;
 });
 

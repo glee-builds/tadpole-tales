@@ -151,9 +151,18 @@ test('tip no-talking: fires with no speech marks and no speaking words, in any c
   assert.equal(tipFor(talk, book('', ' '), opened), null); // nothing written yet
 });
 
+test('tip no-talking: says, told, replied and the like count as talking', () => {
+  for (const w of ['Pip says hi.', 'Mom told Pip.', 'Pip replied.', 'Pip cried.', 'Pip laughed.', 'Pip whispers. Pip tells Mom.'])
+    assert.equal(tipFor(talk, book(w), [talk]), null, w);
+});
+
+test('tip dream-ending: not fooled by "it was dream" or "a dreamy day"', () => {
+  for (const end of ['it was dream', 'It was a dreamy day.']) assert.equal(tipFor(dream, book(end), [dream]), null, end);
+});
+
 test('tip dream-ending: looks only at the last page with words', () => {
   const opened = [dream];
-  for (const end of ['It was all a dream.', 'It was just a dream!', 'it was only a dream', 'It was all just a dream.', 'And then I woke up.', 'Then Pip woke up in bed.', 'and then Pip suddenly woke up'])
+  for (const end of ['It was a dream.', 'It was all a dream.', 'It was just a dream!', 'it was only a dream', 'It was all just a dream.', 'And then I woke up.', 'Then Pip woke up in bed.', 'and then Pip suddenly woke up'])
     assert.equal(tipFor(dream, book('Pip hopped.', end, ''), opened).check, 'dream-ending', end);
   assert.equal(tipFor(dream, book('It was all a dream.', 'Pip hopped home.'), opened), null); // not the last page
   assert.equal(tipFor(dream, book('Pip woke up.', 'Pip ate.'), opened), null);
