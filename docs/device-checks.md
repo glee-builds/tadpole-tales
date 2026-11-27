@@ -58,16 +58,51 @@ Open a book and go to its picture.
 
 1. Tap a sticker in the tray. It appears on the picture.
 2. Drag it with one finger. It follows your finger and stays inside the picture.
-3. Move it with two taps: tap the sticker, then tap a new spot. (Skip if the app doesn't offer this yet.)
+3. Move it with two taps: tap the sticker, then tap a new spot.
 4. Tap a sticker, then tap **Bigger** twice, **Smaller** once, and **Remove**. Each does what it says.
 5. Add stickers until the app says the picture is full (12).
 
 ## 8. Read to me (from Phase 2)
 
 1. Open a finished book to read it and tap **Read to me**.
-2. You should hear the words, and an underline should follow the word being said.
+2. You should hear the words. The sentence being read is underlined. The word being said is underlined too, but only if the device sends word timing; if it doesn't, the sentence is the only thing that moves. Note which one you saw in the results table.
 3. Tap **Stop**. The voice stops and the underline goes away.
 4. Turn the volume up and make sure the silent switch is off if you hear nothing.
+
+## 9. Finishing a book (from Phase 2)
+
+Open a book you wrote in and tap **✓ Finish** at the top right.
+
+1. The first question is "What's your book called?". Type a title. The button reads **Skip** while the box is empty, and **Next ›** once something is there.
+2. Tap **Next ›**. The next question is "What's your author name?". It is asked only the first time: once a name is saved, this step is left out. Type a name, or tap **Skip**.
+3. Next is "Add stickers to your cover". Tap stickers from the tray, or tap **Skip** to leave the cover plain.
+4. On the last step the button reads **✓ Done** once there is a sticker. Tap it. The shelf shows "Your book is on the shelf!", and the book is marked **✓ Finished**.
+
+## 10. Moving a page (from Phase 2)
+
+Open a book with at least three pages.
+
+1. Tap **🖼 Picture** at the top.
+2. On page 2, tap **Later ▶**. The page moves to the next place, and its number at the top changes to match. Its words and stickers move with it.
+3. Tap **◀ Earlier** to move it back. On the first page **◀ Earlier** can't be tapped; on the last page, **Later ▶** can't be.
+4. Tap **✏️ Write** at the top to go back to the words.
+
+## 11. Reading stops (from Phase 2)
+
+Open a finished book and tap **🔊 Read to me** so it starts reading.
+
+1. Tap **Next ›**. Reading stops, the button reads **🔊 Read to me** again, and the next page is shown.
+2. Tap **🔊 Read to me** again and let it read a sentence or two. Then tap **✕ Close**. You are back on the bookshelf and no voice is heard.
+3. Open the book, tap **🔊 Read to me**, then swipe up from the bottom to close the app. Open the app again from its icon. The book is not reading out loud.
+
+## 12. Stickers after backup and restore (from Phase 2)
+
+Use a book with stickers on a page, that the iPad does not have yet.
+
+1. On the phone, open that book, tap **🖼 Picture**, and note one sticker and where it sits (for example, top left).
+2. On the phone, open the grown-up page and tap **Back up all books**. Save the file somewhere both devices can reach.
+3. On the iPad, press and hold **For grown-ups**, tap **Restore from a file…**, and pick the file. Open the same book.
+4. The same sticker should sit in the same place, at the same size, on the same page, on both devices.
 
 ## Results
 
@@ -95,3 +130,8 @@ Version of iOS / iPadOS: phone ______  iPad ______   Phase: ______   Date: _____
 | Stickers: add and drag (Phase 2) | | | |
 | Stickers: two taps, bigger, smaller, remove (Phase 2) | | | |
 | Read to me: hear it, underline, Stop (Phase 2) | | | |
+| Underline follows: sentence / word | | | |
+| Finish: title, author name, cover, Skip on each step (Phase 2) | | | |
+| Moving a page: ◀ Earlier and Later ▶ (Phase 2) | | | |
+| Reading stops: Next, Close, or leaving the app (Phase 2) | | | |
+| Stickers: same place after backup and restore (Phase 2) | | | |
