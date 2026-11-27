@@ -255,10 +255,11 @@ function drawPageTools(book, index) {
 
 /** Write mode: a small picture (tap it for Picture mode), the page tools, the writing area and keys. */
 function drawWriteMode(book, index, title) {
+  title.classList.add('page-label');
   const slot = screen.appendChild(make('div', 'picture-slot'));
   const openPictures = () => { mode = 'picture'; show(); };
   slot.addEventListener('click', openPictures);
-  slot.append(title); // a small badge on the picture area, so the page number takes no row
+  slot.append(title); // a chip on the picture area, so the page number takes no row
   picture = mountPicture(slot, { stickers: book.pages[index].stickers });
   picture.node.setAttribute('role', 'button'); // the whole picture is a button to Picture mode
   picture.node.setAttribute('tabindex', '0');
@@ -286,10 +287,20 @@ function drawWriteMode(book, index, title) {
   });
 }
 
-/** Picture mode: the page number, a big picture with its sticker tray, the page tools, and the move buttons. */
+/** Picture mode: the page number between the move buttons, a big picture with its sticker tray, then the page tools. */
 function drawPictureMode(book, index, title) {
-  title.classList.add('title-row');
-  screen.append(title);
+  const head = screen.appendChild(make('div', 'page-head'));
+  title.classList.add('page-label');
+  const [earlier, later] = [['◀ Earlier', 'Move this page earlier', -1], ['Later ▶', 'Move this page later', 1]].map(([words, label, step]) => {
+    const moveButton = button('pill', words, () => {
+      changed(movePage(open.book, index, index + step, Date.now()));
+      go(index + step);
+    });
+    moveButton.setAttribute('aria-label', label);
+    moveButton.disabled = index + step < 0 || index + step >= book.pages.length;
+    return moveButton;
+  });
+  head.append(earlier, title, later);
   picture = mountPicture(screen, {
     stickers: book.pages[index].stickers,
     editable: true,
@@ -297,17 +308,6 @@ function drawPictureMode(book, index, title) {
   });
   drawPutBack(book);
   drawPageTools(book, index);
-  const move = screen.appendChild(make('div', 'page-tools'));
-  move.setAttribute('role', 'group');
-  move.setAttribute('aria-label', 'Move this page');
-  for (const [words, label, step] of [['◀ Move earlier', 'Move this page earlier', -1], ['Move later ▶', 'Move this page later', 1]]) {
-    const moveButton = move.appendChild(button('pill', words, () => {
-      changed(movePage(open.book, index, index + step, Date.now()));
-      go(index + step);
-    }));
-    moveButton.setAttribute('aria-label', label);
-    moveButton.disabled = index + step < 0 || index + step >= book.pages.length;
-  }
 }
 
 // ---------- The reading view ----------

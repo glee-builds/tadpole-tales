@@ -210,13 +210,13 @@ export async function tryStickers() {
   if (await evaluate(`document.querySelectorAll('.picture .sticker').length`) !== 12) return 'the stickers did not come back';
 
   // Move page: page 1 later puts it second, and the stickers go with it. The ends are off.
-  if (!await isDisabled('Move earlier')) return 'Move earlier should be off on page 1';
-  await tapButton('Move later');
+  if (!await isDisabled('Earlier')) return 'Move earlier should be off on page 1';
+  await tapButton('Later');
   if (!await waitFor(`document.querySelector('.screen-title')?.textContent === 'Page 2 of 3'`, 3)) return 'Move later did not go to page 2';
   if ((await placed()).length !== 12) return 'the stickers did not move with the page';
-  await tapButton('Move later');
+  await tapButton('Later');
   await waitFor(`document.querySelector('.screen-title')?.textContent === 'Page 3 of 3'`, 3);
-  if (!await isDisabled('Move later')) return 'Move later should be off on the last page';
+  if (!await isDisabled('Later')) return 'Move later should be off on the last page';
   await saveNow();
   await open('#book/made-up-pic-1/2', 'document.querySelector(".keyboard") !== null');
   const order = await evaluate(`(async () => { ${STORE} const [one] = await store.loadBooks(); return one.pages.map((p) => p.text + ':' + p.stickers.length).join(); })()`);

@@ -127,16 +127,18 @@ export function mountPicture(parent, { stickers: start = [], onChange, editable 
   picture.setAttribute('role', editable ? 'group' : 'img'); // an "img" would hide the sticker buttons from screen readers
   const parts = [picture];
 
-  let tools, tray, full, bigger, smaller;
+  let bar, tools, hint, tray, full, bigger, smaller;
   if (editable) {
-    tools = make('div', 'sticker-tools');
+    bar = make('div', 'sticker-bar'); // the tools show for a tapped sticker; otherwise a hint takes their place
+    tools = bar.appendChild(make('div', 'sticker-tools'));
+    hint = bar.appendChild(make('p', 'sticker-hint', 'Tap a sticker to change it'));
     bigger = tools.appendChild(toolButton('+', 'Bigger', () => change(resizeSticker(stickers, selected, 1))));
     smaller = tools.appendChild(toolButton('−', 'Smaller', () => change(resizeSticker(stickers, selected, -1))));
     tools.appendChild(toolButton('✕', 'Remove', () => { const index = selected; selected = -1; change(removeSticker(stickers, index)); }));
-    full = make('p', 'sticker-full', '✋ 12 stickers is the most');
+    full = make('p', 'sticker-full', '✋ Page full! 12 stickers is the most.');
     tray = make('div', 'sticker-tray');
     tray.setAttribute('aria-label', 'Stickers');
-    parts.push(tools, full, tray);
+    parts.push(bar, full, tray);
   }
 
   function change(next) {
@@ -169,12 +171,12 @@ export function mountPicture(parent, { stickers: start = [], onChange, editable 
     if (!editable) return;
     const sticker = stickers[selected];
     tools.style.visibility = sticker ? '' : 'hidden';
+    hint.hidden = Boolean(sticker);
     if (sticker) {
       bigger.disabled = sticker.size >= SIZES[SIZES.length - 1];
       smaller.disabled = sticker.size <= SIZES[0];
     }
     full.hidden = canAddSticker(stickers);
-    tray.classList.toggle('tray-full', !canAddSticker(stickers));
   }
 
   if (editable) {

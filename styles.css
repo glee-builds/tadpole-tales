@@ -7,6 +7,7 @@
   --surface: #ffffff;
   --border: #e3dccf;
   --edge: #e3d6c3;       /* the darker line around the writing area, picture and small buttons */
+  --tint: #f3e9dc;       /* a warm grey for quiet backgrounds: wide keys, the Write | Picture switch, the sticker tray */
   --edge-deep: #d9cbb6;  /* the shadow line under keys and sticker tiles */
   --warn: #9a3412;       /* warning text (7:1 on white) */
   --go: #ff8a5c;
@@ -199,11 +200,11 @@ button { font-family: inherit; }
 
 /* The wide keys. */
 .key-shift,
-.key-backspace { max-width: 48px; flex-grow: 1.4; background: #f3e9dc; }
+.key-backspace { max-width: 48px; flex-grow: 1.4; background: var(--tint); }
 .key-shift[aria-pressed="true"] { background: var(--go); }
 .key-row:nth-child(4) .key { max-width: 64px; }
 .key-space { max-width: none; flex-grow: 3; font-size: 1rem; }
-.key-enter { max-width: none; flex-grow: 2; font-size: 1rem; background: #f3e9dc; }
+.key-enter { max-width: none; flex-grow: 2; font-size: 1rem; background: var(--tint); }
 
 /* ---------- Tablets (iPad) ---------- */
 /* Held upright, the phone column is shown bigger, the way Little Pond does it. */
@@ -336,9 +337,12 @@ button { font-family: inherit; }
 /* The picture takes what the words and keys leave, but never less than 52px high (a small thumbnail). */
 .picture-slot { position: relative; flex: 1 1 0; min-height: 52px; overflow: hidden; cursor: pointer; }
 
-/* "Page 2 of 3": a badge on the picture area in Write mode, a slim row above the picture in Picture mode. */
-.picture-slot .screen-title { position: absolute; top: 0; left: 0; z-index: 1; margin: 0; padding: 2px 8px; border-radius: 10px; background: var(--surface); font-size: 0.85rem; }
-.title-row { flex: none; margin: 0; font-size: 1rem; }
+/* "Page 2 of 3": a chip at the bottom middle of the small picture in Write mode (it takes no row); in Picture mode it sits between the Move buttons. */
+.page-label { flex: none; margin: 0; font-size: 1.05rem; line-height: 1.2; }
+.picture-slot .page-label { position: absolute; bottom: 3px; left: 50%; z-index: 1; transform: translateX(-50%); padding: 1px 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); font-size: 0.8rem; white-space: nowrap; }
+.page-head { flex: none; display: flex; align-items: center; gap: 8px; padding: 0 4px; }
+.page-head .page-label { flex: 1; }
+.page-head .pill { flex: none; min-width: 96px; padding: 0 10px; font-size: 0.95rem; }
 
 /* After a Remove: one bar to bring the page back. */
 /* With the bar showing, a full page still fits its words: the picture may shrink to nothing. */
@@ -346,11 +350,10 @@ button { font-family: inherit; }
 .putback-bar { flex: none; display: flex; padding: 0 4px; }
 .putback-bar .pill { flex: 1 1 auto; }
 
-/* Write | Picture: two big buttons with an icon and words, in the top row. */
-.mode-switch { flex: 1 1 0; display: flex; gap: 4px; min-width: 0; }
-
-.mode-choice { flex: 1 1 0; min-width: 0; padding: 0 4px; font-size: 0.95rem; }
-.mode-choice[aria-pressed="true"] { border-color: var(--go); background: var(--go); color: var(--on-go); font-weight: 800; box-shadow: 0 3px 0 #c9602f; }
+/* Write | Picture: one rounded switch in the top row; the chosen side is raised and bold. */
+.mode-switch { flex: 1 1 0; display: flex; min-width: 0; border-radius: 24px; background: var(--tint); box-shadow: 0 0 0 2px var(--border); /* a ring outside, so the row stays 48px */ }
+.mode-choice { flex: 1 1 0; min-width: 0; padding: 0 4px; border: 0; border-radius: 24px; background: transparent; font-size: 0.95rem; }
+.mode-choice[aria-pressed="true"] { background: var(--surface); box-shadow: 0 1px 4px rgb(43 36 64 / 0.3); font-weight: 800; }
 
 .page-tools { display: flex; gap: 6px; padding: 0 4px; }
 .page-tools .pill { flex: 1 1 auto; min-width: 0; padding: 0 8px; font-size: 0.95rem; }

@@ -46,32 +46,39 @@
 .picture-edit .sticker[aria-pressed="true"] { outline: 3px dashed var(--go); outline-offset: -3px; /* inside, so the picture's edge doesn't cut it off */ border-radius: 8px; }
 .sticker.lifted { cursor: grabbing; filter: drop-shadow(0 4px 4px rgba(43, 36, 64, 0.3)); }
 
-/* "Bigger", "Smaller", "Remove": shown for the tapped sticker. Keeps its room when hidden, so nothing jumps. */
-.sticker-tools { flex: none; display: flex; justify-content: center; gap: 8px; }
+/* "Bigger", "Smaller", "Remove" for the tapped sticker; with none tapped, a hint in the same row. The row keeps its room, so nothing jumps. */
+.sticker-bar { flex: none; display: grid; min-height: 48px; }
+.sticker-tools,
+.sticker-hint { grid-area: 1 / 1; }
+.sticker-tools { display: flex; justify-content: center; gap: 8px; }
+.sticker-hint { align-self: center; margin: 0; color: var(--muted); text-align: center; font-weight: 700; }
 
 .sticker-tool { flex: 1 1 0; max-width: 140px; gap: 6px; padding: 0 8px; border-radius: 12px; font-size: 1rem; }
 
 .tool-icon { font-size: 1.4rem; line-height: 1; }
 
-.sticker-full { flex: none; margin: 0; text-align: center; font-weight: 700; }
+/* One friendly line at the 12 limit (the tray stays as it is). */
+.sticker-full { flex: none; margin: 0; text-align: center; font-size: 0.95rem; font-weight: 700; }
 
-/* The tray: every sticker, scrolling inside itself if there are many. */
+/* The tray: its own box, every sticker inside, scrolling inside itself. It takes the room the other rows leave and never sits under them. */
 .sticker-tray {
-  flex: 1 1 auto;
-  min-height: 64px;
+  flex: 1 1 0;
+  min-height: 76px;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-wrap: wrap;
   align-content: flex-start;
   justify-content: center;
   gap: 8px;
   padding: 4px;
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  background: var(--tint);
 }
 
-.tray-sticker { width: 64px; height: 64px; padding: 0; border-radius: 12px; }
-
+.tray-sticker { flex: none; width: 64px; height: 64px; padding: 0; border-radius: 12px; }
 .tray-sticker .emoji { font-size: 40px; }
-.tray-full .tray-sticker { opacity: 0.4; }
 
 .wiggle { animation: wiggle 0.4s; }
 @keyframes wiggle { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
