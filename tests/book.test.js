@@ -133,7 +133,7 @@ test('title and cover are set without changing the book passed in', () => {
 
 test('upgradeBook mends a title and cover that are the wrong shape, and keeps good ones', () => {
   const odd = upgradeBook({ id: 'b-9', pages: [], title: 7, cover: { stickers: 'x' } });
-  assert.deepEqual([odd.title, odd.cover], ['7', null]); // a number keeps its digits
+  assert.deepEqual([odd.title, odd.cover], ['', null]); // only text is kept as a title
   assert.equal(upgradeBook({ id: 'b-9', pages: [], title: { x: 1 } }).title, '');
   const good = { id: 'b-9', pages: [], title: 'Pip', cover: { stickers: [{ id: 'frog', x: 0.5, y: 0.5, size: 1 }] } };
   const kept = upgradeBook(good);

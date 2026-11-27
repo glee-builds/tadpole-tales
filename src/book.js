@@ -93,33 +93,41 @@ export const isNewer = (book) => book.format > BOOK_FORMAT;
  * Turn a saved record into a format-1 book, filling in anything missing.
  * Fields it doesn't know (from a later phase) are kept, on the book and on
  * each page. A book over 12 pages keeps every page. A book from a newer
- * format is returned whole and unchanged (see isNewer). Throws 'not a book'
- * without a string id.
+ * format is returned whole and unchanged (see isNewer). Anything of the
+ * wrong type (from a damaged or hand-edited backup) is mended: words and the
+ * title that aren't text become '', a sticker without a string id and
+ * numeric x, y and size is left out, `finished` is true or false, and the
+ * dates are numbers. Throws 'not a book' without a good id (see ID).
  */
 export function upgradeBook(record) {
-  if (typeof record?.id !== 'string' || !record.id) throw new Error('not a book');
+  if (!isObject(record) || typeof record.id !== 'string' || !ID.test(record.id)) throw new Error('not a book');
   if (isNewer(record)) return record;
   if (!Array.isArray(record.pages)) throw new Error('not a book');
-  const created = record.created ?? record.changed ?? 0;
+  const created = time(record.created) ?? time(record.changed) ?? 0;
   const pages = record.pages.map((page) => ({
-    ...page,
+    ...(isObject(page) ? page : {}),
     text: asText(page?.text),
-    stickers: Array.isArray(page?.stickers) ? page.stickers : [],
+    stickers: stickersOf(page?.stickers),
   }));
   return {
     ...record,
     format: BOOK_FORMAT,
     created,
-    changed: record.changed ?? created,
-    finished: record.finished ?? false,
+    changed: time(record.changed) ?? created,
+    finished: record.finished === true,
     title: asText(record.title),
-    cover: Array.isArray(record.cover?.stickers) ? { ...record.cover } : null,
+    cover: Array.isArray(record.cover?.stickers) ? { ...record.cover, stickers: stickersOf(record.cover.stickers) } : null,
     pages: pages.length ? pages : [newPage()],
   };
 }
 
-/** A hand-edited number becomes its digits; null, a list or an object becomes ''. */
-const asText = (value) => (value == null || typeof value === 'object' ? '' : String(value));
+/** A book id: short, letters, digits, '-' and '_' only (never '/' or '#', which the screen addresses use). */
+const ID = /^[\w-]{1,100}$/;
+const isObject = (value) => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+const asText = (value) => (typeof value === 'string' ? value : '');
+const time = (value) => (Number.isFinite(value) ? value : undefined);
+const isSticker = (sticker) => isObject(sticker) && typeof sticker.id === 'string' && [sticker.x, sticker.y, sticker.size].every(Number.isFinite);
+const stickersOf = (list) => (Array.isArray(list) ? list.filter(isSticker) : []);
 
 /** A random id for a new book. crypto.randomUUID needs Safari 15.4, so older ones make it from random bytes. */
 export function newId() {
@@ -156,6 +164,7 @@ export function backupName(now) {
  * an Error whose message is a short sentence for a grown-up.
  */
 export function readBackup(text) {
+  if (text.length > BACKUP_LIMIT) throw new Error('This file is too big to be a Tadpole Tales backup.');
   let data;
   try {
     data = JSON.parse(text);
@@ -167,14 +176,34 @@ export function readBackup(text) {
   if (!Array.isArray(data.books)) throw new Error('This file is damaged or cut short. Try another backup.');
   const books = [];
   for (const record of data.books) {
-    try { books.push(upgradeBook(record)); } catch { /* counted below */ }
+    try {
+      const book = upgradeBook(record);
+      // A page far longer than the app lets anyone type: counted as unreadable, never cut.
+      if (!isNewer(book) && book.pages.some((page) => page.text.length > PAGE_TEXT_LIMIT)) continue;
+      books.push(book);
+    } catch { /* counted below */ }
   }
   return {
     books,
     author: typeof data.author === 'string' ? data.author : '',
-    progress: data.progress && typeof data.progress === 'object' ? data.progress : {},
+    progress: progressOf(data.progress),
     unreadable: data.books.length - books.length,
   };
+}
+
+export const BACKUP_LIMIT = 5e6;     // characters: a real backup is far smaller
+export const PAGE_TEXT_LIMIT = 2000; // characters on one page in a backup (typing stops at 300)
+
+/**
+ * Lesson progress from a backup: no lesson fields exist yet, so only plain
+ * entries come back, a name of letters, digits, '-' or '_' (starting with a
+ * letter) set to a number or true/false. Anything else is left out.
+ */
+function progressOf(progress) {
+  if (!isObject(progress)) return {};
+  return Object.fromEntries(Object.entries(progress).filter(([key, value]) => (
+    /^[a-z][\w-]{0,63}$/i.test(key) && (Number.isFinite(value) || typeof value === 'boolean')
+  )).slice(0, 500));
 }
 
 /**

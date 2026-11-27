@@ -591,6 +591,48 @@ async function tryBackup() {
   said = await restoreFrom(broken);
   if (!said.startsWith('⚠ This file is damaged')) return `a broken file said "${said}"`;
   if ((await savedTexts()).length !== 2) return 'a broken file changed the shelf';
+
+  // One book won't save (the database turns it away): it is counted, and the books after it are still added.
+  const three = join(downloads, 'three.json');
+  const make = (id, text) => ({ format: 1, id, created: 1, changed: 1, finished: false, title: '', cover: null, pages: [{ text, stickers: [] }] });
+  writeFileSync(three, JSON.stringify({ app: 'tadpole-tales', backup: 1, books: [make('made-up-5', 'One.'), make('made-up-fail', 'Two.'), make('made-up-6', 'Three.')] }));
+  await evaluate(`IDBObjectStore.prototype.realPut ??= IDBObjectStore.prototype.put;
+    IDBObjectStore.prototype.put = function (value, ...rest) {
+      if (value?.id === 'made-up-fail') throw new DOMException('test: will not save', 'DataError');
+      return IDBObjectStore.prototype.realPut.call(this, value, ...rest);
+    };`);
+  said = await restoreFrom(three);
+  await evaluate(`IDBObjectStore.prototype.put = IDBObjectStore.prototype.realPut;`);
+  if (!said.startsWith('✓ Added 2 books.') || !said.includes('1 book in the file couldn\'t be read')) return `a book that would not save said "${said}"`;
+  if ((await savedTexts()).length !== 4) return `after one book would not save the shelf has ${(await savedTexts()).length} books, not 4`;
+  return '';
+}
+
+/** Damaged books on the device: the good book still shows, and nothing logs an error. Returns a problem, or ''. */
+async function tryHostile() {
+  if (!await open('', 'document.querySelector(".go") !== null')) return 'home did not draw';
+  const good = { format: 1, id: 'made-up-good', created: 1, changed: 2, finished: false, title: 'Good book', cover: null, pages: [{ text: 'hello', stickers: [] }] };
+  const bad = [
+    { ...good, id: 7 },
+    { ...good, id: 'made-up-t1', pages: [{ text: 123, stickers: 'abc' }] },
+    { ...good, id: 'made-up-c1', finished: true, cover: { stickers: [null, { id: 'frog', x: 'oops', y: 0.5, size: 1 }] } },
+    { ...good, id: 'h1"><img src=x onerror=window.__xss=1>', title: '<img src=x onerror=window.__xss=1>' },
+  ];
+  // Written straight into the database, past saveBook, as a damaged record would be.
+  await evaluate(`(async () => { ${STORE} await store.startOver(); await store.saveBook(${JSON.stringify(good)});
+    const db = await new Promise((resolve) => { const r = indexedDB.open('tadpole-tales'); r.onsuccess = () => resolve(r.result); });
+    const tx = db.transaction('books', 'readwrite');
+    for (const record of ${JSON.stringify(bad)}) tx.objectStore('books').put(record);
+    await new Promise((resolve) => { tx.oncomplete = resolve; }); db.close(); })()`);
+  if (!await open('', 'document.querySelectorAll(".book-card").length >= 1')) return 'the shelf drew no books';
+  const titles = await evaluate(`[...document.querySelectorAll('.book-card .cover-title')].map((node) => node.textContent).sort().join('|')`);
+  if (!titles.includes('Good book')) return `the good book is not on the shelf: ${titles}`;
+  for (const address of ['#book/made-up-t1/0', '#read/made-up-c1', '#grown-ups']) {
+    if (!await open(address, 'document.querySelector(".keyboard, .read-page, .gu-book") !== null')) return `${address} did not draw`;
+    await sleep(300);
+    if (errors.length) return `${address}: ${errors[0]}`;
+  }
+  if (await evaluate('window.__xss === 1 || document.querySelector("img[src=x]") !== null')) return 'a title or id became HTML';
   return '';
 }
 
@@ -1178,6 +1220,7 @@ try {
   await checkWith('Finish: title, author name, cover, shelf, Edit, close mid-step (phone)', tryFinish);
   await checkWith('Saving: save, reload, spare copies per book, saveNow waits, retry once, "not saved" mark, unreadable books', trySaving);
   await checkWith('A book from a newer version: shown with a note, never opened or changed', tryNewer);
+  await checkWith('Damaged books: the good book still shows; page, reading and grown-up screens draw', tryHostile);
   await checkWith('Grown-up page: hold to open, every device check, delete a book, start over', tryGrownup);
   await checkWith('Backup: back up, start over, restore, restore again, broken file', tryBackup);
   await checkKeyboard('Keyboard: type, tap to move the cursor, hold backspace, 300 fit (phone)');

@@ -6,7 +6,7 @@
 
 import { make, button, plural } from './ui.js';
 import { loadBooks, saveBook, deleteBook, startOver, getSetting, setSetting } from './store.js';
-import { makeBackup, backupName, readBackup, mergeBooks, isNewer } from './book.js';
+import { makeBackup, backupName, readBackup, mergeBooks, isNewer, BACKUP_LIMIT } from './book.js';
 
 // ---------- Install first ----------
 
@@ -382,7 +382,8 @@ function download(file) {
 async function restore(chosen) {
   let found;
   try {
-    found = readBackup(await chosen.text());
+    // Read no more than a backup can be, so a huge file can't use up the iPad's memory (readBackup turns it away).
+    found = readBackup(await chosen.slice(0, BACKUP_LIMIT + 1).text());
   } catch (error) {
     return `⚠ ${error.message} Nothing was changed.`;
   }
@@ -393,21 +394,29 @@ async function restore(chosen) {
     return '⚠ Couldn\'t open the books on this device, so nothing was restored.';
   }
   const { add, skipped } = mergeBooks(shelf, found.books);
+  // Each book is saved on its own: one that won't save is counted, and the rest are still added.
   let added = 0;
-  try {
-    for (const book of add) {
+  let unreadable = found.unreadable;
+  for (const book of add) {
+    try {
       await saveBook(book);
       added++;
+    } catch {
+      unreadable++;
     }
+  }
+  let settingsSaved = true;
+  try {
     // The name and lesson progress come back only if this device has none.
     if (found.author && !(await getSetting('author'))) await setSetting('author', found.author);
     if (Object.keys(found.progress).length && !(await getSetting('progress'))) await setSetting('progress', found.progress);
   } catch {
-    return `⚠ Added ${plural(added, 'book')}, then saving stopped. Try again: books already added are skipped.`;
+    settingsSaved = false;
   }
   return [
-    `✓ Added ${plural(added, 'book')}.`,
+    `${added || !add.length ? '✓' : '⚠'} Added ${plural(added, 'book')}.`,
     skipped ? `${plural(skipped, 'book')} already on the shelf ${skipped === 1 ? 'was' : 'were'} left as ${skipped === 1 ? 'it was' : 'they were'}.` : '',
-    found.unreadable ? `${plural(found.unreadable, 'book')} in the file couldn't be read.` : '',
+    unreadable ? `${plural(unreadable, 'book')} in the file couldn't be read.` : '',
+    settingsSaved ? '' : 'The name couldn\'t be restored. Try again: books already added are skipped.',
   ].filter(Boolean).join(' ');
 }
