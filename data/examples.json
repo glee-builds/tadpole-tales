@@ -4,7 +4,7 @@
     "title": "Dot's Snow Friend",
     "pages": [
       {
-        "text": "One cold morning, Dot looked out the window. Snow covered everything! Dot pulled on a warm hat and ran outside.",
+        "text": "One cold morning, Dot looked out the window. Snow covered everything! Dot wanted to build a snow friend. Dot pulled on a warm hat and ran outside.",
         "stickers": [
           { "id": "house", "x": 0.28, "y": 0.55, "size": 2 },
           { "id": "snow", "x": 0.75, "y": 0.22, "size": 1 },
@@ -12,7 +12,7 @@
         ]
       },
       {
-        "text": "Dot rolled a big snowball and a small one. Dot stacked them up to make a snow friend. Then a puppy ran by and knocked the top off!",
+        "text": "Dot rolled a big snowball and a small one. Dot stacked them up. Then a puppy ran by and knocked the top off!",
         "stickers": [
           { "id": "child", "x": 0.25, "y": 0.68, "size": 1 },
           { "id": "dog", "x": 0.72, "y": 0.72, "size": 1 },
@@ -20,7 +20,7 @@
         ]
       },
       {
-        "text": "Dot laughed. Dot and the puppy rolled a new top together. Now the snow friend had a friend, and so did Dot.",
+        "text": "Dot laughed. Dot and the puppy rolled a new top together. Now the snow friend was done, and Dot had a new friend.",
         "stickers": [
           { "id": "child", "x": 0.35, "y": 0.68, "size": 1 },
           { "id": "dog", "x": 0.58, "y": 0.74, "size": 1 },
@@ -43,7 +43,7 @@
         ]
       },
       {
-        "text": "Pip wanted to see the stars up close. How many were there? Nobody in the pond knew, and Pip wanted to count them all.",
+        "text": "Pip wanted to see the stars up close. How many were there? Nobody in the pond knew. Pip had to find out!",
         "stickers": [
           { "id": "frog", "x": 0.3, "y": 0.72, "size": 1 },
           { "id": "star", "x": 0.6, "y": 0.2, "size": 0.75 },
@@ -129,7 +129,7 @@
         ]
       },
       {
-        "text": "Kit climbed up to grab it, but the wind blew harder. Whoosh! The balloon sailed over the hill, toward the dark clouds.",
+        "text": "Kit climbed up to grab it, but the wind blew harder. Whoosh! The balloon sailed over the hill, toward the dark clouds. Kit wanted to cry.",
         "stickers": [
           { "id": "fox", "x": 0.2, "y": 0.72, "size": 1 },
           { "id": "mountain", "x": 0.6, "y": 0.66, "size": 1.5 },
@@ -137,11 +137,11 @@
         ]
       },
       {
-        "text": "A little bird zoomed up and caught the string. Back came the balloon! Kit laughed and shared a snack with the bird.",
+        "text": "Kit ran up the hill, faster and faster. Kit jumped high and caught the string! Kit hugged the balloon and held on tight all the way home.",
         "stickers": [
           { "id": "fox", "x": 0.35, "y": 0.7, "size": 1 },
-          { "id": "bird", "x": 0.7, "y": 0.28, "size": 1 },
-          { "id": "balloon", "x": 0.5, "y": 0.3, "size": 1 }
+          { "id": "balloon", "x": 0.5, "y": 0.3, "size": 1 },
+          { "id": "sparkles", "x": 0.82, "y": 0.22, "size": 1 }
         ]
       }
     ],

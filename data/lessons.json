@@ -13,8 +13,8 @@
       "number": 1,
       "title": "Beginning, middle, end",
       "idea": "Every story starts, something happens, and then it ends.",
-      "before": "Dot flew a kite.",
-      "after": "Dot flew a kite. The wind blew it into a tree! Dot climbed up and got it back.",
+      "before": "Dot planted a seed.",
+      "after": "Dot planted a seed. Dot watered it every day. At last, a tall sunflower grew!",
       "tryIt": "Try it in your book: give it a beginning, middle, and end.",
       "reminder": "Beginning, middle, end",
       "selfCheck": {
@@ -24,7 +24,7 @@
         "notYet": "I don't have one yet",
         "notYetOffer": "That's okay! Want to go back and add it?"
       },
-      "praise": "Your story starts on page {page} and has a real end.",
+      "praise": "You gave your story a beginning on page {page}.",
       "job": "Add one more thing that happens in the middle.",
       "tip": null
     },
@@ -51,7 +51,7 @@
       "id": "gets-in-the-way",
       "number": 3,
       "title": "Something gets in the way",
-      "idea": "If getting it is easy, there is no story.",
+      "idea": "A story gets exciting when something gets in the way.",
       "before": "Tam walked to the party.",
       "after": "Tam walked to the party, but a big log blocked the path.",
       "tryIt": "Try it in your book: put something in your character's way.",
@@ -62,7 +62,7 @@
         "notYet": "I don't have one yet",
         "notYetOffer": "That's okay! Want to go back and add it?"
       },
-      "praise": "On page {page}, something got in the way. Now it's a story!",
+      "praise": "On page {page}, something got in the way. That makes it exciting!",
       "job": "Add one thing your character tries.",
       "tip": { "check": "and-then", "job": "Find an \"and then\" and start that sentence a new way." }
     },
@@ -70,7 +70,7 @@
       "id": "three-acts",
       "number": 4,
       "title": "Three acts",
-      "idea": "Set it up, make the trouble bigger, then solve it.",
+      "idea": "A story has three acts. Trouble starts, gets bigger, then gets solved.",
       "before": "Pip lost a hat and found it.",
       "after": "Pip lost a hat. Then the wind blew it into the pond! A kind duck swam out and brought it back.",
       "tryIt": "Try it in your book: make the trouble grow, then solve it.",
@@ -82,7 +82,7 @@
         "notYet": "I don't have one yet",
         "notYetOffer": "That's okay! Want to go back and add it?"
       },
-      "praise": "Your trouble starts on page {page}, and then it gets solved.",
+      "praise": "Your trouble starts on page {page}. Readers will want to know what happens!",
       "job": "Make the trouble a little bigger before it gets solved.",
       "tip": { "check": "under-three-pages", "job": "Add a page in the middle where the trouble gets bigger." }
     }
