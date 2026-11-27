@@ -44,6 +44,7 @@ const FILES = [
   'src/stickers.css',
   'data/known-words.txt',
   'data/common-words.txt',
+  'data/extra-known.txt',
   'assets/apple-touch-icon.png',
   'assets/icon-192.png',
   'assets/icon-512.png',

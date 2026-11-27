@@ -10866,7 +10866,6 @@ arenilitic
 arenoid
 arenose
 arenosity
-arent
 areocentric
 areographer
 areographic
@@ -16700,8 +16699,6 @@ beautician
 beautied
 beautifier
 beautiful
-beautifuler
-beautifulest
 beautifully
 beautify
 beautihood
@@ -19211,8 +19208,6 @@ billionism
 billionth
 billitonite
 billjim
-billled
-billling
 billman
 billon
 billot
@@ -19332,7 +19327,6 @@ bink
 binman
 binna
 binnacle
-binned
 binning
 binnite
 binnogue
@@ -20365,7 +20359,6 @@ blindball
 blinded
 blindedly
 blinder
-blindest
 blindeyes
 blindfast
 blindfish
@@ -21546,8 +21539,6 @@ borickite
 boride
 borine
 boring
-boringer
-boringest
 boringly
 boringness
 borinqueno
@@ -30316,7 +30307,6 @@ chinky
 chinless
 chinnam
 chinned
-chinning
 chinny
 chino
 chinoa
@@ -32725,8 +32715,6 @@ closable
 close
 closecross
 closed
-closeder
-closedest
 closefisted
 closehanded
 closehearted
@@ -39855,7 +39843,6 @@ cucurbit
 cucurbita
 cucurbite
 cucurbitine
-cud
 cudava
 cudbear
 cudden
@@ -40000,7 +39987,6 @@ culverkey
 culvert
 culvertage
 culverwort
-cum
 cumacea
 cumacean
 cumaceous
@@ -45682,7 +45668,6 @@ didinium
 didle
 didn't
 didna
-didnt
 dido
 didrachma
 didrachmal
@@ -45939,7 +45924,6 @@ dihydroxy
 dihysteria
 diiamb
 diiambus
-diing
 diiodide
 diiodo
 diiodoform
@@ -48211,7 +48195,6 @@ doer
 does
 doeskin
 doesn't
-doesnt
 doest
 doff
 doffer
@@ -49457,7 +49440,6 @@ drink
 drinkability
 drinkable
 drinkably
-drinked
 drinker
 drinking
 drinkless
@@ -51303,8 +51285,6 @@ eggeater
 egger
 eggfish
 eggfruit
-eggged
-eggging
 egghead
 egghot
 egging
@@ -65548,14 +65528,12 @@ gemmae
 gemmate
 gemmation
 gemmative
-gemmed
 gemmeous
 gemmer
 gemmiferous
 gemmiform
 gemmily
 gemminess
-gemming
 gemmingia
 gemmipara
 gemmipares
@@ -69634,7 +69612,6 @@ gubernator
 gubernatrix
 guberniya
 gucki
-gud
 gudame
 guddle
 gude
@@ -71005,8 +70982,6 @@ handcloth
 handcraft
 handcraftman
 handcuff
-handded
-handding
 handed
 handedness
 handelian
@@ -71684,7 +71659,6 @@ havenership
 havenet
 havenful
 havenless
-havent
 havenward
 haver
 havercake
@@ -72999,10 +72973,8 @@ henlike
 henmoldy
 henna
 hennebique
-henned
 hennery
 hennin
-henning
 hennish
 henny
 henogeny
@@ -90749,7 +90721,6 @@ lid
 lida
 lidded
 lidder
-lidding
 lide
 lidflower
 lidgate
@@ -102446,7 +102417,6 @@ mournsome
 mouse
 mousebane
 mousebird
-mousees
 mousefish
 mousehawk
 mousehole
@@ -103361,7 +103331,6 @@ musicomania
 musicophobia
 musicopoetic
 musicproof
-musics
 musie
 musily
 musimon
@@ -125684,8 +125653,6 @@ pocketknife
 pocketless
 pocketlike
 pockets
-pocketted
-pocketting
 pockety
 pockhouse
 pockily
@@ -142493,8 +142460,6 @@ rockiness
 rocking
 rockingly
 rockish
-rockked
-rockking
 rocklay
 rockless
 rocklet
@@ -151385,7 +151350,6 @@ shouldering
 shoulders
 shouldn't
 shouldna
-shouldnt
 shoupeltin
 shout
 shouted
@@ -155755,7 +155719,6 @@ sorts
 sorty
 sorus
 sorva
-sory
 sosh
 soshed
 sosia
@@ -155872,7 +155835,6 @@ soured
 souredness
 souren
 sourer
-sourest
 sourhearted
 souring
 sourish
@@ -156341,8 +156303,6 @@ spec
 specchie
 spece
 special
-specialer
-specialest
 specialism
 specialist
 specialistic
@@ -163092,12 +163052,10 @@ sunlike
 sunlit
 sunn
 sunna
-sunned
 sunni
 sunniah
 sunnily
 sunniness
-sunning
 sunnism
 sunnite
 sunnud
@@ -168831,7 +168789,6 @@ thatchwork
 thatchy
 thatn
 thatness
-thats
 thaught
 thaumantian
 thaumantias
@@ -169223,7 +169180,6 @@ thereon
 thereout
 thereover
 thereright
-theres
 theresa
 therese
 therethrough
@@ -169402,8 +169358,6 @@ thewy
 they
 they'll
 they're
-theyll
-theyre
 thiacetic
 thiadiazole
 thialdine
@@ -171551,7 +171505,6 @@ tonikan
 tonish
 tonishly
 tonishness
-tonite
 tonitruant
 tonitruone
 tonitruous
@@ -173394,7 +173347,6 @@ trevet
 trevor
 trews
 trewsman
-trex
 trey
 tri
 triable
@@ -175131,7 +175083,6 @@ tubba
 tubbable
 tubbal
 tubbeck
-tubbed
 tubber
 tubbie
 tubbiness
@@ -192742,8 +192693,6 @@ wan
 wanapum
 wanchancy
 wand
-wandded
-wandding
 wander
 wanderable
 wanderer
@@ -193090,7 +193039,6 @@ washwork
 washy
 wasir
 wasn't
-wasnt
 wasoga
 wasp
 waspen
@@ -193142,7 +193090,6 @@ wastrife
 wasty
 wasukuma
 waswahili
-wat
 watala
 watap
 watch
@@ -193809,7 +193756,6 @@ werehyena
 werejaguar
 wereleopard
 weren't
-werent
 weretiger
 werewolf
 werewolfish
@@ -193884,7 +193830,6 @@ wettest
 wetting
 wettish
 wetumpka
-weve
 wevet
 wewenoc
 wey
@@ -193973,7 +193918,6 @@ whatna
 whatness
 whatnot
 whatreck
-whats
 whatso
 whatsoeer
 whatsoever
@@ -195432,7 +195376,6 @@ wolframic
 wolframine
 wolframinium
 wolframite
-wolfs
 wolfsbane
 wolfsbergite
 wolfskin
@@ -195902,7 +195845,6 @@ wough
 would
 wouldest
 wouldn't
-wouldnt
 wouldst
 wound
 woundability
@@ -196151,7 +196093,6 @@ wryneck
 wryness
 wrytail
 wuchereria
-wud
 wuddie
 wudge
 wudu
