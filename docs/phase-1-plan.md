@@ -82,20 +82,21 @@ Done when: tests cover each function, including the 1 and 12 page edges and that
 
 ## 1.6 Store and saving (Opus)
 
-Files: `src/store.js`, `tests/store.test.js` (only what runs without IndexedDB), `sw.js`.
+Files: `src/store.js`, `src/ui.js` (`saveMark`), `src/app.js` (the 1.4 demo saves what is typed), `styles.css`, `sw.js`, `tests/screens.mjs`. No `tests/store.test.js`: nothing in `store.js` runs without IndexedDB, so the screen test covers it.
 
 Database `tadpole-tales`, version 1, stores: `books` (keyPath `id`), `recordings` (keyPath `id`, empty until Phase 4), `settings` (keyPath `key`, records `{ key, value }`).
 
 Exports:
 - `loadBooks()`: `Promise<Book[]>`, every book through `upgradeBook`. Rejects if the database can't be read; the caller must then show "couldn't open your books", never an empty shelf. A record that fails `upgradeBook` is kept in the database and left off the list.
 - `saveBook(book)`: `Promise<void>`. On failure it reopens the database and tries once more, then rejects.
-- `deleteBook(id)`, `getSetting(key)` (resolves `undefined` if not set), `setSetting(key, value)`. Keys used: `author`, `progress`, `lastBackup` (ISO date), `tellIt` (boolean).
+- `deleteBook(id)`, `startOver()` (empties every store and the spare copy), `getSetting(key)` (resolves `undefined` if not set), `setSetting(key, value)`. Keys used: `author`, `progress`, `lastBackup` (ISO date), `tellIt` (boolean).
 - `saveSoon(book)`: saves 1 second after the last call. `saveNow()`: saves at once whatever is waiting (called on `visibilitychange` to hidden and `pagehide`, which `store.js` listens for itself).
-- Spare copy: `saveSoon` also writes `localStorage['tadpole-tales.spare'] = JSON.stringify(book)` straight away, and removes it once that book saves. `takeSpare()` returns that book (or `null`) and clears it; `loadBooks` uses it when its `changed` is newer than the stored copy, and saves it.
-- `onSaveState(callback)`: calls `callback('saved' | 'saving' | 'not-saved')` on each change. The page screen shows the "not saved" mark (icon plus words).
+- Spare copy: `saveSoon` also writes `localStorage['tadpole-tales.spare'] = JSON.stringify(book)` straight away, and removes it once that book saves. `loadBooks` puts it back when its `changed` is newer than the stored copy (or the book isn't stored), and saves it; the spare is cleared only after that save works. (Changed from the first plan: there is no `takeSpare()`, because clearing the spare before it was saved could lose it.)
+- `onSaveState(callback)`: calls `callback('saved' | 'saving' | 'not-saved')` at once and on each change; returns a function that stops it. The page screen shows the "not saved" mark: `saveMark()` in `src/ui.js` returns `{ node, update }`, used as `onSaveState(mark.update)`.
+- Writes go one at a time in order, so a retried older save can't land on top of a newer one.
 - `askToPersist()`: `navigator.storage.persist()` if it exists; resolves `true` or `false`.
 
-Done when: a screen test saves, reloads and finds the book; a forced failure (a test hook that closes the database) shows the retry working.
+Done when: a screen test saves, reloads and finds the book; a forced failure (the test replaces `IDBDatabase.prototype.transaction` in the page, so `store.js` has no test hook) shows the retry working and the "not saved" mark.
 
 ## 1.7 Bookshelf, page screen, reading view (Sonnet)
 

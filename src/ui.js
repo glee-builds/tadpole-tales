@@ -44,3 +44,14 @@ export const plural = (count, word) => `${count} ${word}${count === 1 ? '' : 's'
 
 /** The whole numbers from `low` to `high`: range(2, 5) is [2, 3, 4, 5]. */
 export const range = (low, high) => Array.from({ length: high - low + 1 }, (_, i) => low + i);
+
+/**
+ * The "not saved" mark: an icon and words, shown only while a save has
+ * failed. Use it with store.js: onSaveState(mark.update).
+ */
+export function saveMark() {
+  const node = make('p', 'save-mark', '⚠ Not saved');
+  node.setAttribute('role', 'status');
+  node.hidden = true;
+  return { node, update: (state) => { node.hidden = state !== 'not-saved'; } };
+}

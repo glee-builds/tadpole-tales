@@ -176,3 +176,14 @@ html { touch-action: manipulation; }
 @media (min-width: 700px) and (min-height: 900px) {
   .screen { zoom: 1.3; height: calc(100dvh / 1.3); }
 }
+
+/* "Not saved": shown only while a save has failed (src/ui.js saveMark). */
+.save-mark {
+  margin: 0 0 0 auto;
+  padding: 4px 10px;
+  border: 2px solid #c2410c;
+  border-radius: 12px;
+  background: #fff;
+  color: #9a3412;
+  font-weight: 700;
+}
