@@ -31,9 +31,7 @@ test('every data/ file the app loads is in the sw.js list', () => {
     .flatMap((name) => readFileSync(new URL(`src/${name}`, root), 'utf8').match(/\.\.\/data\/[\w.-]+/g) ?? [])
     .map((path) => path.slice(3));
   assert.ok(loaded.length > 0, 'found no data/ file loaded by src/, so this test checks nothing');
-  // The lesson files arrive with the wording pull request; the app works without them, so FILES may leave them out.
-  const optional = ['data/lessons.json', 'data/examples.json'];
-  const missing = [...new Set(loaded)].filter((path) => !listed.includes(path) && !optional.includes(path));
+  const missing = [...new Set(loaded)].filter((path) => !listed.includes(path));
   assert.deepEqual(missing, [], `add these to FILES in sw.js: ${missing.join(', ')}`);
   const unused = readdirSync(new URL('data/', root)).map((name) => `data/${name}`).filter((path) => !loaded.includes(path));
   assert.deepEqual(unused, [], `these data/ files are loaded by no file in src/: ${unused.join(', ')}`);

@@ -47,6 +47,8 @@ const FILES = [
   'assets/icon.svg',
   'assets/tadpole.svg',
   'data/stickers.json',
+  'data/lessons.json',
+  'data/examples.json',
   'assets/fonts/andika-latin-400-normal.woff2',
   'assets/fonts/andika-latin-700-normal.woff2',
 ];
