@@ -15,7 +15,6 @@
   --words-ink: #5644c4;  /* purple text on cream or white (6:1) */
   --size-ink: #12705f;   /* teal text (5.9:1 on white) */
   --water: #cdeef5;
-  --star: #ffb627;
   --full: 100vh;         /* the screen's height */
   --zoom: 1;             /* the tablet rule below makes it 1.3 */
   --vh: calc(var(--full) / var(--zoom));
