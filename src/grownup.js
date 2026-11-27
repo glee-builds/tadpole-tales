@@ -7,7 +7,7 @@
 import { make, button, plural } from './ui.js';
 import { loadBooks, saveBook, deleteBook, startOver, getSetting, setSetting } from './store.js';
 import { makeBackup, backupName, readBackup, mergeBooks, isNewer, bookTitle, BACKUP_LIMIT } from './book.js';
-import { isSupported as canRecord } from './record.js';
+import { isSupported as canRecord, start as startRecording, stop as stopRecording, play, stopPlaying } from './record.js';
 import { mergeProgress } from './lessons.js';
 
 // ---------- Install first ----------
@@ -48,7 +48,7 @@ const answer = (request) => new Promise((resolve, reject) => {
   request.onerror = () => reject(request.error);
 });
 
-let recording = null; // the last 3-second recording, for "Play it back"
+let recording = null; // the last 3-second recording, { bytes, type }, for "Play it back"
 
 async function saveCheck() {
   const name = 'tadpole-tales-check'; // a throwaway database, never the books
@@ -108,47 +108,38 @@ function speakCheck() {
   });
 }
 
+// Record and play with Tell it's own start, stop and play (record.js), so a ✓ here means Tell it works.
 async function recordCheck() {
-  if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) return { ok: false, detail: 'this browser can\'t record sound' };
+  if (!canRecord()) return { ok: false, detail: 'this browser can\'t record sound' };
   const types = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm', 'audio/ogg']
     .filter((type) => MediaRecorder.isTypeSupported?.(type));
-  let stream;
+  let got;
+  const stopped = new Promise((resolve) => { got = resolve; });
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    if (!await startRecording(got)) return { ok: false, detail: 'stopped before it started recording' };
   } catch (error) {
     return { ok: false, detail: error.name === 'NotAllowedError' ? 'the microphone is not allowed' : `no microphone (${error.name})` };
   }
-  try {
-    const recorder = new MediaRecorder(stream, types[0] ? { mimeType: types[0] } : {});
-    const chunks = [];
-    recorder.ondataavailable = (event) => chunks.push(event.data);
-    const stopped = new Promise((resolve) => { recorder.onstop = resolve; });
-    recorder.start();
-    await sleep(3000);
-    recorder.stop();
-    await stopped;
-    recording = new Blob(chunks, { type: recorder.mimeType });
-    const kinds = `can record: ${types.join(', ') || 'none named'}`;
-    return recording.size
-      ? { ok: true, detail: `recorded 3 seconds as ${recording.type || 'an unnamed type'} (${Math.ceil(recording.size / 1024)} KB); ${kinds}` }
-      : { ok: false, detail: `the recording was empty; ${kinds}` };
-  } finally {
-    stream.getTracks().forEach((track) => track.stop()); // never leave the microphone on
-  }
+  await sleep(3000);
+  stopRecording(); // the microphone goes off here, as on the page screen
+  recording = await stopped;
+  const kinds = `can record: ${types.join(', ') || 'none named'}`;
+  return recording
+    ? { ok: true, detail: `recorded 3 seconds as ${recording.type || 'an unnamed type'} (${Math.ceil(recording.bytes.byteLength / 1024)} KB); ${kinds}` }
+    : { ok: false, detail: `the recording was empty; ${kinds}` };
 }
 
-async function playCheck() {
-  if (!recording?.size) return { ok: false, detail: 'record first, then tap this' };
-  const url = URL.createObjectURL(recording);
-  const audio = new Audio(url);
-  try {
-    const ended = new Promise((resolve) => { audio.onended = () => resolve(true); setTimeout(() => resolve(false), 6000); });
-    await audio.play(); // starts inside the tap: phones block sound that isn't
-    return await ended ? { ok: true, detail: 'played the recording to the end' } : { ok: false, detail: 'started playing but didn\'t finish' };
-  } finally {
-    audio.pause();
-    URL.revokeObjectURL(url);
-  }
+function playCheck() {
+  if (!recording) return { ok: false, detail: 'record first, then tap this' };
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(stopPlaying, 6000);
+    play(recording, (why) => { // starts inside the tap: phones block sound that isn't
+      clearTimeout(timer);
+      if (why?.type === 'ended') resolve({ ok: true, detail: 'played the recording to the end' });
+      else if (why?.name) reject(why); // play() was refused, e.g. NotAllowedError
+      else resolve({ ok: false, detail: 'started playing but didn\'t finish' });
+    });
+  });
 }
 
 function shareCheck() {
