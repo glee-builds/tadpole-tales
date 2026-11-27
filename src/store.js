@@ -18,9 +18,10 @@ import { upgradeBook } from './book.js';
 
 const NAME = 'tadpole-tales';
 const VERSION = 1;
-const SPARE = 'tadpole-tales.spare';
+const SPARE = 'tadpole-tales.spare'; // + '.<book id>'; the bare key is the one spare Phase 1 kept, still read
 const WAIT = 1000;      // ms after the last change before saving
 const OPEN_WAIT = 5000; // ms to wait for the database to open
+const RUN_WAIT = 5000;  // ms to wait for one read or write
 
 // ---------- Opening the database ----------
 
@@ -60,15 +61,20 @@ function forget() {
   opening = null;
 }
 
-/** Do one thing in one store, and wait until it is safely written (or read). */
+/** Do one thing in one store, and wait until it is safely written (or read), at most RUN_WAIT. */
 async function run(storeName, mode, action) {
   const db = await open();
   return new Promise((resolve, reject) => {
     // Throws InvalidStateError if Safari closed the connection without saying so.
     const transaction = db.transaction(storeName, mode);
     const request = action(transaction.objectStore(storeName));
-    transaction.oncomplete = () => resolve(request.result);
-    transaction.onabort = () => reject(transaction.error ?? new Error('not saved')); // QuotaExceededError lands here
+    // Safari can leave a transaction with no answer at all: give up, so the queue moves on.
+    const timer = setTimeout(() => {
+      try { transaction.abort(); } catch { /* already over */ }
+      reject(new Error('the database did not answer'));
+    }, RUN_WAIT);
+    transaction.oncomplete = () => { clearTimeout(timer); resolve(request.result); };
+    transaction.onabort = () => { clearTimeout(timer); reject(transaction.error ?? new Error('not saved')); }; // QuotaExceededError lands here
   });
 }
 
@@ -110,25 +116,30 @@ export function onSaveState(callback) {
   return () => watchers.delete(callback);
 }
 
-// ---------- The spare copy in localStorage ----------
+// ---------- The spare copies in localStorage, one per book ----------
 
-function readSpare() {
+/** Every readable spare copy, as [{ key, book }]. */
+function readSpares() {
+  const spares = [];
   try {
-    return upgradeBook(JSON.parse(localStorage.getItem(SPARE)));
-  } catch {
-    return null; // none, unreadable, or localStorage is off
-  }
+    for (const key of Object.keys(localStorage)) {
+      if (key !== SPARE && !key.startsWith(`${SPARE}.`)) continue;
+      try { spares.push({ key, book: upgradeBook(JSON.parse(localStorage.getItem(key))) }); } catch { /* unreadable: left as it is */ }
+    }
+  } catch { /* localStorage is off */ }
+  return spares;
 }
 
 function writeSpare(book) {
-  try { localStorage.setItem(SPARE, JSON.stringify(book)); } catch { /* full or off: IndexedDB still saves */ }
+  try { localStorage.setItem(`${SPARE}.${book.id}`, JSON.stringify(book)); } catch { /* full or off: IndexedDB still saves */ }
 }
 
-/** Remove the spare if it is this book and no newer than `book`. */
-function dropSpare(book) {
-  const spare = readSpare();
-  if (spare && spare.id === book.id && spare.changed <= book.changed) {
-    try { localStorage.removeItem(SPARE); } catch { /* off */ }
+/** Remove the spares of book `id`, or only those no newer than `changed`. */
+function dropSpares(id, changed = Infinity) {
+  for (const { key, book } of readSpares()) {
+    if (book.id === id && book.changed <= changed) {
+      try { localStorage.removeItem(key); } catch { /* off */ }
+    }
   }
 }
 
@@ -149,7 +160,7 @@ export async function saveBook(book) {
     throw error;
   }
   saving--;
-  dropSpare(book);
+  dropSpares(book.id, book.changed);
   if (!saving) setState('saved');
   if (!asked) { asked = true; askToPersist(); }
 }
@@ -165,15 +176,14 @@ export async function loadBooks() {
   for (const record of records) {
     try { books.push(upgradeBook(record)); } catch { /* kept, not shown */ }
   }
-  // The spare copy is newer if the last save didn't finish: put it back.
-  const spare = readSpare();
-  if (spare) {
+  // A spare copy is newer if the last save of that book didn't finish: put it back.
+  for (const { book: spare } of readSpares()) {
     const index = books.findIndex((book) => book.id === spare.id);
     if (index === -1 || spare.changed > books[index].changed) {
       books.splice(index === -1 ? books.length : index, 1, spare);
       await saveBook(spare).catch(() => {}); // if this fails the spare stays for next time
     } else {
-      dropSpare(books[index]);
+      dropSpares(spare.id, books[index].changed);
     }
   }
   return books;
@@ -181,16 +191,16 @@ export async function loadBooks() {
 
 /** Delete one book for good (the grown-up page asks first). */
 export async function deleteBook(id) {
-  if (pending?.id === id) pending = null;
-  if (readSpare()?.id === id) { try { localStorage.removeItem(SPARE); } catch { /* off */ } }
+  pending.delete(id);
+  dropSpares(id);
   await inTurn(() => run('books', 'readwrite', (books) => books.delete(id)));
 }
 
 /** Delete every book, recording and setting (the grown-up page asks first). */
 export async function startOver() {
   clearTimeout(timer);
-  pending = null;
-  try { localStorage.removeItem(SPARE); } catch { /* off */ }
+  pending.clear();
+  for (const { key } of readSpares()) { try { localStorage.removeItem(key); } catch { /* off */ } }
   for (const name of ['books', 'recordings', 'settings']) {
     await inTurn(() => run(name, 'readwrite', (store) => store.clear()));
   }
@@ -210,29 +220,35 @@ export function setSetting(key, value) {
 
 // ---------- Saving by itself ----------
 
-let pending = null; // the book waiting to be saved
+const pending = new Map(); // book id -> the newest copy waiting to be saved
 let timer;
 
 /** Save `book` 1 second after the last call. Keeps a spare copy at once. */
 export function saveSoon(book) {
-  if (pending && pending.id !== book.id) saveNow(); // another book is waiting: save it first
-  pending = book;
+  pending.set(book.id, book);
   writeSpare(book);
   clearTimeout(timer);
   timer = setTimeout(saveNow, WAIT);
 }
 
-/** Save at once whatever is waiting. */
+/**
+ * Save at once whatever is waiting, and wait for any save already under way.
+ * Resolves true if everything is saved, false if not (the mark then shows).
+ */
 export async function saveNow() {
   clearTimeout(timer);
-  const book = pending;
-  if (!book) return;
-  pending = null;
-  try {
-    await saveBook(book);
-  } catch {
-    pending ??= book; // try again on the next change or when the app goes to the background
-  }
+  const books = [...pending.values()];
+  pending.clear();
+  await Promise.all(books.map(async (book) => {
+    try {
+      await saveBook(book);
+    } catch {
+      // Try again on the next change or when the app goes to the background (unless a newer copy is waiting).
+      if (!pending.has(book.id)) pending.set(book.id, book);
+    }
+  }));
+  await queue; // a save the timer started has landed too (the queue never rejects)
+  return state !== 'not-saved';
 }
 
 // The phone can close a home-screen app at any time after it goes to the background.

@@ -54,10 +54,17 @@ test('a file from a newer version is turned away', () => {
 });
 
 test('books in the file that can\'t be read are counted, the rest still come back', () => {
-  const text = JSON.stringify({ app: 'tadpole-tales', backup: 1, books: [frog, { id: 'no-pages' }, { ...moon, format: 99 }] });
+  const text = JSON.stringify({ app: 'tadpole-tales', backup: 1, books: [frog, { id: 'no-pages' }, { ...moon, id: 5 }] });
   const { books, unreadable } = readBackup(text);
   assert.deepEqual(books, [frog]);
   assert.equal(unreadable, 2);
+});
+
+test('a book from a newer version comes back whole, as it was', () => {
+  const later = { ...moon, format: 99, chapters: ['one'] };
+  const { books, unreadable } = readBackup(JSON.stringify({ app: 'tadpole-tales', backup: 1, books: [later] }));
+  assert.deepEqual(books, [later]);
+  assert.equal(unreadable, 0);
 });
 
 test('restore adds only books that aren\'t on the shelf', () => {

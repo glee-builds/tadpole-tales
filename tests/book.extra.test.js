@@ -32,10 +32,10 @@ test('upgradeBook refuses an empty object: it has no id and no pages', () => {
   assert.throws(() => upgradeBook({}), { message: 'not a book' });
 });
 
-test('upgradeBook refuses a record from a newer format, even one that is otherwise fine', () => {
+test('upgradeBook leaves a record from a newer format exactly as it is', () => {
   const newer = { ...newBook('b-7', 1000), format: BOOK_FORMAT + 1, title: 'From later' };
   const frozen = JSON.stringify(newer);
-  assert.throws(() => upgradeBook(newer), { message: 'newer book' });
+  assert.equal(upgradeBook(newer), newer);
   assert.equal(JSON.stringify(newer), frozen);
 });
 
