@@ -75,9 +75,9 @@ test('the kind message names the first tapped page, else says the book is finish
   assert.equal(kindWords(data, null, [1]), data.messages.finished);
 });
 
-test('the steps: as before lessons without the wording; then hear, check, job, kind', () => {
+test('the steps: as before lessons without the wording; then hear, check, job, polish, kind', () => {
   assert.deepEqual(stepsFor('', null, null), ['title', 'name', 'cover']);
   assert.deepEqual(stepsFor('pip', null, null), ['title', 'cover']);
-  assert.deepEqual(stepsFor('pip', data, { check: {}, job: 'x' }), ['title', 'cover', 'hear', 'check', 'job', 'kind']);
-  assert.deepEqual(stepsFor('pip', data, { check: null, job: null }), ['title', 'cover', 'hear', 'kind']);
+  assert.deepEqual(stepsFor('pip', data, { check: {}, job: 'x' }), ['title', 'cover', 'hear', 'check', 'job', 'polish', 'kind']);
+  assert.deepEqual(stepsFor('pip', data, { check: null, job: null }), ['title', 'cover', 'hear', 'polish', 'kind']);
 });

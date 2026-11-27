@@ -69,6 +69,7 @@ src/plan.js              a book's plan (planning answers) as plain functions
 src/readaloud.js        "Read to me": speaks a book one sentence at a time with the device's voice
 src/sentences.js         cuts a page's text into sentences for reading aloud
 src/polish.js            spelling suggestions for the Polish step: loadWordLists, wordsToAsk, applySuggestion
+src/polish-screen.js     the Polish step's screen ("Spelling check"): loads the word lists when reached, one word at a time
 src/voice.js             picks the best English voice on the device; never an online one
 src/finish.js            after Finish (showFinish): title, author name, cover, then hear your book, the self-check,
                          one "make it better" job and the kind message (from data/lessons.json, once it is there)
