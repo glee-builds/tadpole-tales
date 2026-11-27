@@ -15,7 +15,7 @@ import { readFile } from 'node:fs/promises';
 import { existsSync, mkdtempSync, rmSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
-import { join, extname } from 'node:path';
+import { join, extname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
@@ -30,8 +30,15 @@ const TYPES = {
 
 let serverIsOff = false;
 const server = createServer(async (request, response) => {
-  const path = decodeURIComponent(new URL(request.url, 'http://x').pathname);
-  const file = join(ROOT, path.endsWith('/') ? `${path}index.html` : path);
+  let file;
+  try {
+    const path = decodeURIComponent(new URL(request.url, 'http://x').pathname);
+    file = resolve(ROOT, `.${path.endsWith('/') ? `${path}index.html` : path}`);
+  } catch { /* a broken %-escape */ }
+  if (!file || !file.startsWith(ROOT)) { // e.g. /..%2f..%2fetc/passwd: nothing outside the repo
+    response.writeHead(403).end('not allowed');
+    return;
+  }
   try {
     const body = await readFile(file);
     response.writeHead(200, { 'content-type': TYPES[extname(file)] || 'application/octet-stream', 'cache-control': 'no-store' });
@@ -1213,6 +1220,14 @@ async function tryReadAloud() {
 }
 
 try {
+  // The test server never hands out a file from outside the repo.
+  checked++;
+  const before = problems.length;
+  for (const path of ['/..%2f..%2f..%2f..%2fetc/passwd', '/%2e%2e/%2e%2e/%2e%2e/etc/passwd', '/src/..%2f..%2f..%2fetc/passwd']) {
+    const { status } = await fetch(`${origin}${path}`);
+    if (status !== 403 && status !== 404) problems.push(`Test server: ${path} answered ${status}`);
+  }
+  console.log(`${problems.length > before ? '✗' : '✓'} Test server: nothing outside the repo`);
   await checkScreen('Home (phone)', '');
   await checkWith('Books: make a 3-page book, reload, finish, read it, Refresh saves first', tryBooks);
   await checkWith('Every screen fits (phone)', tryFits);

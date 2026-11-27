@@ -29,6 +29,19 @@ test('every file in the sw.js list exists', () => {
   assert.deepEqual(gone, [], `these are in FILES in sw.js but don't exist: ${gone.join(', ')}`);
 });
 
+test('a new version deletes only this app\'s old caches, never a sibling app\'s on the same address', async () => {
+  const names = ['tadpole-tales-v0', 'tadpole-tales-v1', 'little-pond-v3', 'lily-pad', 'other'];
+  const deleted = [];
+  const listeners = {};
+  const self = { addEventListener: (type, listener) => { listeners[type] = listener; }, clients: { claim: async () => {} } };
+  const caches = { keys: async () => names, delete: async (name) => { deleted.push(name); return true; } };
+  new Function('self', 'caches', sw)(self, caches); // run sw.js with a pretend browser
+  let done;
+  listeners.activate({ waitUntil: (promise) => { done = promise; } });
+  await done;
+  assert.deepEqual(deleted, ['tadpole-tales-v0']);
+});
+
 test('the list has no file twice, and includes the app itself', () => {
   assert.equal(new Set(listed).size, listed.length);
   assert.ok(listed.includes('./'));
