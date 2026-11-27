@@ -110,3 +110,20 @@ test('about 100 typical slips: print each word and its suggestion, check the one
   };
   for (const [word, want] of Object.entries(right)) assert.equal(suggest(word), want, word);
 });
+
+import { namesFrom, sentenceAround } from '../src/polish-screen.js';
+
+test('the screen: names come from the plan and the author', () => {
+  assert.deepEqual(namesFrom({ plan: { who: "Pipp, a small frog", where: 'a pond' } }, 'tess'), ['Pipp', 'a', 'small', 'frog', 'tess']);
+  assert.deepEqual(namesFrom({}, undefined), []);
+});
+
+test('the screen: the word is shown in its own sentence, a long one cut short', () => {
+  const text = 'I have a frend. We sit on a rok.';
+  assert.deepEqual(sentenceAround(text, { start: 9, end: 14 }), ['I have a ', 'frend', '.']);
+  const long = `${'word '.repeat(40)}rok ${'more '.repeat(40)}`;
+  const at = long.indexOf('rok');
+  const [before, word, after] = sentenceAround(long, { start: at, end: at + 3 });
+  assert.equal(word, 'rok');
+  assert.ok(before.length < 70 && after.length < 70 && before.startsWith('…') && after.endsWith('…'));
+});

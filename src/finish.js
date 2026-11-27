@@ -1,7 +1,7 @@
 // finish.js: what comes after "Finish". The book's title, the author name
 // (only the first time) and the cover; then, once the lesson wording
 // (data/lessons.json) is there, the steps that teach: "Hear your book", the
-// self-check, one "make it better" job, and a kind message. Without the
+// self-check, one "make it better" job, an optional spelling check, and a kind message. Without the
 // wording it stops after the cover, as before lessons.
 //
 // The page screen's Finish button calls startFinish, which opens the next
@@ -16,8 +16,9 @@ import { make, button } from './ui.js';
 import { mountWriter } from './keyboard.js';
 import { mountPicture } from './stickers.js';
 import { showReading } from './reading.js';
+import { showPolish, namesFrom } from './polish-screen.js';
 import { canSpeak, voiceMissing } from './voice.js';
-import { getSetting, setSetting } from './store.js';
+import { getSetting, setSetting, saveNow } from './store.js';
 import { TITLE_LIMIT, setTitle, setCoverStickers } from './book.js';
 import { currentLesson, openLessonAfterFinish, selfCheckFor, jobFor, praiseFor, sentencesOf } from './lessons.js';
 
@@ -73,7 +74,7 @@ export const kindWords = (data, lesson, tapped) => (lesson && praiseFor(lesson, 
 export function stepsFor(author, data, plan) {
   const steps = ['title', ...(author ? [] : ['name']), 'cover'];
   if (!data) return steps;
-  return [...steps, 'hear', ...(plan.check ? ['check'] : []), ...(plan.job ? ['job'] : []), 'kind'];
+  return [...steps, 'hear', ...(plan.check ? ['check'] : []), ...(plan.job ? ['job'] : []), 'polish', 'kind'];
 }
 
 export function showFinish(screen, { book, author, lessons, onBook, onAuthor, onWrite, onDone }) {
@@ -81,6 +82,7 @@ export function showFinish(screen, { book, author, lessons, onBook, onAuthor, on
   let writer = null;
   let picture = null;
   let reading = null;
+  let polish = null;
   let at = 0;
   let tapped = []; // the self-check's marked page(s), 0-based
   const plan = lessons ? lessonPlan(lessons.lessons, book) : null;
@@ -97,6 +99,13 @@ export function showFinish(screen, { book, author, lessons, onBook, onAuthor, on
   function draw() {
     clear();
     const step = steps[at];
+    if (step === 'polish') { // draws its own title and Skip, or nothing when there is nothing to ask
+      polish = showPolish(screen, {
+        book, names: namesFrom(book, author), onExit: next,
+        onBook: async (changed) => { book = changed; onBook(book); await saveNow(); }, // saved before the next word
+      });
+      return;
+    }
     const top = screen.appendChild(make('div', 'screen-top finish-top'));
     const heading = top.appendChild(make('h1', 'screen-title', {
       title: 'What\'s your book called?',
@@ -221,7 +230,8 @@ export function showFinish(screen, { book, author, lessons, onBook, onAuthor, on
     writer?.remove();
     picture?.remove();
     reading?.stop();
-    writer = picture = reading = null;
+    polish?.remove();
+    writer = picture = reading = polish = null;
     screen.replaceChildren();
   }
 
