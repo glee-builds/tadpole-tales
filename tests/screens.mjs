@@ -287,8 +287,110 @@ async function checkKeyboard(label) {
   console.log(`${problem ? '✗' : '✓'} ${label}`);
 }
 
+// ---------- Saving (src/store.js) ----------
+
+// In the page: store.js and book.js, the same copies the app uses.
+const STORE = `const store = await import('/src/store.js'); const book = await import('/src/book.js');`;
+// Make every IndexedDB transaction fail (as when Safari drops the connection), or put it right.
+const BREAK = `IDBDatabase.prototype.realTransaction ??= IDBDatabase.prototype.transaction;
+  IDBDatabase.prototype.transaction = function () { throw new DOMException('test: connection lost', 'InvalidStateError'); };`;
+const MEND = `IDBDatabase.prototype.transaction = IDBDatabase.prototype.realTransaction;`;
+/** The text of page 1 of every saved book, read fresh from the database. */
+const savedTexts = () => evaluate(`(async () => { ${STORE} return (await store.loadBooks()).map((b) => b.pages[0].text); })()`);
+const markShows = () => evaluate(`(() => { const mark = document.querySelector('.save-mark'); return Boolean(mark && !mark.hidden && mark.textContent.includes('Not saved')); })()`);
+
+/** Open the home screen with no books, then the keyboard demo. */
+async function freshDemo() {
+  if (!await open('', 'document.querySelector(".go") !== null')) throw new Error('home did not draw');
+  await evaluate(`(async () => { ${STORE} await store.startOver(); })()`);
+  const go = await middleOf('.go');
+  await touch(go.x, go.y);
+  await sleep(100);
+}
+
+/** Save through the keyboard, reload, and find the book; break saving and see the mark. Returns a problem, or ''. */
+async function trySaving() {
+  // Type, wait for the save, reload: the book is there.
+  await freshDemo();
+  await press('f', 'r', 'o', 'g');
+  await sleep(1500);
+  if (await markShows()) return 'the "not saved" mark shows after a good save';
+  await open('', 'document.querySelector(".go") !== null');
+  if (JSON.stringify(await savedTexts()) !== '["frog"]') return `after a reload the saved books are ${JSON.stringify(await savedTexts())}, not ["frog"]`;
+
+  // Reload straight after typing, before the 1-second wait: still kept.
+  await freshDemo();
+  await press('p', 'o', 'n', 'd');
+  await open('', 'document.querySelector(".go") !== null');
+  if (JSON.stringify(await savedTexts()) !== '["pond"]') return `reloading at once kept ${JSON.stringify(await savedTexts())}, not ["pond"]`;
+
+  // Every save fails: the mark shows, the spare copy holds the words, and the next load puts them back.
+  await freshDemo();
+  await evaluate(BREAK);
+  await press('l', 'o', 'g');
+  await sleep(1500);
+  if (!await markShows()) return 'the "not saved" mark did not show when saving failed';
+  if (!(await evaluate(`localStorage.getItem('tadpole-tales.spare') || ''`)).includes('"log"')) return 'no spare copy in localStorage after a failed save';
+  await open('', 'document.querySelector(".go") !== null'); // a fresh page: saving works again
+  if (JSON.stringify(await savedTexts()) !== '["log"]') return `the spare copy was not put back: ${JSON.stringify(await savedTexts())}`;
+  if (await evaluate(`localStorage.getItem('tadpole-tales.spare')`) !== null) return 'the spare copy stayed after it was saved';
+
+  // One failure (Safari closed the connection): the save reopens and works.
+  const retried = await evaluate(`(async () => {
+    ${STORE}
+    let fails = 1;
+    const real = IDBDatabase.prototype.transaction;
+    IDBDatabase.prototype.transaction = function (...args) {
+      if (fails-- > 0) throw new DOMException('test: connection lost', 'InvalidStateError');
+      return real.apply(this, args);
+    };
+    try { await store.saveBook(book.newBook('retry-test', 1)); } catch { return 'saveBook gave up after one failure'; }
+    finally { IDBDatabase.prototype.transaction = real; }
+    return (await store.loadBooks()).some((b) => b.id === 'retry-test') ? '' : 'the retried save is not in the database';
+  })()`);
+  if (retried) return retried;
+
+  // A full disk: saveBook rejects and says "not-saved".
+  const full = await evaluate(`(async () => {
+    ${STORE}
+    const real = IDBObjectStore.prototype.put;
+    IDBObjectStore.prototype.put = function () { throw new DOMException('test: disk full', 'QuotaExceededError'); };
+    let heard;
+    const stop = store.onSaveState((state) => { heard = state; });
+    try { await store.saveBook(book.newBook('full-test', 1)); return 'saveBook did not reject on a full disk'; }
+    catch { return heard === 'not-saved' ? '' : 'a full disk did not report not-saved'; }
+    finally { IDBObjectStore.prototype.put = real; stop(); }
+  })()`);
+  if (full) return full;
+
+  // The books can't be read: loadBooks rejects (never an empty list).
+  const unread = await evaluate(`(async () => {
+    ${STORE} ${BREAK}
+    try { await store.loadBooks(); return 'loadBooks gave a list when the database could not be read'; }
+    catch { return ''; }
+    finally { ${MEND} }
+  })()`);
+  return unread;
+}
+
+/** Run a check that returns a problem (or ''), and note it. */
+async function checkWith(label, check) {
+  checked++;
+  let problem;
+  try {
+    problem = await check();
+  } catch (error) {
+    problem = `broke: ${String(error.message).split('\n')[0]}`;
+  }
+  for (const error of errors) problem += `${problem ? '; ' : ''}logged an error: ${String(error).split('\n')[0]}`;
+  for (const url of outside) problem += `${problem ? '; ' : ''}asked another site for ${url}`;
+  if (problem) problems.push(`${label}: ${problem}`);
+  console.log(`${problem ? '✗' : '✓'} ${label}`);
+}
+
 try {
   await checkScreen('Home (phone)', '');
+  await checkWith('Saving: save, reload, spare copy, retry once, "not saved" mark, unreadable books', trySaving);
   await checkKeyboard('Keyboard: type, tap to move the cursor, hold backspace, 300 fit (phone)');
   for (const [tablet, size] of Object.entries(TABLETS)) {
     await page('Emulation.setDeviceMetricsOverride', { ...size, deviceScaleFactor: 2, mobile: true });
