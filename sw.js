@@ -31,6 +31,7 @@ const FILES = [
   'src/finish.js',
   'src/voice.js',
   'src/sentences.js',
+  'src/lessons.js',
   'src/readaloud.js',
   'src/stickers.js',
   'src/stickers.css',
