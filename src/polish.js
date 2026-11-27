@@ -20,6 +20,7 @@ export const PAIRS = {
   rok: 'rock', wont: "won't", dont: "don't", isnt: "isn't", evry: 'every', eny: 'any', sory: 'sorry', funy: 'funny',
   hapy: 'happy', pupy: 'puppy', aple: 'apple', juse: 'juice', enuf: 'enough', piza: 'pizza', bik: 'bike',
   kno: 'know', nu: 'new', wher: 'where', tonite: 'tonight', elefant: 'elephant', snak: 'snake', brav: 'brave', thier: 'their',
+  lookt: 'looked', prinses: 'princess',
 };
 
 const pairOf = (word) => (Object.prototype.hasOwnProperty.call(PAIRS, word) ? PAIRS[word] : undefined);
