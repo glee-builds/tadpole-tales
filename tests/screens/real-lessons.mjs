@@ -12,7 +12,14 @@ const SHOWS = (selector) => `document.querySelector(${JSON.stringify(selector)})
 const SCREEN = (title) => `document.querySelector('.screen-title')?.textContent === ${JSON.stringify(title)}`;
 const BOOK_CARDS = `document.querySelectorAll('.book-card:not(.example-card)')`;
 const BOOK_CARD = `document.querySelector('.book-card:not(.example-card)')`;
+const NOT_YET = `[...document.querySelectorAll('button')].some((b) => b.offsetParent !== null && b.textContent.includes('Not now'))`;
 const width = () => evaluate('innerWidth');
+
+/** Wait (up to 5 seconds) for an element to be on the page, then tap it. A slow computer may draw it late. */
+async function tap(selector) {
+  if (!await waitFor(SHOWS(selector), 5)) throw new Error(`no ${selector} to tap`);
+  return tapOn(selector);
+}
 
 /** Start over (no books, no lesson progress), then open the shelf. */
 async function fresh() {
@@ -24,11 +31,11 @@ async function fresh() {
 /** Tap a finish step's button (Not now, or the top button: Skip, Next, Done) until the shelf shows. */
 async function goOnToShelf() {
   for (let step = 0; step < 8; step++) {
+    await waitFor(`location.hash === '' || document.querySelector('.finish-top .pill') !== null || ${NOT_YET}`, 5);
     if (await evaluate(`location.hash === ''`)) return true;
     const before = await evaluate(`document.querySelector('.finish-top h1')?.textContent ?? ''`);
-    const notYet = await evaluate(`[...document.querySelectorAll('button')].some((b) => b.offsetParent !== null && b.textContent.includes('Not now'))`);
-    if (notYet) await tapButton('Not now');
-    else await tapOn('.finish-top .pill');
+    if (await evaluate(NOT_YET)) await tapButton('Not now');
+    else await tap('.finish-top .pill');
     await waitFor(`location.hash === '' || document.querySelector('.finish-card-more') !== null || (document.querySelector('.finish-top h1')?.textContent ?? '') !== ${JSON.stringify(before)}`, 3);
   }
   return waitFor(`location.hash === ''`, 3);
@@ -37,7 +44,7 @@ async function goOnToShelf() {
 /** A 3-page book made through the lesson card and planning (planning skipped): reload, find it on the shelf, read it, Refresh. */
 export async function tryLessonBook() {
   await fresh();
-  await tapOn('.go');
+  await tap('.go');
   if (!await waitFor(SHOWS('.lesson-card'), 3)) return 'Make a new book did not show the lesson card';
   await tapButton('Try it in your book');
   if (!await waitFor(SHOWS('.plan-question'), 3)) return 'Try it in your book did not start planning';
@@ -55,7 +62,7 @@ export async function tryLessonBook() {
   if (!await waitFor(SCREEN('Page 3 of 3'), 3)) return 'Add page did not open page 3';
   await press('h', 'o', 'm', 'e');
   if (await typed() !== 'home') return `page 3 holds "${await typed()}"`;
-  await tapOn('.back');
+  await tap('.back');
   if (!await waitFor(`${BOOK_CARDS}.length === 1`, 3)) return 'the shelf has no card for the new book';
   const card = await evaluate(`${BOOK_CARD}.textContent`);
   if (!card.includes('Keep going') || !card.includes('3 pages')) return `the card says "${card}"`;
@@ -63,7 +70,7 @@ export async function tryLessonBook() {
   // Reload: still there, marked "Keep going", and page 1 is saved.
   await open('', `${BOOK_CARDS}.length === 1`);
   if (!await evaluate(`${BOOK_CARD}.textContent.includes('Keep going')`)) return 'after a reload the book is not marked "Keep going"';
-  await tapOn('.book-card:not(.example-card)');
+  await tap('.book-card:not(.example-card)');
   if (!await waitFor(SHOWS('.keyboard'), 3)) return 'the saved book did not open';
   if (await typed() !== 'pip') return `the saved page 1 holds "${await typed()}"`;
 
@@ -74,7 +81,7 @@ export async function tryLessonBook() {
   if (!await waitFor(`${BOOK_CARD}?.textContent.includes('Finished')`, 3)) return 'the finished book is not on the shelf';
 
   // Read it: 3 pages, Next and Previous work, Close goes back to the shelf.
-  await tapOn('.book-card:not(.example-card)');
+  await tap('.book-card:not(.example-card)');
   if (!await waitFor(SHOWS('.read-page'), 3)) return 'a finished book did not open in the reading view';
   if (!await noFields()) return 'a text field is on the reading view';
   const readPage = () => evaluate(`document.querySelector('.read-page').textContent + '|' + document.querySelector('.read-count').textContent`);
@@ -87,7 +94,7 @@ export async function tryLessonBook() {
 
   // Refresh saves first, then reloads. `window.__same` goes away only when the page reloads.
   await evaluate('window.__same = true');
-  await tapOn('.refresh-button').catch(() => {}); // the page may reload while the tap's last frame is drawn
+  await tap('.refresh-button').catch(() => {}); // the page may reload while the tap's last frame is drawn
   if (!await waitFor(`window.__same === undefined && document.readyState === 'complete' && (${HOME})`, 10)) return 'Refresh did not reload';
   if (!await evaluate(`${BOOK_CARD}?.textContent.includes('Finished')`)) return 'after Refresh the finished book is not on the shelf';
   if (JSON.stringify(await savedTexts()) !== '["pip"]') return `after Refresh the book holds ${JSON.stringify(await savedTexts())}`;
@@ -159,7 +166,7 @@ export async function tryFinishAndEdit() {
   if (!await waitFor(shelfNow, 3)) return 'the shelf does not show "Books by pip" and the finished cover';
 
   // Edit opens the pages; Finish again shows the title already typed; close in the middle of it.
-  await tapOn('.book-card.finished .card-edit');
+  await tap('.book-card.finished .card-edit');
   if (!await waitFor(`location.hash === '#book/made-up-real-fin/0' && document.querySelector('.keyboard')`, 3)) return 'Edit did not open the pages';
   await tapButton('Finish');
   if (!await waitFor(`document.querySelector('.screen h1')?.textContent.includes('called') && document.querySelector('.writing .ch')`, 3)) return 'Edit then Finish did not show the title again';
