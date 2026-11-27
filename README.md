@@ -37,3 +37,5 @@ node tests/screens.mjs
 ```
 
 GitHub runs both commands on every pull request, so a failing check shows on the pull request before it is merged.
+
+**Real devices:** at each phase gate, run the checklist in [docs/device-checks.md](docs/device-checks.md) on a phone and an iPad.
