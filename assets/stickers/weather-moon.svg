@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="moon">
+<path d="M69 17 A38 38 0 1 0 83 69 A30 30 0 0 1 69 17 Z" fill="#ffd166"/>
+<circle cx="40" cy="36" r="3" fill="#f2b84b"/>
+<circle cx="34" cy="58" r="2.2" fill="#f2b84b"/>
+</svg>

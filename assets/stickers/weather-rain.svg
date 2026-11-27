@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="rain">
+<g fill="#9fb7c9"><circle cx="34" cy="56" r="14"/><circle cx="54" cy="46" r="19"/><circle cx="72" cy="58" r="14"/><rect x="34" y="56" width="52" height="18" rx="9"/></g>
+<path d="M30 82 Q25 89 30 92 Q35 89 30 82 Z" fill="#4a90c2"/>
+<path d="M48 88 Q43 95 48 98 Q53 95 48 88 Z" fill="#4a90c2"/>
+<path d="M66 82 Q61 89 66 92 Q71 89 66 82 Z" fill="#4a90c2"/>
+</svg>

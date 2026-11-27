@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="cake">
+<ellipse cx="50" cy="86" rx="40" ry="6" fill="#c9cfd8"/>
+<rect x="16" y="60" width="68" height="26" rx="6" fill="#e0a97e"/>
+<rect x="24" y="40" width="52" height="22" rx="6" fill="#ff9aa2"/>
+<path d="M24 46 Q30 40 36 46 Q42 52 48 46 Q54 40 60 46 Q66 52 76 46 V40 H24 Z" fill="#ffffff"/>
+<rect x="47" y="24" width="6" height="18" fill="#8fd3f4"/>
+<path d="M50 12 Q58 20 50 24 Q42 20 50 12 Z" fill="#ffd166"/>
+<circle cx="30" cy="72" r="3" fill="#ffffff"/>
+<circle cx="50" cy="76" r="3" fill="#ffd166"/>
+<circle cx="70" cy="72" r="3" fill="#ffffff"/>
+</svg>

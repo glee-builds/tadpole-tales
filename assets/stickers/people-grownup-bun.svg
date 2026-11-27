@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="grown-up with a bun">
+<circle cx="50" cy="38" r="22" fill="#7a4a2b"/><circle cx="50" cy="15" r="9" fill="#7a4a2b"/>
+<rect x="44" y="54" width="12" height="14" fill="#b87a4f"/>
+<path d="M10 100 Q10 70 50 70 Q90 70 90 100 Z" fill="#ff9f5a"/>
+<circle cx="50" cy="40" r="20" fill="#b87a4f"/>
+<ellipse cx="38.0" cy="46.0" rx="4" ry="2.6" fill="#ff9aa2" opacity="0.85"/>
+<ellipse cx="62.0" cy="46.0" rx="4" ry="2.6" fill="#ff9aa2" opacity="0.85"/>
+<circle cx="42.8" cy="42.0" r="2.8" fill="#2b2440"/>
+<circle cx="57.2" cy="42.0" r="2.8" fill="#2b2440"/>
+<path d="M44.0 46.4 QNaN 52.4 56.0 46.4" fill="none" stroke="#2b2440" stroke-width="3.5" stroke-linecap="round"/>
+<ellipse cx="50" cy="28.4" rx="20.0" ry="8.4" fill="#7a4a2b"/>
+</svg>

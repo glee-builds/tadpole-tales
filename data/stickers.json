@@ -1,0 +1,242 @@
+[
+  {
+    "id": "animals-frog",
+    "group": "animals",
+    "label": "frog",
+    "src": "assets/stickers/animals-frog.svg"
+  },
+  {
+    "id": "animals-duck",
+    "group": "animals",
+    "label": "duck",
+    "src": "assets/stickers/animals-duck.svg"
+  },
+  {
+    "id": "animals-fish",
+    "group": "animals",
+    "label": "fish",
+    "src": "assets/stickers/animals-fish.svg"
+  },
+  {
+    "id": "animals-turtle",
+    "group": "animals",
+    "label": "turtle",
+    "src": "assets/stickers/animals-turtle.svg"
+  },
+  {
+    "id": "animals-dragonfly",
+    "group": "animals",
+    "label": "dragonfly",
+    "src": "assets/stickers/animals-dragonfly.svg"
+  },
+  {
+    "id": "animals-snail",
+    "group": "animals",
+    "label": "snail",
+    "src": "assets/stickers/animals-snail.svg"
+  },
+  {
+    "id": "animals-bird",
+    "group": "animals",
+    "label": "bird",
+    "src": "assets/stickers/animals-bird.svg"
+  },
+  {
+    "id": "animals-dog",
+    "group": "animals",
+    "label": "dog",
+    "src": "assets/stickers/animals-dog.svg"
+  },
+  {
+    "id": "people-child-pigtails",
+    "group": "people",
+    "label": "child with pigtails",
+    "src": "assets/stickers/people-child-pigtails.svg"
+  },
+  {
+    "id": "people-child-curly",
+    "group": "people",
+    "label": "child with curly hair",
+    "src": "assets/stickers/people-child-curly.svg"
+  },
+  {
+    "id": "people-child-bun",
+    "group": "people",
+    "label": "child with a bun",
+    "src": "assets/stickers/people-child-bun.svg"
+  },
+  {
+    "id": "people-child-short",
+    "group": "people",
+    "label": "child with short hair",
+    "src": "assets/stickers/people-child-short.svg"
+  },
+  {
+    "id": "people-grownup-long-hair",
+    "group": "people",
+    "label": "grown-up with long hair",
+    "src": "assets/stickers/people-grownup-long-hair.svg"
+  },
+  {
+    "id": "people-grownup-short",
+    "group": "people",
+    "label": "grown-up with short hair",
+    "src": "assets/stickers/people-grownup-short.svg"
+  },
+  {
+    "id": "people-grownup-grey",
+    "group": "people",
+    "label": "grown-up with grey hair",
+    "src": "assets/stickers/people-grownup-grey.svg"
+  },
+  {
+    "id": "people-grownup-bun",
+    "group": "people",
+    "label": "grown-up with a bun",
+    "src": "assets/stickers/people-grownup-bun.svg"
+  },
+  {
+    "id": "places-tree",
+    "group": "places",
+    "label": "tree",
+    "src": "assets/stickers/places-tree.svg"
+  },
+  {
+    "id": "places-house",
+    "group": "places",
+    "label": "house",
+    "src": "assets/stickers/places-house.svg"
+  },
+  {
+    "id": "places-castle",
+    "group": "places",
+    "label": "castle",
+    "src": "assets/stickers/places-castle.svg"
+  },
+  {
+    "id": "places-cave",
+    "group": "places",
+    "label": "cave",
+    "src": "assets/stickers/places-cave.svg"
+  },
+  {
+    "id": "places-mountain",
+    "group": "places",
+    "label": "mountain",
+    "src": "assets/stickers/places-mountain.svg"
+  },
+  {
+    "id": "places-pond",
+    "group": "places",
+    "label": "pond",
+    "src": "assets/stickers/places-pond.svg"
+  },
+  {
+    "id": "places-lily-pad",
+    "group": "places",
+    "label": "lily pad",
+    "src": "assets/stickers/places-lily-pad.svg"
+  },
+  {
+    "id": "places-boat",
+    "group": "places",
+    "label": "boat",
+    "src": "assets/stickers/places-boat.svg"
+  },
+  {
+    "id": "things-ball",
+    "group": "things",
+    "label": "ball",
+    "src": "assets/stickers/things-ball.svg"
+  },
+  {
+    "id": "things-key",
+    "group": "things",
+    "label": "key",
+    "src": "assets/stickers/things-key.svg"
+  },
+  {
+    "id": "things-treasure-chest",
+    "group": "things",
+    "label": "treasure chest",
+    "src": "assets/stickers/things-treasure-chest.svg"
+  },
+  {
+    "id": "things-crown",
+    "group": "things",
+    "label": "crown",
+    "src": "assets/stickers/things-crown.svg"
+  },
+  {
+    "id": "things-book",
+    "group": "things",
+    "label": "book",
+    "src": "assets/stickers/things-book.svg"
+  },
+  {
+    "id": "things-kite",
+    "group": "things",
+    "label": "kite",
+    "src": "assets/stickers/things-kite.svg"
+  },
+  {
+    "id": "things-cake",
+    "group": "things",
+    "label": "cake",
+    "src": "assets/stickers/things-cake.svg"
+  },
+  {
+    "id": "things-lantern",
+    "group": "things",
+    "label": "lantern",
+    "src": "assets/stickers/things-lantern.svg"
+  },
+  {
+    "id": "weather-sun",
+    "group": "weather",
+    "label": "sun",
+    "src": "assets/stickers/weather-sun.svg"
+  },
+  {
+    "id": "weather-moon",
+    "group": "weather",
+    "label": "moon",
+    "src": "assets/stickers/weather-moon.svg"
+  },
+  {
+    "id": "weather-star",
+    "group": "weather",
+    "label": "star",
+    "src": "assets/stickers/weather-star.svg"
+  },
+  {
+    "id": "weather-cloud",
+    "group": "weather",
+    "label": "cloud",
+    "src": "assets/stickers/weather-cloud.svg"
+  },
+  {
+    "id": "weather-rain",
+    "group": "weather",
+    "label": "rain",
+    "src": "assets/stickers/weather-rain.svg"
+  },
+  {
+    "id": "weather-rainbow",
+    "group": "weather",
+    "label": "rainbow",
+    "src": "assets/stickers/weather-rainbow.svg"
+  },
+  {
+    "id": "weather-snow",
+    "group": "weather",
+    "label": "snow",
+    "src": "assets/stickers/weather-snow.svg"
+  },
+  {
+    "id": "weather-lightning",
+    "group": "weather",
+    "label": "lightning",
+    "src": "assets/stickers/weather-lightning.svg"
+  }
+]
