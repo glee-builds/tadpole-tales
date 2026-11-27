@@ -26,9 +26,9 @@
 .lesson-idea { margin: 0; font-size: 1.1rem; line-height: 1.45; }
 
 .lesson-pair { display: flex; flex-direction: column; gap: 10px; }
-.lesson-line { padding: 8px 12px; border: 2px solid var(--border); border-left-width: 6px; border-radius: 12px; }
-.lesson-line.before { border-left-color: var(--edge-deep); }
-.lesson-line.after { border-left-color: var(--size-ink); }
+.lesson-line { padding: 8px 12px; border: 2px solid var(--border); border-radius: 12px; background: var(--surface); }
+.lesson-line.before { background: var(--tint); }
+.lesson-line.after { background: #e6f4f0; border-color: #b9dfd5; } /* a pale teal, like --size-ink */
 .lesson-tag { font-size: 0.85rem; font-weight: 800; color: var(--muted); }
 .lesson-line.after .lesson-tag { color: var(--size-ink); }
 .lesson-sentence { margin: 2px 0 0; font-size: 1.1rem; line-height: 1.4; }
@@ -113,7 +113,7 @@
   box-shadow: 0 4px 12px rgb(43 36 64 / 0.25);
 }
 
-.idea-card { flex: 1 1 calc(50% - 6px); min-width: 0; display: flex; flex-direction: column; gap: 1px; padding: 5px 8px; border: 1px solid var(--border); border-left: 5px solid var(--go); border-radius: 10px; }
+.idea-card { flex: 1 1 calc(50% - 6px); min-width: 0; display: flex; flex-direction: column; gap: 1px; padding: 5px 8px; border: 1px solid var(--border); border-radius: 10px; background: #fff3d6; }
 .idea-label { font-size: 0.8rem; font-weight: 800; color: var(--muted); }
 .idea-text { font-size: 0.95rem; line-height: 1.2; overflow-wrap: anywhere; }
 
