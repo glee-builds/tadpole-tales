@@ -73,7 +73,7 @@
 }
 
 .tray-group + .tray-group { margin-top: 6px; }
-.tray-heading { margin: 0 0 4px 4px; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.tray-heading { margin: 0 0 4px 4px; font-size: 0.9rem; font-weight: 800; color: var(--muted); }
 .tray-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 
 .tray-sticker { flex: none; width: 64px; height: 64px; padding: 0; border-radius: 12px; }

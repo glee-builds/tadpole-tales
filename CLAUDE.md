@@ -60,6 +60,9 @@ src/store.js             saving books on the device (the only file that uses Ind
 src/stickers.js          the picture area: placing, moving and sizing stickers (mountPicture)
 src/stickers.css         styles for the picture area and the sticker tray, grouped by kind (linked from index.html)
 src/reading.js           the reading view (showReading): one page at a time, with Read to me
+src/lesson-screens.js    lesson card, "Plan your story", example story with "Find it", the page screen's reminder and idea cards, the second shelf; loads data/lessons.json and examples.json if they exist
+src/lesson-screens.css   styles for those
+src/plan.js              a book's plan (planning answers) as plain functions
 src/readaloud.js        "Read to me": speaks a book one sentence at a time with the device's voice
 src/sentences.js         cuts a page's text into sentences for reading aloud
 src/polish.js            spelling suggestions for the Polish step: loadWordLists, wordsToAsk, applySuggestion

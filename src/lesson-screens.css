@@ -1,0 +1,124 @@
+/* lesson-screens.css: the lesson card, "Plan your story", the example story's find step, the
+   page screen's reminder and idea cards, and the second shelf (linked from index.html, after styles.css). */
+
+.top-balance { flex: none; width: 48px; }
+
+/* ---------- The lesson card ---------- */
+
+.lesson-card {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto; /* only if the wording is long; the page itself never scrolls */
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0 4px;
+  padding: 16px;
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+}
+
+.lesson-head { display: flex; align-items: center; gap: 12px; }
+.lesson-mascot { flex: none; width: 52px; height: auto; }
+.lesson-title { margin: 0; font-size: 1.4rem; line-height: 1.2; }
+.lesson-idea { margin: 0; font-size: 1.1rem; line-height: 1.45; }
+
+.lesson-pair { display: flex; flex-direction: column; gap: 10px; }
+.lesson-line { padding: 8px 12px; border: 2px solid var(--border); border-left-width: 6px; border-radius: 12px; }
+.lesson-line.before { border-left-color: var(--edge-deep); }
+.lesson-line.after { border-left-color: var(--size-ink); }
+.lesson-tag { font-size: 0.85rem; font-weight: 800; color: var(--muted); }
+.lesson-line.after .lesson-tag { color: var(--size-ink); }
+.lesson-sentence { margin: 2px 0 0; font-size: 1.1rem; line-height: 1.4; }
+
+.lesson-actions { flex: none; display: flex; flex-direction: column; gap: 8px; padding: 0 4px; }
+.lesson-actions .pill { min-height: 52px; font-size: 1.05rem; }
+
+/* ---------- Plan your story ---------- */
+
+.plan-screen .screen-title { font-size: 1.05rem; }
+.plan-skip { flex: none; padding: 0 10px; font-size: 0.9rem; }
+
+.plan-ask { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 0 12px; text-align: center; overflow-y: auto; }
+.plan-count { margin: 0; font-size: 0.85rem; font-weight: 800; color: var(--size-ink); }
+.plan-question { margin: 0; font-size: 1.35rem; line-height: 1.25; }
+.plan-hint { margin: 0; color: var(--muted); font-size: 1rem; }
+
+/* One short answer: a small writing area, so the keys keep their room. */
+.plan-screen .writing { flex: none; min-height: 0; height: 76px; font-size: 20px; }
+.plan-actions { flex: none; display: flex; padding: 0 4px; }
+.plan-actions .pill { flex: 1 1 auto; font-size: 1.1rem; }
+
+/* ---------- The example story's find step ---------- */
+
+.example-screen .read-title { font-size: 0.95rem; line-height: 1.15; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.example-screen .screen-top .pill { flex: none; padding: 0 10px; font-size: 0.95rem; }
+
+.find-prompt { flex: none; margin: 0; padding: 0 8px; text-align: center; font-size: 1.2rem; font-weight: 800; line-height: 1.25; }
+.find-answer { color: var(--size-ink); }
+
+.find-stage { flex: 1 1 0; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 4px; }
+.find-pages { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.find-sentences { display: flex; flex-direction: column; gap: 8px; }
+
+.find-tile,
+.find-sentence {
+  position: relative;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+}
+
+.find-tile { display: flex; flex-direction: column; gap: 6px; padding: 6px; }
+.find-art .picture { border-radius: 10px; }
+.find-label { font-weight: 800; font-size: 0.95rem; }
+.find-sentence { min-height: 52px; padding: 10px 12px; text-align: left; font-size: 1.1rem; line-height: 1.35; }
+
+/* What the writer tapped: a plain outline. The place the lesson points to: bright, with a badge. Both can be one place. */
+.tapped { border-color: var(--words-ink); }
+.found { border-color: var(--go); background: #fff3d6; box-shadow: 0 0 0 3px var(--go); }
+.found-badge { position: absolute; top: -10px; right: 8px; padding: 1px 8px; border-radius: 999px; background: var(--go); color: var(--on-go); font-size: 0.85rem; font-weight: 800; }
+
+/* ---------- The page screen: reminder and idea cards ---------- */
+
+.lesson-bar { flex: none; position: relative; }
+.lesson-row { display: flex; gap: 6px; padding: 0 4px; }
+.lesson-row .pill { padding: 0 10px; font-size: 0.9rem; }
+.lesson-row .lesson-reminder { flex: 1 1 0; min-width: 0; justify-content: flex-start; text-align: left; white-space: normal; line-height: 1.15; font-size: 0.85rem; }
+.lesson-row .pill { -webkit-tap-highlight-color: transparent; }
+.ideas-button[aria-expanded="true"] { background: var(--tint); }
+.bar-icon { flex: none; }
+.ideas-button { flex: none; }
+
+/* Over the picture and page buttons, never pushing the keys. */
+.ideas-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 4px;
+  right: 4px;
+  z-index: 4;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 190px;
+  overflow-y: auto;
+  padding: 8px;
+  border: 2px solid var(--edge);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 4px 12px rgb(43 36 64 / 0.25);
+}
+
+.idea-card { flex: 1 1 calc(50% - 6px); min-width: 0; display: flex; flex-direction: column; gap: 1px; padding: 5px 8px; border: 1px solid var(--border); border-left: 5px solid var(--go); border-radius: 10px; }
+.idea-label { font-size: 0.8rem; font-weight: 800; color: var(--muted); }
+.idea-text { font-size: 0.95rem; line-height: 1.2; overflow-wrap: anywhere; }
+
+/* ---------- The second shelf ---------- */
+
+.shelf-heading { grid-column: 1 / -1; margin: 8px 0 0; font-size: 1.15rem; }
+.example-card { border-color: var(--border); }
+.example-card .card-status { color: var(--words-ink); }
