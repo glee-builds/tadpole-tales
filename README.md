@@ -11,7 +11,8 @@ What the app does:
 - **Stickers:** the writer adds emoji stickers to a page's picture, moves them, and sizes them.
 - **Finish:** the writer gives the book a title and a cover, and types an author name once. Once the lesson wording is in, Finish also opens the next lesson, then offers "Hear your book", a self-check (tap a page or a sentence; never right or wrong), one "make it better" job and a kind message. Every step can be skipped.
 - **Read to me:** the device's own English voice reads the book aloud, one sentence at a time. It is hidden if the device has no English voice.
-- **Grown-up page:** hold "For grown-ups" on the bookshelf for 2 seconds to back up all books, restore them, delete a book, or start over.
+- **Tell it:** the writer records a page out loud (up to 2 minutes), then plays it back while typing. Off until a grown-up turns it on; hidden on a device that can't record. Recordings stay on the device and are never in a backup.
+- **Grown-up page:** hold "For grown-ups" on the bookshelf for 2 seconds to back up all books, restore them, delete a book, start over, or turn on Tell it.
 
 **Keep books safe:** add Tadpole Tales to the Home Screen and open it from there. Books are kept only on the device; removing the app's icon from the Home Screen deletes its books. Back them up from the grown-up page (hold "For grown-ups" on the bookshelf for 2 seconds).
 

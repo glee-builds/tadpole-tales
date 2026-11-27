@@ -25,7 +25,7 @@ test('words and a title that are not text become empty', () => {
 
 test('a page that is not an object becomes an empty page', () => {
   assert.deepEqual(upgradeBook({ ...good, pages: ['abc', 7, null] }).pages, [
-    { text: '', stickers: [] }, { text: '', stickers: [] }, { text: '', stickers: [] },
+    { id: 'p0', text: '', stickers: [] }, { id: 'p1', text: '', stickers: [] }, { id: 'p2', text: '', stickers: [] },
   ]);
 });
 

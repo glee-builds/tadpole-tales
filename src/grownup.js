@@ -1,12 +1,13 @@
 // grownup.js: the grown-up page, opened by holding its button for 2 seconds.
 //
-// It has a device check (what this phone or iPad can really do), backup and
-// restore, a way to delete a book, and "start over". This is not a writer
+// It has a device check (what this phone or iPad can really do), the Tell it
+// switch, backup and restore, a way to delete a book, and "start over". This is not a writer
 // screen, so the file picker for restoring is allowed here (and only here).
 
 import { make, button, plural } from './ui.js';
 import { loadBooks, saveBook, deleteBook, startOver, getSetting, setSetting } from './store.js';
 import { makeBackup, backupName, readBackup, mergeBooks, isNewer, bookTitle, BACKUP_LIMIT } from './book.js';
+import { isSupported as canRecord } from './record.js';
 
 // ---------- Install first ----------
 
@@ -215,6 +216,7 @@ export function showGrownup(root, { onBack }) {
   root.append(make('p', 'gu-note', 'Books are kept only on this device. Removing the app\'s icon from the Home Screen deletes its books.'));
 
   drawDeviceCheck(root);
+  const tellIt = drawTellIt(root);
   const backup = drawBackup(root, () => books.draw());
   const books = drawBooks(root, backup.setFile);
 
@@ -232,6 +234,7 @@ export function showGrownup(root, { onBack }) {
         books.said.textContent = '⚠ Couldn\'t delete everything. Try again.';
       }
       books.draw();
+      tellIt.read(); // start over turns Tell it off
     },
     [button('pill plain-button', 'Back up first', backup.backUp)],
   ));
@@ -277,6 +280,40 @@ function drawDeviceCheck(root) {
   });
   drawCopy();
   root.append(copyText, copy, copied);
+}
+
+/** The Tell it switch: off until a grown-up turns it on, and always off on a device that can't record. Returns { read }, which shows the saved setting again. */
+function drawTellIt(root) {
+  root.append(
+    make('h2', '', 'Tell it'),
+    make('p', 'gu-note', 'Recordings stay on this device. They are not in backups.'),
+  );
+  let on = false;
+  const toggle = button('pill plain-button gu-switch', '', async () => {
+    toggle.disabled = true;
+    try {
+      await setSetting('tellIt', !on);
+      on = !on;
+      said.textContent = '';
+    } catch {
+      said.textContent = '⚠ Couldn\'t change it. Try again.';
+    }
+    draw();
+  });
+  toggle.setAttribute('role', 'switch');
+  const said = make('p', 'gu-note');
+  said.setAttribute('role', 'status');
+  const draw = () => {
+    toggle.textContent = `Tell it (record your voice): ${on ? 'On' : 'Off'}`;
+    toggle.setAttribute('aria-checked', String(on));
+    toggle.disabled = !canRecord();
+  };
+  const read = () => { if (canRecord()) getSetting('tellIt').then((value) => { on = value === true; draw(); }, () => {}); };
+  draw();
+  read();
+  if (!canRecord()) said.textContent = 'This device can\'t record sound, so Tell it stays off.';
+  root.append(toggle, said);
+  return { read };
 }
 
 /**

@@ -104,6 +104,23 @@ Use a book with stickers on a page, that the iPad does not have yet.
 3. On the iPad, press and hold **For grown-ups**, tap **Restore from a file…**, and pick the file. Open the same book.
 4. The same sticker should sit in the same place, at the same size, on the same page, on both devices.
 
+## 13. Tell it (from Phase 4)
+
+Tell it records the writer telling a page out loud. It is off until a grown-up turns it on. Do this on **both** devices; the old iPad mini matters most.
+
+1. On the bookshelf, press and hold **For grown-ups**. Under **Tell it**, tap **Tell it (record your voice): Off**. It changes to **On**. Tap **←** to go back.
+2. Open a book. Above **‹ Prev** you should see **🎙 Tell it**, and no **▶ Hear it** yet.
+3. Tap **🎙 Tell it**. The first time, a question asks to use the microphone: tap **Allow**. You should see **■ Stop** and a red **● Recording**. Say a sentence or two.
+4. Tap **■ Stop**. **● Recording** goes away and **▶ Hear it** appears. Check the microphone is off: on an iPhone, the orange or red microphone dot at the top of the screen goes away within a few seconds.
+5. Tap **▶ Hear it**. You should hear what you said, from the loudspeaker at normal loudness (not quietly, as if from the earpiece). Tap **■ Stop** while it plays: it stops.
+6. Tap **🎙 Tell it** again, say something different, and tap **■ Stop**. **▶ Hear it** now plays only the new recording.
+7. Tap **🎙 Tell it** and say nothing. Wait for about 2 minutes, without touching the screen. The recording stops by itself, with no countdown, and **▶ Hear it** appears.
+8. Tap **🎙 Tell it**, then tap **Next ›** while recording. The microphone dot goes away. Tap **‹ Prev**: **▶ Hear it** plays what you said before leaving.
+9. Tap **🎙 Tell it**, then swipe up to the Home Screen while recording. The microphone dot goes away. Open the app again: the page is still there, and nothing is recording.
+10. Leave the book (tap **←**) and open it again. **▶ Hear it** is still there and still plays.
+11. On the grown-up page, tap **Back up all books** and open the file in **Files**: it is a short text file. It holds the books' words, not the recordings.
+12. To see what a refusal looks like (optional): in **Settings → Safari → Microphone**, choose **Deny**, then tap **🎙 Tell it**. A short note says a grown-up can allow the microphone; typing still works. Set it back to **Ask** afterwards.
+
 ## Results
 
 Version of iOS / iPadOS: phone ______  iPad ______   Phase: ______   Date: ______
@@ -135,3 +152,8 @@ Version of iOS / iPadOS: phone ______  iPad ______   Phase: ______   Date: _____
 | Moving a page: ◀ Earlier and Later ▶ (Phase 2) | | | |
 | Reading stops: Next, Close, or leaving the app (Phase 2) | | | |
 | Stickers: same place after backup and restore (Phase 2) | | | |
+| Tell it: switch on; Allow; record, Stop, Hear it (Phase 4) | | | |
+| Tell it: loudspeaker, normal loudness (Phase 4) | | | |
+| Tell it: record again replaces it; stops by itself at 2 minutes (Phase 4) | | | |
+| Tell it: microphone dot goes off after Stop, Next, Home Screen (Phase 4) | | | |
+| Tell it: still there after leaving the book (Phase 4) | | | |

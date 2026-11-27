@@ -2,8 +2,9 @@
 //
 // IndexedDB is the browser's own database. Ours is called `tadpole-tales`:
 //   books       one record per book (see src/book.js), keyed by its id
-//   recordings  empty until Phase 4
-//   settings    { key, value }: author, progress, lastBackup, tellIt (tellIt is for Phase 4)
+//   recordings  one Tell it recording per page: { id: '<book id>/<page id>', bytes, type },
+//               the sound as plain bytes (an ArrayBuffer) and its mime type. Never in a backup.
+//   settings    { key, value }: author, progress, lastBackup, tellIt (true once a grown-up turns Tell it on)
 //
 // Saving happens by itself. A screen calls saveSoon(book) after every change;
 // the book is saved 1 second after the last change, and at once when the app
@@ -39,7 +40,7 @@ function open() {
     request.onupgradeneeded = () => {
       const db = request.result;
       db.createObjectStore('books', { keyPath: 'id' });
-      db.createObjectStore('recordings', { keyPath: 'id' }); // for Phase 4: kept so the database doesn't need an upgrade then
+      db.createObjectStore('recordings', { keyPath: 'id' }); // made in Phase 1, so Tell it needed no database upgrade
       db.createObjectStore('settings', { keyPath: 'key' });
     };
     request.onsuccess = () => {
@@ -201,10 +202,11 @@ export async function loadBooks() {
   return books;
 }
 
-/** Delete one book for good (the grown-up page asks first). */
+/** Delete one book for good, with its recordings (the grown-up page asks first). */
 export async function deleteBook(id) {
   pending.delete(id);
   dropSpares(id);
+  await deleteRecordings(id); // first: if this fails, the book is still there to delete again
   await inTurn(() => run('books', 'readwrite', (books) => books.delete(id)));
   failed.delete(id); // a deleted book has nothing left to save
   showState();
@@ -215,11 +217,42 @@ export async function startOver() {
   clearTimeout(timer);
   pending.clear();
   for (const { key } of readSpares()) clearSpare(key);
-  for (const name of ['books', 'recordings', 'settings']) {
+  for (const name of ['recordings', 'books', 'settings']) { // recordings first: a voice is never left behind
     await inTurn(() => run(name, 'readwrite', (store) => store.clear()));
   }
   failed.clear();
   showState();
+}
+
+// ---------- Tell it recordings ----------
+//
+// Kept by book id and page id (not the page's place), so moving a page keeps
+// its recording. Ids never hold '/', so '<book id>/' starts only that book's keys.
+
+export const recordingKey = (bookId, pageId) => `${bookId}/${pageId}`;
+
+/** Every key of one book's recordings lies in this range ('0' comes right after '/'). */
+export const bookKeys = (bookId) => [`${bookId}/`, `${bookId}0`];
+
+/** Keep a page's recording, in place of the one before. `bytes` is an ArrayBuffer: some iPads lose Blobs kept in IndexedDB. */
+export function saveRecording(bookId, pageId, bytes, type) {
+  return inTurn(() => run('recordings', 'readwrite', (store) => store.put({ id: recordingKey(bookId, pageId), bytes, type })));
+}
+
+/** A page's recording as { bytes, type }, or undefined. Rejects if it can't be read. */
+export async function loadRecording(bookId, pageId) {
+  const record = await twice(() => run('recordings', 'readonly', (store) => store.get(recordingKey(bookId, pageId))));
+  return record && { bytes: record.bytes, type: record.type };
+}
+
+/** Delete a book's recordings, except those of the pages in `keep` (page ids): a page removed and not put back loses its recording. */
+export function deleteRecordings(bookId, keep = []) {
+  const kept = new Set(keep.map((pageId) => recordingKey(bookId, pageId)));
+  return inTurn(() => run('recordings', 'readwrite', (store) => {
+    const found = store.getAllKeys(IDBKeyRange.bound(...bookKeys(bookId), false, true));
+    found.onsuccess = () => found.result.filter((key) => !kept.has(key)).forEach((key) => store.delete(key));
+    return found;
+  }));
 }
 
 // ---------- Settings ----------

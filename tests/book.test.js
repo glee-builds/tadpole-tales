@@ -39,9 +39,11 @@ function deepFreeze(value) {
 }
 
 test('a new book has format 1 and one empty page', () => {
-  assert.deepEqual(newBook('b-1', 1000), {
+  const book = newBook('b-1', 1000);
+  assert.match(book.pages[0].id, /^[\w-]{1,100}$/);
+  assert.deepEqual(book, {
     format: 1, id: 'b-1', created: 1000, changed: 1000, finished: false, title: '', cover: null,
-    pages: [{ text: '', stickers: [] }],
+    pages: [{ id: book.pages[0].id, text: '', stickers: [] }],
   });
   assert.equal(BOOK_FORMAT, 1);
   assert.equal(MAX_PAGES, 12);
@@ -79,7 +81,7 @@ test('removePage returns the new book and the page with its place', () => {
   const { book: next, removed } = removePage(book, 1, 2000);
   assert.equal(texts(next), 'ac');
   assert.equal(next.changed, 2000);
-  assert.deepEqual(removed, { page: { text: 'b', stickers: [] }, index: 1 });
+  assert.deepEqual(removed, { page: { id: book.pages[1].id, text: 'b', stickers: [] }, index: 1 });
   assert.equal(JSON.stringify(book), frozen);
 });
 
@@ -124,7 +126,7 @@ test('upgradeBook keeps a good book as it is, and does not change the record', (
   assert.deepEqual(upgradeBook(book), book);
   const record = deepFreeze({
     format: 1, id: 'b-3', created: 10, changed: 20, finished: true, title: 'Frog', cover: { stickers: [{ id: 'frog', x: 0.5, y: 0.5, size: 1 }] },
-    pages: [{ text: 'Hi', stickers: [] }],
+    pages: [{ id: 'p-1', text: 'Hi', stickers: [] }],
   });
   const kept = upgradeBook(record);
   assert.deepEqual(kept, record);
@@ -135,12 +137,27 @@ test('upgradeBook fills in missing fields', () => {
   const old = { id: 'b-9', changed: 5, pages: [{ text: 'Hi' }, {}] };
   assert.deepEqual(upgradeBook(old), {
     format: 1, id: 'b-9', created: 5, changed: 5, finished: false, title: '', cover: null,
-    pages: [{ text: 'Hi', stickers: [] }, { text: '', stickers: [] }],
+    pages: [{ id: 'p0', text: 'Hi', stickers: [] }, { id: 'p1', text: '', stickers: [] }],
   });
 });
 
+test('every page has its own id: new pages differ, old pages get one by place, a bad or repeated id is replaced', () => {
+  let book = newBook('b-1', 1000);
+  for (let i = 0; i < 11; i++) book = addPage(book, i, 1000);
+  assert.equal(new Set(book.pages.map((page) => page.id)).size, 12);
+  // Moving a page moves its id with it.
+  const first = book.pages[0].id;
+  assert.equal(movePage(book, 0, 5, 1000).pages[5].id, first);
+  assert.equal(upgradeBook(book).pages[0].id, first);
+  const odd = upgradeBook({ id: 'b-9', pages: [{ id: 'p1' }, {}, { id: 'p1' }, { id: 'a/b' }, { id: 7 }] });
+  assert.deepEqual(odd.pages.map((page) => page.id), ['p1', 'p1x', 'p2', 'p3', 'p4']);
+  // Read twice, an old book gets the same ids, so its recordings still match before it is saved.
+  const old = { id: 'b-9', pages: [{ text: 'a' }, { text: 'b' }] };
+  assert.deepEqual(upgradeBook(old).pages.map((page) => page.id), upgradeBook(old).pages.map((page) => page.id));
+});
+
 test('upgradeBook gives a book with no pages one empty page', () => {
-  assert.deepEqual(upgradeBook({ id: 'b-9', pages: [] }).pages, [{ text: '', stickers: [] }]);
+  assert.deepEqual(upgradeBook({ id: 'b-9', pages: [] }).pages, [{ id: 'p0', text: '', stickers: [] }]);
 });
 
 test('upgradeBook keeps a newer format whole and refuses things that are not books', () => {

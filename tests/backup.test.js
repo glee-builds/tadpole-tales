@@ -29,7 +29,7 @@ test('an old-format file: books with missing fields are filled in', () => {
   const old = JSON.stringify({ app: 'tadpole-tales', backup: 1, books: [{ id: 'b-old', changed: 5, pages: [{ text: 'Hi' }] }] });
   const { books, author, progress, unreadable } = readBackup(old);
   assert.equal(books.length, 1);
-  assert.deepEqual(books[0].pages, [{ text: 'Hi', stickers: [] }]);
+  assert.deepEqual(books[0].pages, [{ id: 'p0', text: 'Hi', stickers: [] }]);
   assert.equal(books[0].format, 1);
   assert.equal(author, '');
   assert.deepEqual(progress, {});

@@ -56,7 +56,7 @@ src/ui.js                small helpers: make, button, plural, tapScale (taps und
 src/typing.js            the writer's text and cursor, as plain functions
 src/keyboard.js          the app's own keyboard and drawn writing area (mountWriter)
 src/book.js              a book as plain functions: pages, title (bookTitle), cover, backup file
-src/store.js             saving books on the device (the only file that uses IndexedDB)
+src/store.js             saving books and Tell it recordings on the device (the only file that uses IndexedDB)
 src/stickers.js          the picture area: placing, moving and sizing stickers (mountPicture)
 src/stickers.css         styles for the picture area and the sticker tray, grouped by kind (linked from index.html)
 src/reading.js           the reading view (showReading): one page at a time, with Read to me
@@ -69,7 +69,8 @@ src/polish.js            spelling suggestions for the Polish step: loadWordLists
 src/voice.js             picks the best English voice on the device; never an online one
 src/finish.js            after Finish (showFinish): title, author name, cover, then hear your book, the self-check,
                          one "make it better" job and the kind message (from data/lessons.json, once it is there)
-src/grownup.js           the grown-up page, one function per section: device check, backup and restore, books, start over
+src/grownup.js           the grown-up page, one function per section: device check, Tell it switch, backup and restore, books, start over
+src/record.js            Tell it: recording a page (start, stop, isSupported, the 2-minute limit), playing it back, its row on the page screen (mountTellIt)
 tests/                   tests for the plain functions (node --test) and tests/screens.mjs (a real browser; its checks are in tests/screens/)
 docs/                    decisions.md (the decisions log), phase-1-plan.md (task notes), device-checks.md (the owner's checklist)
 .github/                 the tests workflow and the pull request template

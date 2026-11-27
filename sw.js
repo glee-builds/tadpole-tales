@@ -38,6 +38,7 @@ const FILES = [
   'src/polish.js',
   'src/readaloud.js',
   'src/stickers.js',
+  'src/record.js',
   'src/stickers.css',
   'data/known-words.txt',
   'data/common-words.txt',

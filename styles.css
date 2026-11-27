@@ -349,6 +349,13 @@ button { font-family: inherit; }
 .putback-bar { flex: none; display: flex; padding: 0 4px; }
 .putback-bar .pill { flex: 1 1 auto; }
 
+/* Tell it (when a grown-up turned it on): one row, "🎙 Tell it" and "▶ Hear it", then a short note; the picture gives up the room. */
+.has-tell .picture-slot { min-height: 0; }
+.tell-bar { flex: none; display: flex; align-items: center; gap: 6px; padding: 0 4px; }
+.tell-bar .pill { flex: none; padding: 0 12px; font-size: 0.95rem; }
+.tell-note { flex: 1 1 0; min-width: 0; margin: 0; font-size: 0.8rem; line-height: 1.2; color: var(--muted); }
+.tell-recording .tell-note { color: #b91c1c; font-size: 0.95rem; font-weight: 700; }
+
 /* Write | Picture: one rounded switch in the top row; the chosen side is raised and bold. */
 .mode-switch { flex: 1 1 0; display: flex; min-width: 0; border-radius: 24px; background: var(--tint); box-shadow: 0 0 0 2px var(--border); /* a ring outside, so the row stays 48px */ }
 .mode-choice { flex: 1 1 0; min-width: 0; padding: 0 4px; border: 0; border-radius: 24px; background: transparent; font-size: 0.95rem; }
@@ -460,6 +467,7 @@ button { font-family: inherit; }
 }
 
 .gu-confirm p { margin: 8px 0; }
+.gu-switch[aria-checked="true"] { border-color: #166534; color: #166534; font-weight: 700; }
 
 /* The restore file picker: the label looks like a button; the input inside is hidden but still works. */
 .gu-pick { position: relative; }
