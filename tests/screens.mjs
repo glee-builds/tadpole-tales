@@ -20,6 +20,7 @@
 import { PHONE, TABLETS, page, problems, checked, checkScreen, checkWith, shutDown } from './screens/lib.mjs';
 import { tryBooks, tryNewer, tryFinish, tryReadAloud } from './screens/shelf-and-books.mjs';
 import { tryKeyboard, tryStickers, tryFits } from './screens/page-keyboard-pictures.mjs';
+import { tryLessons, tryLessonPaths, tryLessonFits, tryNoLessons } from './screens/lessons.mjs';
 import {
   trySaving, tryGrownup, tryBackup, tryHostile, tryServerLock, checkOffline, removeDownloads,
 } from './screens/grownup-backup-security.mjs';
@@ -37,6 +38,10 @@ try {
   await checkWith('Grown-up page: hold to open, every device check, delete a book, start over', tryGrownup);
   await checkWith('Backup: back up, start over, restore, restore again, broken file', tryBackup);
   await checkWith('Keyboard: type, tap to move the cursor, hold backspace, 300 fit (phone)', tryKeyboard);
+  await checkWith('Lessons: shelf, card, example and find, planning, close mid-planning, reminder and idea cards (phone)', tryLessons);
+  await checkWith('Lessons: skip planning, five questions, sentence find, Skip, second shelf grows (phone)', tryLessonPaths);
+  await checkWith('Lessons: every lesson screen fits (phone)', tryLessonFits);
+  await checkWith('No lesson files: no card, no planning, no second shelf, no errors (phone)', tryNoLessons);
   await checkWith('Picture mode: add, drag, two-tap move, bigger, remove, 12 limit, save, reorder pages (phone)', tryStickers);
   for (const [tablet, size] of Object.entries(TABLETS)) {
     await page('Emulation.setDeviceMetricsOverride', { ...size, deviceScaleFactor: 2, mobile: true });
@@ -45,6 +50,7 @@ try {
     await checkWith(`Picture mode (${tablet})`, tryStickers);
     await checkWith(`Every screen fits (${tablet})`, tryFits);
     await checkWith(`Finish (${tablet})`, tryFinish);
+    await checkWith(`Lesson screens fit (${tablet})`, tryLessonFits);
   }
   await checkOffline(); // last: it stops the server
 } catch (error) {

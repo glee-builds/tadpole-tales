@@ -11,8 +11,11 @@ const SMALLEST = 20; // ...and only shrink to this, and only once the picture ha
 const MIN_PICTURE = 110; // px tall: below this the words shrink a little instead
 const GAP = 12; // px between the picture and the words
 
-/** Draw `book` into `root` (a flex column that fills the screen). `onClose` leaves it. */
-export function showReading(root, book, { onClose }) {
+/**
+ * Draw `book` into `root` (a flex column that fills the screen). `onClose` leaves it.
+ * `action` ({ label, onClick }) adds one more button to the top row (an example story's "Find it").
+ */
+export function showReading(root, book, { onClose, action }) {
   let index = 0;
   let stopSpeaking = null; // set while "Read to me" is reading
   let picture = null;
@@ -21,7 +24,8 @@ export function showReading(root, book, { onClose }) {
   const top = root.appendChild(make('div', 'screen-top'));
   const close = top.appendChild(button('pill', '✕ Close', () => { stopReading(); onClose(); }));
   close.setAttribute('aria-label', 'Close the book');
-  top.append(make('h1', 'screen-title', book.title || 'Your book'));
+  top.append(make('h1', 'screen-title read-title', book.title || 'Your book'));
+  if (action) top.append(button('pill pill-go read-action', action.label, () => { stopReading(); action.onClick(); }));
 
   const page = root.appendChild(make('div', 'read-page'));
   page.setAttribute('aria-live', 'polite');

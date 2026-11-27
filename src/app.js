@@ -6,6 +6,7 @@
 //   '#read/<id>'          the reading view
 //   '#finish/<id>'        title, author name and cover, after "Finish"
 //   '#grown-ups'          the grown-up page
+//   '#lesson/...', '#plan/...', '#example/...'   the lesson screens (src/lesson-screens.js)
 
 import { make, button, saveMark, plural } from './ui.js';
 import { mountWriter } from './keyboard.js';
@@ -16,6 +17,9 @@ import { holdToOpen, showGrownup, isInstalled, INSTALL_NOTE } from './grownup.js
 import { mountPicture } from './stickers.js';
 import { showReading } from './reading.js';
 import { showFinish } from './finish.js';
+import { loadLessonData, drawLessonRoute, lessonBar, tadpoleBooks } from './lesson-screens.js';
+import { currentLesson } from './lessons.js';
+import { planOf, setPlanAnswer, ideaCards } from './plan.js';
 
 // The service worker (sw.js) saves the app's files so it opens without
 // internet. If the phone can't run one, the app works as before, online.
@@ -75,6 +79,8 @@ function safeCard(book) {
   }
 }
 
+const getProgress = () => getSetting('progress').catch(() => undefined); // lesson progress (src/lessons.js)
+
 let shelfMessage = ''; // a kind message for the shelf, set when a book is finished
 
 async function showShelf(token) {
@@ -90,21 +96,25 @@ async function showShelf(token) {
     return;
   }
   try { author = await getSetting('author'); } catch { /* the heading just says "Your books" */ }
+  const lessons = await loadLessonData(); // null without lessons: no second shelf
+  const second = lessons ? tadpoleBooks(lessons, await getProgress()) : [];
   if (token !== shown) return;
   shelf.querySelector('h1').textContent = author ? `Books by ${author}` : 'Your books';
   // Unfinished books first, then the most recently changed.
   books.sort((a, b) => Number(a.finished) - Number(b.finished) || b.changed - a.changed);
   booksBox.replaceChildren(...(books.length
     ? books.flatMap(safeCard)
-    : [make('p', 'books-note', 'No books yet. Make your first one!')]));
+    : [make('p', 'books-note', 'No books yet. Make your first one!')]), ...second);
   if (shelfMessage) booksBox.prepend(make('p', 'books-note shelf-message', `🎉 ${shelfMessage}`));
   shelfMessage = '';
 }
 
-shelf.querySelector('.go').addEventListener('click', () => {
-  const book = newBook(newId(), Date.now());
+shelf.querySelector('.go').addEventListener('click', async () => {
+  const lessons = await loadLessonData();
+  const lesson = lessons && currentLesson(await getProgress(), lessons.lessons);
+  const book = { ...newBook(newId(), Date.now()), ...(lesson && { lesson: lesson.id }) }; // a book remembers its lesson
   open = { book, removed: [], stored: false }; // saved at the first word, so backing out leaves no empty book
-  location.hash = `book/${book.id}/0`;
+  location.hash = lesson ? `lesson/${book.id}/${lesson.id}/new` : `book/${book.id}/0`; // the lesson card, then planning
 });
 
 // Not opened from the Home Screen: tell a grown-up the books may not be safe.
@@ -163,7 +173,7 @@ function go(index) {
 /** The book changed: keep it, and save it (but never an empty book nobody wrote in). */
 function changed(next) {
   open.book = next;
-  if (open.stored || !isBlank(next)) {
+  if (open.stored || !isBlank(next) || Object.keys(planOf(next)).length) { // a plan answer is saved too
     open.stored = true;
     saveSoon(next);
   }
@@ -186,6 +196,8 @@ async function showPage(id, wanted, token) {
   const index = Math.min(Math.max(wanted, 0), book.pages.length - 1);
   if (index !== wanted || !Number.isInteger(wanted)) history.replaceState(null, '', `#book/${id}/${index}`);
 
+  const lessons = await loadLessonData();
+  if (token !== shown) return;
   screen = make('main', 'screen page-screen');
   drawTopRow();
   const mark = saveMark();
@@ -193,7 +205,7 @@ async function showPage(id, wanted, token) {
   screen.append(mark.node);
   const title = make('h1', 'screen-title', `Page ${index + 1} of ${book.pages.length}`);
   if (mode === 'picture') drawPictureMode(book, index, title);
-  else drawWriteMode(book, index, title);
+  else drawWriteMode(book, index, title, lessons);
   shelf.hidden = true;
   document.body.append(screen);
 }
@@ -259,8 +271,11 @@ function drawPageTools(book, index) {
 }
 
 /** Write mode: a small picture (tap it for Picture mode), the page tools, the writing area and keys. */
-function drawWriteMode(book, index, title) {
+function drawWriteMode(book, index, title, lessons) {
   title.classList.add('page-label');
+  const lesson = lessons?.lessons.find((one) => one.id === book.lesson);
+  const cards = ideaCards(lessons?.planning, book);
+  if (lesson || cards.length) screen.append(lessonBar({ lesson, cards, onLesson: () => { location.hash = `lesson/${book.id}/${lesson.id}/${index}`; } }));
   const slot = screen.appendChild(make('div', 'picture-slot'));
   const openPictures = () => { mode = 'picture'; show(); };
   slot.addEventListener('click', openPictures);
@@ -360,14 +375,40 @@ async function showFinishScreen(id, token) {
   document.body.append(screen);
 }
 
+// ---------- The lesson screens ----------
+
+async function showLessonRoute(parts, token) {
+  const [kind, bookId] = parts;
+  const data = await loadLessonData();
+  if (data && bookId !== '-' && (!open || open.book.id !== bookId)) {
+    const book = await findBook(bookId);
+    if (book) open = { book, removed: [], stored: true };
+  }
+  if (token !== shown) return;
+  const book = open?.book.id === bookId ? open.book : null;
+  screen = make('main', `screen ${kind}-screen`);
+  const drawn = data && drawLessonRoute(screen, parts, {
+    data,
+    book,
+    onAnswer: (id, text) => changed(setPlanAnswer(open.book, id, text, Date.now())),
+    go: (hash, replace) => (replace ? location.replace(`#${hash}`) : (location.hash = hash)),
+  });
+  if (drawn === false || !data) { screen.remove(); screen = null; location.hash = ''; return; }
+  if (drawn) writer = drawn; // the planning answer's writing area
+  shelf.hidden = true;
+  document.body.append(screen);
+}
+
 // ---------- Choosing the screen ----------
 
 async function show() {
   const token = ++shown;
-  const [kind, id, page] = location.hash.slice(1).split('/');
+  const parts = location.hash.slice(1).split('/');
+  const [kind, id, page] = parts;
   clearScreen();
   if (kind !== 'book') mode = 'write';
-  if (kind !== 'book' || (open && open.book.id !== id)) open = null; // leaving the book: the put-back is gone
+  const lessonScreen = ['lesson', 'plan', 'example'].includes(kind); // these keep the book that is open
+  if (!(kind === 'book' || lessonScreen) || (open && open.book.id !== id)) open = null; // leaving the book: the put-back is gone
   const grownupsOpen = location.hash === '#grown-ups';
   grownups.hidden = !grownupsOpen;
   if (grownupsOpen) {
@@ -379,6 +420,7 @@ async function show() {
   if (kind === 'book' && id) await showPage(id, Number(page) || 0, token);
   else if (kind === 'read' && id) await showRead(id, token);
   else if (kind === 'finish' && id) await showFinishScreen(id, token);
+  else if (lessonScreen && id) await showLessonRoute(parts, token);
   else {
     shelf.hidden = true; // until the books are read, so an old shelf is never shown
     await showShelf(token);

@@ -24,12 +24,19 @@ const TYPES = {
 
 // ---------- A tiny web server for the app's files ----------
 
+// The lesson files are not in the app yet (the wording pull request adds them), so by default the
+// server answers 404 for them, as the real site does. lessons.mjs turns this on to serve the fixtures.
+export const lessonFiles = { on: false };
+const LESSON_URL = /^\/data\/(lessons|examples)\.json$/;
+
 let serverIsOff = false;
 export const server = createServer(async (request, response) => {
   let file;
   try {
     const path = decodeURIComponent(new URL(request.url, 'http://x').pathname);
-    file = resolve(ROOT, `.${path.endsWith('/') ? `${path}index.html` : path}`);
+    file = resolve(ROOT, LESSON_URL.test(path)
+      ? (lessonFiles.on ? `tests/fixtures/${path.slice(6)}` : 'no-such-file') // /data/lessons.json -> tests/fixtures/lessons.json
+      : `.${path.endsWith('/') ? `${path}index.html` : path}`);
   } catch { /* a broken %-escape */ }
   if (!file || !file.startsWith(ROOT)) { // e.g. /..%2f..%2fetc/passwd: nothing outside the repo
     response.writeHead(403).end('not allowed');
@@ -127,7 +134,8 @@ listeners.push((message) => {
   if (message.method === 'Runtime.consoleAPICalled' && message.params.type === 'error') {
     errors.push(message.params.args.map((arg) => arg.value ?? arg.description).join(' '));
   }
-  if (message.method === 'Log.entryAdded' && message.params.entry.level === 'error') {
+  // (The browser itself logs a 404 for a lesson file that isn't there: that is the "no lessons" case, not an error.)
+  if (message.method === 'Log.entryAdded' && message.params.entry.level === 'error' && !LESSON_URL.test(new URL(message.params.entry.url ?? 'http://x/', 'http://x').pathname)) {
     errors.push(message.params.entry.text);
   }
   // Any request to a web address that isn't this app's own server.
