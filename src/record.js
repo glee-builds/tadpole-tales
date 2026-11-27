@@ -133,15 +133,17 @@ if (typeof document !== 'undefined') {
 /**
  * What the buttons say. `state` is 'idle', 'starting' (asking for the
  * microphone), 'recording' or 'playing'; `has` is true when the page has a recording.
- * `hear` is null when "Hear it" is hidden.
+ * `hear` is null when "Hear it" is hidden. `compact` gives the icons alone (the lesson row has no room for words).
  */
-export function tellView(state, has) {
+export function tellView(state, has, compact = false) {
+  const words = (icon, label) => (compact ? icon : `${icon} ${label}`);
   return {
-    tell: state === 'recording' ? '■ Stop' : '🎙 Tell it',
-    hear: !has || state === 'recording' || state === 'starting' ? null : state === 'playing' ? '■ Stop' : '▶ Hear it',
+    tell: state === 'recording' ? words('■', 'Stop') : words('🎙', 'Tell it'),
+    hear: !has || state === 'recording' || state === 'starting' ? null : state === 'playing' ? words('■', 'Stop') : words('▶', 'Hear it'),
   };
 }
 
+const RECORDING = '● Recording';
 const REFUSED = ['NotAllowedError', 'SecurityError'];
 
 /**
@@ -158,16 +160,23 @@ export function mountTellIt(parent, { bookId, pageId, onSaved, inRow = false }) 
   let sound = null; // this page's recording, { bytes, type }, kept here so "Hear it" can play inside the tap
 
   function draw() {
-    const view = tellView(state, Boolean(sound));
+    const view = tellView(state, Boolean(sound), inRow);
     tell.textContent = view.tell;
     tell.disabled = state === 'starting';
-    tell.setAttribute('aria-label', state === 'recording' ? 'Stop recording' : 'Tell it: record this page out loud');
+    tell.setAttribute('aria-label', inRow ? (state === 'recording' ? 'Stop' : 'Tell it') : state === 'recording' ? 'Stop recording' : 'Tell it: record this page out loud');
     hear.hidden = !view.hear;
     hear.textContent = view.hear || '';
-    hear.setAttribute('aria-label', state === 'playing' ? 'Stop playing' : 'Hear it: play the recording');
+    hear.setAttribute('aria-label', inRow ? (state === 'playing' ? 'Stop' : 'Hear it') : state === 'playing' ? 'Stop playing' : 'Hear it: play the recording');
     bar.classList.toggle('tell-recording', state === 'recording');
   }
-  const say = (words) => { note.textContent = words; };
+  let fade = 0;
+  // With a lesson row the note takes the reminder's place (`has-note`), so it never covers a button; anything but "Recording" goes after 4 seconds.
+  const say = (words) => {
+    clearTimeout(fade);
+    note.textContent = words;
+    if (inRow) parent.classList.toggle('has-note', Boolean(words));
+    if (words && words !== RECORDING) fade = setTimeout(() => say(''), 4000);
+  };
 
   loadRecording(bookId, pageId).then((found) => {
     if (found && !sound) { sound = found; draw(); }
@@ -195,12 +204,12 @@ export function mountTellIt(parent, { bookId, pageId, onSaved, inRow = false }) 
       });
       if (started) {
         state = 'recording';
-        say('● Recording');
+        say(RECORDING);
       }
     } catch (error) {
       state = 'idle';
       say(REFUSED.includes(error?.name)
-        ? '🎙 The microphone is off. A grown-up can allow it in Settings.'
+        ? '🎙 The microphone is off. A grown-up can turn it on.'
         : '🎙 Recording didn\'t work on this device.');
     }
     if (state === 'starting') state = 'idle';
@@ -218,6 +227,7 @@ export function mountTellIt(parent, { bookId, pageId, onSaved, inRow = false }) 
   draw();
   return {
     remove() {
+      clearTimeout(fade);
       stop();
       stopPlaying();
       bar.remove();

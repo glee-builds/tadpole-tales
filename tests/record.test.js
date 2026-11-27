@@ -72,6 +72,12 @@ test('which buttons show', () => {
   assert.deepEqual(tellView('playing', true), { tell: '🎙 Tell it', hear: '■ Stop' });
 });
 
+test('in the lesson row the buttons are icons alone', () => {
+  assert.deepEqual(tellView('idle', true, true), { tell: '🎙', hear: '▶' });
+  assert.deepEqual(tellView('recording', true, true), { tell: '■', hear: null });
+  assert.deepEqual(tellView('playing', true, true), { tell: '🎙', hear: '■' });
+});
+
 test('Tell it is only possible with both MediaRecorder and getUserMedia', () => {
   fakeDevice();
   assert.equal(isSupported(), true);

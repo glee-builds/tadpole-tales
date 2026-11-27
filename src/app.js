@@ -251,8 +251,9 @@ function drawTopRow() {
 }
 
 /** Prev, Add page, Remove, (after a Remove) put back, Next. Returns the "Add page" button so Write mode can light it up. */
-function drawPageTools(book, index) {
+function drawPageTools(book, index, chip) {
   const tools = screen.appendChild(make('div', 'page-tools'));
+  if (chip) tools.append(chip); // "Page 2 of 3" sits here, so a squeezed picture can never clip it
   const previous = tools.appendChild(button('pill', '‹ Prev', () => go(index - 1)));
   previous.setAttribute('aria-label', 'Previous page');
   previous.disabled = index === 0;
@@ -298,7 +299,8 @@ function drawWriteMode(book, index, title, lessons, tellOn) {
   const slot = screen.appendChild(make('div', 'picture-slot'));
   const openPictures = () => { mode = 'picture'; show(); };
   slot.addEventListener('click', openPictures);
-  slot.append(title); // a chip on the picture area, so the page number takes no row
+  // Under 24px tall the picture is a useless sliver: hide it (the slot stays, so the layout doesn't move).
+  new ResizeObserver(() => slot.classList.toggle('slot-tiny', slot.clientHeight < 24)).observe(slot);
   picture = mountPicture(slot, { stickers: book.pages[index].stickers });
   picture.node.setAttribute('role', 'button'); // the whole picture is a button to Picture mode
   picture.node.setAttribute('tabindex', '0');
@@ -314,11 +316,11 @@ function drawWriteMode(book, index, title, lessons, tellOn) {
     screen.classList.add('has-tell');
   }
 
-  const add = drawPageTools(book, index);
+  const add = drawPageTools(book, index, title);
   const showFull = (text) => {
     const full = isFull({ text, limit: LIMIT }) && canAddPage(open.book);
-    add.classList.toggle('pill-go', full); // a full page: "Add a page" stands out
-    add.textContent = full ? '+ Add a page' : '+ Add page';
+    add.classList.toggle('pill-go', full); // a full page: "Add page" turns orange
+    add.textContent = '+ Add page';
   };
   showFull(book.pages[index].text);
 

@@ -89,6 +89,11 @@
 .lesson-row { display: flex; gap: 6px; padding: 0 4px; }
 .lesson-row .pill { padding: 0 10px; font-size: 0.9rem; }
 .lesson-row .lesson-reminder { flex: 1 1 0; min-width: 0; justify-content: flex-start; text-align: left; white-space: normal; line-height: 1.15; font-size: 0.85rem; }
+/* One or two lines at most, then an ellipsis; tapping still opens the whole card. */
+.lesson-reminder .bar-words { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; min-width: 0; }
+/* A Tell it note takes the reminder's place while it shows. */
+.lesson-row.has-note .lesson-reminder { display: none; }
+.lesson-row.has-note .tell-bar { flex: 1 1 0; min-width: 0; order: -1; }
 .lesson-row .pill { -webkit-tap-highlight-color: transparent; }
 .ideas-button[aria-expanded="true"] { background: var(--tint); }
 .bar-icon { flex: none; }

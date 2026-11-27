@@ -6,7 +6,7 @@
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { reachPage, send, page, evaluate, waitFor, until, open, tapOn, tapButton, press, typed, isDisabled, STORE, saveNow, fitProblem, settle, HOME } from './lib.mjs';
+import { reachPage, send, page, evaluate, waitFor, until, open, tapOn, press, typed, isDisabled, STORE, saveNow, fitProblem, settle, HOME } from './lib.mjs';
 
 // Put in every page before its own scripts: a pretend microphone and recorder, and an <audio> that
 // only notes what it was asked to play. window.__tracks lists every microphone track handed out.
@@ -42,12 +42,21 @@ const FAKE = `
 `;
 const NO_RECORDER = 'delete window.MediaRecorder;';
 
+/** Tap a button by its words, or by its label (in a lesson row the Tell it buttons are only icons). */
+async function tapButton(label) {
+  const n = await evaluate(`[...document.querySelectorAll('button')].findIndex((b) => b.offsetParent !== null && (b.textContent.includes(${JSON.stringify(label)}) || (b.getAttribute('aria-label') || '').startsWith(${JSON.stringify(label)})))`);
+  if (n < 0) throw new Error(`no button says "${label}"`);
+  await tapOn('button', n);
+}
+
 const BOOK = 'made-up-tell';
 const bar = 'document.querySelector(".tell-bar")';
-const tellSays = (words) => `${bar}?.querySelector(".tell-button").textContent === ${JSON.stringify(words)}`;
+// The buttons may be icons alone (in a lesson row), so only the icon is compared.
+const icon = (words) => words.split(' ')[0];
+const tellSays = (words) => `${bar}?.querySelector(".tell-button").textContent.split(' ')[0] === ${JSON.stringify(icon(words))}`;
 /** "Hear it" says `words`, or is hidden when `words` is null. */
 const hearSays = (words) => `(() => { const hear = ${bar}?.querySelector(".tell-hear");
-  return ${words === null ? '!hear || hear.hidden' : `Boolean(hear) && !hear.hidden && hear.textContent === ${JSON.stringify(words)}`}; })()`;
+  return ${words === null ? '!hear || hear.hidden' : `Boolean(hear) && !hear.hidden && hear.textContent.split(' ')[0] === ${JSON.stringify(words && icon(words))}`}; })()`;
 const micOn = () => evaluate('window.__tracks.filter((track) => !track.stopped).length');
 const pageIds = () => evaluate(`(async () => { ${STORE} return (await store.loadBooks()).find((b) => b.id === '${BOOK}').pages.map((p) => p.id); })()`);
 /** The words in the test book's recording of page `id`, or null. */

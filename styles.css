@@ -336,9 +336,10 @@ button { font-family: inherit; }
 /* The picture takes what the words and keys leave, but never less than 52px high (a small thumbnail). */
 .picture-slot { position: relative; flex: 1 1 0; min-height: 52px; overflow: hidden; cursor: pointer; }
 
-/* "Page 2 of 3": a chip at the bottom middle of the small picture in Write mode (it takes no row); in Picture mode it sits between the Move buttons. */
+/* "Page 2 of 3": a small two-line chip at the start of the page tools in Write mode (so it is never clipped); in Picture mode it sits between the Move buttons. */
 .page-label { flex: none; margin: 0; font-size: 1.05rem; line-height: 1.2; }
-.picture-slot .page-label { position: absolute; bottom: 3px; left: 50%; z-index: 1; transform: translateX(-50%); padding: 1px 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); font-size: 0.8rem; white-space: nowrap; }
+.page-tools .page-label { flex: none; width: 3.6em; padding: 2px 4px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); font-size: 0.75rem; line-height: 1.1; text-align: center; align-self: center; }
+.slot-tiny { visibility: hidden; }
 .page-head { flex: none; display: flex; align-items: center; gap: 8px; padding: 0 4px; }
 .page-head .page-label { flex: 1; }
 .page-head .pill { flex: none; min-width: 96px; padding: 0 10px; font-size: 0.95rem; }
@@ -352,12 +353,12 @@ button { font-family: inherit; }
 .has-lesson .picture-slot { min-height: 0; }
 .tell-bar { flex: none; display: flex; align-items: center; gap: 6px; padding: 0 4px; }
 .tell-bar .pill { flex: none; padding: 0 12px; font-size: 0.95rem; }
-.tell-note { flex: 1 1 0; min-width: 0; margin: 0; font-size: 0.8rem; line-height: 1.2; color: var(--muted); }
-.tell-note:empty { display: none; }
+.tell-note { flex: 1 1 0; min-width: 0; margin: 0; font-size: 0.8rem; line-height: 1.2; color: var(--muted); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.tell-note:empty, .tell-in-row .tell-note:empty { display: none; }
 /* With a lesson row, Tell it shares that row and the note floats under it, so no row is added. */
 .tell-in-row { flex: none; padding: 0; gap: 6px; }
-.tell-in-row .pill { padding: 0 8px; font-size: 0.85rem; }
-.tell-in-row .tell-note { position: absolute; top: calc(100% + 4px); left: 4px; right: 4px; z-index: 4; padding: 6px 10px; border: 2px solid var(--edge); border-radius: 12px; background: var(--surface); box-shadow: 0 4px 12px rgb(43 36 64 / 0.25); font-size: 0.95rem; }
+.tell-in-row .pill { min-width: 48px; padding: 0; font-size: 1.1rem; }
+.tell-in-row .tell-note { font-size: 0.8rem; line-height: 1.15; padding: 1px 0; }
 .tell-recording .tell-note { color: #b91c1c; font-size: 0.95rem; font-weight: 700; }
 
 /* Write | Picture: one rounded switch in the top row; the chosen side is raised and bold. */
@@ -366,7 +367,7 @@ button { font-family: inherit; }
 .mode-choice[aria-pressed="true"] { background: var(--surface); box-shadow: 0 1px 4px rgb(43 36 64 / 0.3); font-weight: 800; }
 
 .page-tools { display: flex; gap: 6px; padding: 0 4px; }
-.page-tools .pill { flex: 1 1 auto; min-width: 0; padding: 0 8px; font-size: 0.95rem; }
+.page-tools .pill { flex: 1 1 auto; min-width: 0; padding: 0 4px; font-size: 0.85rem; }
 
 .screen .writing { flex: 1 1 auto; min-height: 96px; padding-top: 6px; padding-bottom: 6px; font-size: 18px; line-height: 1.4; }
 
