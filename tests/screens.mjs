@@ -651,6 +651,12 @@ const fitProblem = () => evaluate(`(() => {
   if (short.length) return short.length + ' buttons are shorter than 48px: ' + short.map((node) => node.textContent.trim()).join(', ');
   const low = buttons.filter((node) => node.getBoundingClientRect().bottom > innerHeight + 0.5);
   if (low.length) return 'off the bottom of the screen: ' + low.map((node) => node.textContent.trim()).join(', ');
+  const text = document.querySelector('.read-text');
+  if (text) {
+    const box = document.querySelector('.read-page');
+    if (box.scrollHeight > box.clientHeight + 1) return 'the reading view needs to scroll';
+    if (parseFloat(getComputedStyle(text).fontSize) < 20) return 'the reading view words are smaller than 20px';
+  }
   if (document.querySelector('.keyboard') && document.querySelector('.writing').scrollHeight > document.querySelector('.writing').clientHeight + 1) return 'the words do not fit the writing area';
   return '';
 })()`);
@@ -758,7 +764,9 @@ async function tryFits() {
   await open('', 'document.querySelector(".go") !== null');
   await evaluate(`(async () => { ${STORE} await store.startOver();
     const long = 'The frog hops to the big rock, and sees a tiny fish! "Hello," says the frog. '.repeat(5).slice(0, 300);
+    const ids = (await (await fetch('/data/stickers.json')).json()).slice(0, 12).map((s) => s.id);
     let one = book.setPageText(book.newBook('made-up-fit-1', 1000), 0, long, 1000);
+    one.pages[0].stickers = ids.map((id, i) => ({ id, x: 0.12 + (i % 4) * 0.25, y: 0.2 + Math.floor(i / 4) * 0.3, size: 1 }));
     one = book.setPageText(book.addPage(one, 0, 1000), 1, 'Two fish had a party.', 1000);
     await store.saveBook(one);
     await store.saveBook({ ...book.setPageText(book.newBook('made-up-fit-2', 2000), 0, 'A snail raced a leaf.', 2000), finished: true, title: 'The Big Rock' });
@@ -775,6 +783,13 @@ async function tryFits() {
     await sleep(300);
     const problem = await fitProblem();
     if (problem) return `${name}: ${problem}`;
+    if (name === 'the reading view') {
+      await waitFor('document.querySelectorAll(".read-art .sticker").length === 12', 3);
+      if (await evaluate('document.querySelectorAll(".read-art .sticker").length') !== 12) return 'the reading view does not show the 12 stickers';
+      if (!await evaluate('document.querySelector(".read-voice").offsetHeight >= 48 || document.querySelector(".read-voice").hidden')) return 'Read to me is shorter than 48px';
+      const problem2 = await fitProblem();
+      if (problem2) return `${name} with its stickers: ${problem2}`;
+    }
     if (name !== 'the shelf' && !await noFields()) return `${name} has a text field`;
     if (process.env.SHOTS) {
       const { data } = await page('Page.captureScreenshot', { format: 'png' });
@@ -784,10 +799,95 @@ async function tryFits() {
   return '';
 }
 
+
+// A pretend voice, put in the page before it loads (headless Chrome cannot speak).
+const FAKE_VOICE = `(() => {
+  window.__spoken = []; window.__cancels = 0;
+  class Utter { constructor(text) { this.text = text; } }
+  window.SpeechSynthesisUtterance = Utter;
+  let timer = 0;
+  const synth = {
+    getVoices: () => [{ name: 'Ava', lang: 'en-US', localService: true, voiceURI: 'Ava' }],
+    cancel() { window.__cancels++; clearTimeout(timer); },
+    speak(u) {
+      window.__spoken.push(u.text);
+      if (window.__words) timer = setTimeout(() => u.onboundary?.({ name: 'word', charIndex: 0, charLength: 3 }), 60);
+      timer = setTimeout(() => u.onend?.(), 250);
+    },
+  };
+  Object.defineProperty(window, 'speechSynthesis', { value: synth, configurable: true });
+})()`;
+const NO_VOICE = `(() => { delete window.speechSynthesis; delete Window.prototype.speechSynthesis; })()`;
+
+/** "Read to me": underlines sentences in order, turns the page, Stop and a hand-turn stop it; hidden with no voice. */
+async function tryReadAloud() {
+  await open('', 'document.querySelector(".go") !== null');
+  await evaluate(`(async () => { ${STORE} await store.startOver();
+    let b = book.setPageText(book.newBook('made-up-read-1', 1000), 0, 'The frog sat. The frog hopped!', 1000);
+    b = book.setPageText(book.addPage(b, 0, 1000), 1, 'Then it swam.', 1000);
+    await store.saveBook({ ...b, finished: true });
+  })()`);
+  const ready = 'document.querySelector(".read-page") !== null';
+  const label = () => evaluate(`document.querySelector('.read-voice').textContent`);
+  const now = () => evaluate(`document.querySelector('.read-now, .read-word')?.textContent ?? ''`);
+  const watch = `window.__seen = []; new MutationObserver(() => { const t = document.querySelector('.read-now')?.textContent; if (t && window.__seen.at(-1) !== t) window.__seen.push(t); }).observe(document.body, { subtree: true, childList: true });`;
+
+  // Sentences in order, then the page turns by itself, and at the end the button is back.
+  let script = (await page('Page.addScriptToEvaluateOnNewDocument', { source: FAKE_VOICE })).identifier;
+  if (!await open('#read/made-up-read-1', ready)) return 'the reading view did not draw';
+  if (await evaluate(`document.querySelector('.read-voice').hidden`)) return 'Read to me is hidden although there is a voice';
+  if (await label() !== '🔊 Read to me') return `the button says "${await label()}"`;
+  await evaluate(watch);
+  await tapButton('Read to me');
+  if (await label() !== '⏹ Stop') return 'the button did not become Stop';
+  if (!await waitFor(`document.querySelector('.read-count').textContent === 'Page 2 of 2'`, 4)) return 'reading did not turn the page';
+  if (!await waitFor(`document.querySelector('.read-voice').textContent === '🔊 Read to me'`, 4)) return 'the button did not come back at the end';
+  const seen = JSON.stringify(await evaluate('window.__seen'));
+  if (seen !== '["The frog sat.","The frog hopped!","Then it swam."]') return `underlined ${seen}`;
+  if (await now()) return 'an underline was left after reading';
+
+  // Stop stops it, and nothing more is spoken.
+  await tapButton('Previous');
+  await evaluate('window.__spoken.length = 0');
+  await tapButton('Read to me');
+  if (!await waitFor(`document.querySelector('.read-now')?.textContent === 'The frog sat.'`, 2)) return 'the first sentence was not underlined';
+  await tapButton('Stop');
+  if (await label() !== '🔊 Read to me' || await now()) return 'Stop did not clear the button and the underline';
+  await sleep(600);
+  if (await evaluate('window.__spoken.length') !== 1) return `${await evaluate('window.__spoken.length')} sentences were spoken around Stop`;
+
+  // Turning a page by hand stops it.
+  await tapButton('Read to me');
+  await waitFor(`document.querySelector('.read-now') !== null`, 2);
+  await tapButton('Next');
+  if (await label() !== '🔊 Read to me' || await now()) return 'turning a page by hand did not stop reading';
+  // Closing the book stops it.
+  await evaluate('window.__cancels = 0');
+  await tapButton('Read to me');
+  await tapButton('Close');
+  if (await evaluate('window.__cancels') < 1) return 'closing the book did not stop the voice';
+
+  // Word timing, when the device sends it: the word is underlined, not the sentence.
+  await open('#read/made-up-read-1', ready);
+  await evaluate('window.__words = true');
+  await tapButton('Read to me');
+  if (!await waitFor(`document.querySelector('.read-word')?.textContent === 'The' && !document.querySelector('.read-now')`, 3)) return 'the word was not underlined when word timing came';
+  await tapButton('Stop');
+  await page('Page.removeScriptToEvaluateOnNewDocument', { identifier: script });
+
+  // No voice: the button is hidden.
+  script = (await page('Page.addScriptToEvaluateOnNewDocument', { source: NO_VOICE })).identifier;
+  const shown = await open('#read/made-up-read-1', ready) && !await evaluate(`document.querySelector('.read-voice').hidden`);
+  await page('Page.removeScriptToEvaluateOnNewDocument', { identifier: script });
+  if (shown) return 'Read to me shows on a device with no voice';
+  return '';
+}
+
 try {
   await checkScreen('Home (phone)', '');
   await checkWith('Books: make a 3-page book, reload, finish, read it, Refresh saves first', tryBooks);
   await checkWith('Every screen fits (phone)', tryFits);
+  await checkWith('Read to me: underlines in order, turns the page, Stop, hand-turn, no voice (phone)', tryReadAloud);
   await checkWith('Saving: save, reload, spare copy, retry once, "not saved" mark, unreadable books', trySaving);
   await checkWith('Grown-up page: hold to open, every device check, delete a book, start over', tryGrownup);
   await checkWith('Backup: back up, start over, restore, restore again, broken file', tryBackup);
