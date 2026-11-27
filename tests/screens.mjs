@@ -26,6 +26,7 @@ const TYPES = {
 
 // ---------- A tiny web server for the app's files ----------
 
+let serverIsOff = false;
 const server = createServer(async (request, response) => {
   const path = decodeURIComponent(new URL(request.url, 'http://x').pathname);
   const file = join(ROOT, path.endsWith('/') ? `${path}index.html` : path);
@@ -994,12 +995,37 @@ try {
     await checkWith(`Every screen fits (${tablet})`, tryFits);
     await checkWith(`Finish (${tablet})`, tryFinish);
   }
+
+  // Offline: save a book, let the service worker keep every file, stop the server, reload.
+  await page('Emulation.setDeviceMetricsOverride', { ...PHONE, deviceScaleFactor: 2, mobile: true });
+  await open('', 'document.querySelector("h1") !== null');
+  await evaluate(`(async () => { ${STORE} await store.startOver();
+    await store.saveBook({ ...book.setPageText(book.newBook('made-up-offline-1', 1000), 0, 'The frog sat still.', 1000), finished: true, title: 'Offline Frog' }); })()`);
+  const kept = await evaluate(`(async () => {
+    await navigator.serviceWorker.ready;
+    for (let tries = 0; tries < 100; tries++) {
+      const names = await caches.keys();
+      const count = names.length ? (await (await caches.open(names[0])).keys()).length : 0;
+      if (count >= 20) return count;
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    return 0;
+  })()`);
+  if (!kept) problems.push('Offline: the service worker did not keep the app\'s files');
+  await new Promise((resolve) => { server.close(resolve); server.closeAllConnections(); });
+  serverIsOff = true;
+  await checkWith('Offline: the shelf and a saved book open with the server off', async () => {
+    if (!await open('', 'document.querySelectorAll(".book-card").length === 1')) return 'the shelf did not draw offline';
+    await tapOn('.book-card');
+    if (!await waitFor(`document.querySelector('.read-page')?.textContent === 'The frog sat still.'`, 3)) return 'the saved book did not open offline';
+    return '';
+  });
 } catch (error) {
   problems.push(`stopped early: ${String(error.message).split('\n')[0]}`);
 } finally {
   socket.close();
   chrome.kill();
-  await new Promise((resolve) => { server.close(resolve); server.closeAllConnections(); });
+  if (!serverIsOff) await new Promise((resolve) => { server.close(resolve); server.closeAllConnections(); });
   await sleep(300);
   rmSync(downloads, { recursive: true, force: true });
   try { rmSync(profile, { recursive: true, force: true }); } catch { /* Chrome may still hold a file; the folder is temporary */ }
