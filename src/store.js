@@ -152,21 +152,28 @@ function dropSpares(id, changed = Infinity) {
 
 let asked = false;
 let saving = 0; // saves under way
+const failed = new Set(); // ids of books whose last save failed: the mark stays until each of them saves
+
+function showState() {
+  setState(failed.size ? 'not-saved' : saving ? 'saving' : 'saved');
+}
 
 /** Save a book now. On failure it reopens the database and tries once more, then rejects. */
 export async function saveBook(book) {
   saving++;
-  setState('saving');
+  showState();
   try {
     await inTurn(() => run('books', 'readwrite', (books) => books.put(book)));
   } catch (error) {
     saving--;
-    setState('not-saved');
+    failed.add(book.id);
+    showState();
     throw error;
   }
   saving--;
+  failed.delete(book.id);
   dropSpares(book.id, book.changed);
-  if (!saving) setState('saved');
+  showState();
   if (!asked) { asked = true; askToPersist(); }
 }
 
@@ -199,6 +206,8 @@ export async function deleteBook(id) {
   pending.delete(id);
   dropSpares(id);
   await inTurn(() => run('books', 'readwrite', (books) => books.delete(id)));
+  failed.delete(id); // a deleted book has nothing left to save
+  showState();
 }
 
 /** Delete every book, recording and setting (the grown-up page asks first). */
@@ -209,6 +218,8 @@ export async function startOver() {
   for (const name of ['books', 'recordings', 'settings']) {
     await inTurn(() => run(name, 'readwrite', (store) => store.clear()));
   }
+  failed.clear();
+  showState();
 }
 
 // ---------- Settings ----------
