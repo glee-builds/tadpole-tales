@@ -1,10 +1,22 @@
 :root {
   color-scheme: light;
+  /* The same palette as Lily Pad, so the apps look like one family. */
   --bg: #fff7ec;
   --text: #2b2440;
-  --muted: #6b6280;
+  --muted: #6b6280;      /* 5.2:1 on the page, 5.6:1 on white */
+  --surface: #ffffff;
+  --border: #e3dccf;
   --go: #ff8a5c;
-  --on-go: #2b2440;
+  --on-go: #2b2440;      /* dark text on orange (white would be too faint) */
+  --words-ink: #5644c4;  /* purple text on cream or white (6:1) */
+  --size-ink: #12705f;   /* teal text (5.9:1 on white) */
+  --water: #cdeef5;
+  --star: #ffb627;
+  --vh: 100vh;           /* the screen's height; the tablet rule below changes it */
+}
+
+@supports (height: 100dvh) {
+  :root { --vh: 100dvh; } /* the part of the screen not hidden by the browser's bars (Safari 15.4 has it) */
 }
 
 /* Andika: a font made for children learning to read. The files live in
@@ -28,71 +40,88 @@
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 
+html { touch-action: manipulation; } /* a quick double tap is two taps, not "zoom in" */
+
+html,
+body { margin: 0; }
+
 body {
-  margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: "Andika", system-ui, sans-serif;
+  font-family: "Andika", ui-rounded, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-text-size-adjust: 100%;
 }
 
 /* Buttons don't pick up the page font on their own. */
 button { font-family: inherit; }
 
-.shelf {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+/* A clear ring for anyone using a keyboard or a switch (a tap doesn't show it). */
+:focus-visible { outline: 3px solid var(--words-ink); outline-offset: 2px; }
+
+/* ---------- Shared pieces ---------- */
+
+/* A rounded button with an icon and words (Lily Pad's button shape). */
+.pill {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  padding: 24px;
-  text-align: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 2px solid var(--border);
+  border-radius: 24px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
 }
 
-h1 { margin: 0; font-size: 2rem; }
-.empty { margin: 0; color: var(--muted); }
+.pill:active { transform: translateY(1px); }
+.pill:disabled { opacity: 0.5; cursor: default; }
 
-.go {
-  min-width: 64px;
-  min-height: 56px;
-  padding: 0 28px;
-  border: 0;
-  border-radius: 28px;
+/* The main button of a screen: orange with dark text. */
+.pill-go {
+  border-color: var(--go);
   background: var(--go);
   color: var(--on-go);
-  font: inherit;
-  font-size: 1.2rem;
-  font-weight: 700;
+  font-weight: 800;
+  box-shadow: 0 3px 0 #c9602f;
 }
 
-.mascot { width: 96px; height: auto; }
+/* ---------- A screen the app draws: one phone-sized column ---------- */
 
-/* A quick double tap is two taps, not "zoom in". */
-html { touch-action: manipulation; }
-
-/* ---------- A writer screen: one phone-sized column ---------- */
+.shelf,
 .screen {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  height: 100dvh; /* the part of the screen not hidden by the browser's bars (Safari 15.4 has it) */
+  height: var(--vh);
   max-width: 440px;
   margin: 0 auto;
-  padding: 8px 4px max(4px, env(safe-area-inset-bottom));
+  padding: max(8px, env(safe-area-inset-top)) 12px max(8px, env(safe-area-inset-bottom));
   gap: 8px;
 }
 
-.screen-top { display: flex; align-items: center; gap: 8px; padding: 0 4px; }
-.screen-top h2 { margin: 0; font-size: 1.2rem; }
+.screen { position: relative; padding-left: 4px; padding-right: 4px; }
 
+.screen-top { display: flex; align-items: center; gap: 8px; padding: 0 4px; }
+.screen-top h1,
+.screen-top h2 { margin: 0; font-size: 1.2rem; }
+.screen-title { flex: 1; text-align: center; font-size: 1.15rem; font-weight: 800; }
+
+/* Back: a 48px circle (the grown-up page uses it too). */
 .back {
+  flex: none;
   width: 48px;
   height: 48px;
-  border: 0;
-  border-radius: 24px;
-  background: #fff;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface);
   color: var(--text);
   font-size: 1.5rem;
+  font-weight: 800;
 }
 
 /* ---------- The writing area (src/keyboard.js) ---------- */
@@ -174,7 +203,15 @@ html { touch-action: manipulation; }
 /* ---------- Tablets (iPad) ---------- */
 /* Held upright, the phone column is shown bigger, the way Little Pond does it. */
 @media (min-width: 700px) and (min-height: 900px) {
-  .screen { zoom: 1.3; height: calc(100dvh / 1.3); }
+  :root { --vh: calc(100vh / 1.3); }
+  .shelf,
+  .screen { zoom: 1.3; }
+}
+
+@supports (height: 100dvh) {
+  @media (min-width: 700px) and (min-height: 900px) {
+    :root { --vh: calc(100dvh / 1.3); }
+  }
 }
 
 /* "Not saved": shown only while a save has failed (src/ui.js saveMark). */
@@ -188,25 +225,177 @@ html { touch-action: manipulation; }
   font-weight: 700;
 }
 
-/* ---------- Bookshelf extras ---------- */
-.install-note { margin: 0; color: var(--muted); font-size: 0.95rem; }
+/* ---------- The bookshelf (home) ---------- */
+
+.shelf { gap: 10px; }
+
+.shelf-top {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 4px 0;
+}
+
+.mascot { flex: none; width: 60px; height: auto; }
+.brand-name { margin: 0; color: var(--words-ink); font-size: 0.8rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.shelf h1 { margin: 0; font-size: 1.6rem; line-height: 1.2; overflow-wrap: anywhere; }
+
+.books {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto; /* only when there are more books than fit; the page itself never scrolls */
+  -webkit-overflow-scrolling: touch;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: max-content;
+  gap: 12px;
+  padding: 2px 4px 6px;
+}
+
+.books-note { grid-column: 1 / -1; margin: 12px 0; color: var(--muted); text-align: center; font-size: 1.05rem; }
+.books-problem { color: #9a3412; font-weight: 700; }
+
+/* A book on the shelf: Lily Pad's card, with the cover title inside. */
+.book-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 8px 10px;
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.book-card.unfinished { border-color: var(--go); box-shadow: 0 4px 0 var(--go); }
+.book-card.unfinished:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--go); }
+
+.cover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 72px;
+  padding: 6px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  background: var(--water);
+  text-align: center;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.cover-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.cover-1 { background: #e3dcfb; }
+.cover-2 { background: #ffe3d3; }
+.cover-3 { background: #d9f1de; }
+
+.card-info { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 0 4px; }
+.card-status { font-size: 0.9rem; font-weight: 800; color: var(--size-ink); }
+.keep-going { padding: 3px 10px; border-radius: 999px; background: var(--go); color: var(--on-go); }
+.card-pages { font-size: 0.85rem; color: var(--muted); }
+
+.shelf .go { width: 100%; min-height: 56px; font-size: 1.2rem; }
+
+.install-note {
+  margin: 0;
+  padding: 8px 12px;
+  border: 2px solid var(--border);
+  border-left: 6px solid var(--star);
+  border-radius: 12px;
+  background: var(--surface);
+  font-size: 0.9rem;
+}
+
 .install-note:empty { display: none; }
+
+.shelf-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; }
+
+/* Refresh, at the very bottom of the shelf: quiet, but easy to tap (as in Lily Pad). */
+.refresh-button {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 2px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ---------- The page screen (writing) ---------- */
+
+/* The picture area shrinks first: it takes what the words and keys leave. */
+.picture-slot { position: relative; flex: 1 1 0; min-height: 0; overflow: hidden; }
+
+.picture {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  max-width: 100%;
+  aspect-ratio: 4 / 3;
+  transform: translateX(-50%);
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  background: var(--water);
+}
+
+.page-tools { display: flex; gap: 6px; padding: 0 4px; }
+.page-tools .pill { flex: 1 1 auto; min-width: 0; padding: 0 8px; font-size: 0.95rem; }
+
+.screen .writing { flex: 1 1 auto; min-height: 96px; font-size: 18px; line-height: 1.45; }
+
+/* The "not saved" mark floats over a screen, so it is never squeezed out. */
+.screen > .save-mark { position: absolute; top: 60px; right: 8px; z-index: 5; margin: 0; box-shadow: 0 2px 6px rgb(0 0 0 / 0.15); }
+.shelf-top > .save-mark { position: absolute; top: 4px; right: 4px; margin: 0; }
+
+/* ---------- The reading view ---------- */
+
+.read-page {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px;
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  font-size: 1.5rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.read-empty { color: var(--muted); font-size: 1.1rem; }
+.read-nav { display: flex; align-items: center; gap: 8px; padding: 0 4px; }
+.read-count { flex: 1; text-align: center; color: var(--muted); font-weight: 700; }
+.read-nav .pill { min-width: 104px; }
 
 /* Fills from left to right while held (src/grownup.js holdToOpen). */
 .hold-button {
   min-height: 48px;
-  padding: 0 16px;
+  padding: 0 12px;
   border: 2px solid #e3d6c3;
   border-radius: 24px;
   background: linear-gradient(to right, #e3d6c3 50%, transparent 50%) right / 200% 100%;
   color: var(--muted);
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none; /* iOS: a long press must not open a menu */
 }
 
 .hold-button.holding {
+  color: var(--text); /* the fill is darker, so the words need to be too (4.5:1) */
   background-position: left;
   transition: background-position 2s linear;
 }

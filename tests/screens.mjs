@@ -629,8 +629,165 @@ async function checkWith(label, check) {
   console.log(`${problem ? '✗' : '✓'} ${label}`);
 }
 
+// ---------- Books: shelf, page screen, reading view (src/app.js, src/reading.js) ----------
+
+/** Tap the first button whose words contain `label`. */
+async function tapButton(label) {
+  const n = await evaluate(`[...document.querySelectorAll('button')].findIndex((b) => b.offsetParent !== null && b.textContent.includes(${JSON.stringify(label)}))`);
+  if (n < 0) throw new Error(`no button says "${label}"`);
+  await tapOn('button', n);
+}
+
+const heading = () => evaluate(`document.querySelector('h1:not([hidden])') && [...document.querySelectorAll('h1')].find((h) => h.offsetParent !== null)?.textContent`);
+const noFields = () => evaluate('document.querySelectorAll("input, textarea, [contenteditable]").length === 0');
+const isDisabled = (label) => evaluate(`[...document.querySelectorAll('button')].find((b) => b.offsetParent !== null && b.textContent.includes(${JSON.stringify(label)}))?.disabled`);
+const reloaded = () => waitFor('window.__same === undefined', 5);
+
+/** What is wrong with how the screen fits, or ''. The books list may scroll inside itself; the page may not. */
+const fitProblem = () => evaluate(`(() => {
+  if (document.documentElement.scrollHeight > innerHeight + 1 || document.documentElement.scrollWidth > innerWidth) return 'the page scrolls';
+  const buttons = [...document.querySelectorAll('button, a.book-card')].filter((node) => node.offsetParent !== null);
+  const short = buttons.filter((node) => node.offsetHeight < 48);
+  if (short.length) return short.length + ' buttons are shorter than 48px: ' + short.map((node) => node.textContent.trim()).join(', ');
+  const low = buttons.filter((node) => node.getBoundingClientRect().bottom > innerHeight + 0.5);
+  if (low.length) return 'off the bottom of the screen: ' + low.map((node) => node.textContent.trim()).join(', ');
+  if (document.querySelector('.keyboard') && document.querySelector('.writing').scrollHeight > document.querySelector('.writing').clientHeight + 1) return 'the words do not fit the writing area';
+  return '';
+})()`);
+
+/** Make a 3-page book on the app's keys, then find it, finish it, read it, and refresh. Returns a problem, or ''. */
+async function tryBooks() {
+  if (!await open('', 'document.querySelector(".go") !== null')) return 'home did not draw';
+  await evaluate(`(async () => { ${STORE} await store.startOver(); })()`);
+  await open('', 'document.querySelector(".go") !== null');
+  if (!await waitFor(`document.querySelector('.books-note')?.textContent.includes('No books yet')`)) return 'an empty shelf does not say so';
+  if (await heading() !== 'Your books') return `the heading is "${await heading()}", not "Your books"`;
+  if (!await evaluate(`document.querySelector('.install-note').textContent.includes('Add to Home Screen')`)) return 'no install note in a browser tab';
+  if (!await evaluate(`[...document.querySelectorAll('.shelf-foot button')].some((b) => b.textContent === '↻ Refresh')`)) return 'no Refresh button';
+
+  // Backing out of a new book before writing anything leaves no empty book.
+  await tapOn('.go');
+  if (!await waitFor('document.querySelector(".keyboard") !== null', 3)) return 'Make a new book did not open the page screen';
+  await tapButton('Books');
+  await sleep(1500);
+  if ((await savedTexts()).length) return 'an empty book was saved';
+
+  // Three pages, on the app's own keys.
+  await tapOn('.go');
+  await waitFor('document.querySelector(".keyboard") !== null', 3);
+  if (await heading() !== 'Page 1 of 1') return `the page screen says "${await heading()}"`;
+  if (!await noFields()) return 'a text field is on the page screen';
+  if (!await isDisabled('Prev') || !await isDisabled('Remove')) return 'Prev and Remove should be off on a one-page book';
+  await press('p', 'i', 'p');
+  await tapButton('Add page');
+  if (!await waitFor(`document.querySelector('.screen-title')?.textContent === 'Page 2 of 2'`, 3)) return 'Add page did not open page 2';
+  await press('h', 'o', 'p', 's');
+  await tapButton('Add page');
+  await waitFor(`document.querySelector('.screen-title')?.textContent === 'Page 3 of 3'`, 3);
+  await press('h', 'o', 'm', 'e');
+  if (await typed() !== 'home') return `page 3 holds "${await typed()}"`;
+
+  // Remove page 3 and put it back.
+  await tapButton('Remove');
+  if (!await waitFor(`document.querySelector('.screen-title')?.textContent === 'Page 2 of 2'`, 3)) return 'Remove did not leave 2 pages';
+  await tapButton('Put page back');
+  if (!await waitFor(`document.querySelector('.screen-title')?.textContent === 'Page 3 of 3'`, 3)) return 'Put page back did not bring page 3 back';
+  if (await typed() !== 'home') return `the put-back page holds "${await typed()}"`;
+  await tapButton('Prev');
+  await waitFor(`document.querySelector('.screen-title')?.textContent === 'Page 2 of 3'`, 3);
+  if (await typed() !== 'hops') return `page 2 holds "${await typed()}"`;
+  await tapButton('Books');
+  if (!await waitFor(`document.querySelectorAll('.book-card').length === 1`, 3)) return 'the shelf has no card for the new book';
+  const card = await evaluate(`document.querySelector('.book-card').textContent`);
+  if (!card.includes('Keep going') || !card.includes('3 pages') || !card.includes('pip')) return `the card says "${card}"`;
+
+  // Reload: still there, first, with "Keep going". Open it again.
+  await open('', 'document.querySelector(".book-card") !== null');
+  if (!await evaluate(`document.querySelector('.book-card').textContent.includes('Keep going')`)) return 'after a reload the book is not marked "Keep going"';
+  await tapOn('.book-card');
+  await waitFor('document.querySelector(".keyboard") !== null', 3);
+  if (await typed() !== 'pip') return `the saved page 1 holds "${await typed()}"`;
+
+  // Finish: back on the shelf, no longer "Keep going".
+  await tapButton('Finish');
+  if (!await waitFor(`location.hash === '' && document.querySelector('.book-card')?.textContent.includes('Finished')`, 3)) return 'Finish did not mark the book finished on the shelf';
+
+  // Reading view.
+  await tapOn('.book-card');
+  if (!await waitFor(`document.querySelector('.read-page') !== null`, 3)) return 'a finished book did not open in the reading view';
+  if (!await noFields()) return 'a text field is on the reading view';
+  const readPage = () => evaluate(`document.querySelector('.read-page').textContent + '|' + document.querySelector('.read-count').textContent`);
+  if (await readPage() !== 'pip|Page 1 of 3') return `reading page 1 shows "${await readPage()}"`;
+  if (!await isDisabled('Previous')) return 'Previous should be off on page 1';
+  await tapButton('Next');
+  await tapButton('Next');
+  if (await readPage() !== 'home|Page 3 of 3') return `reading page 3 shows "${await readPage()}"`;
+  if (!await isDisabled('Next')) return 'Next should be off on the last page';
+  await tapButton('Close');
+  if (!await waitFor(`location.hash === '' && document.querySelectorAll('.book-card').length === 1`, 3)) return 'Close did not go back to the shelf';
+
+  // The name makes the heading.
+  await evaluate(`(async () => { ${STORE} await store.setSetting('author', 'Pip'); })()`);
+  await open('', 'document.querySelector(".book-card") !== null');
+  if (!await waitFor(`document.querySelector('h1').textContent === 'Books by Pip'`)) return 'the heading is not "Books by Pip"';
+
+  // Refresh saves first, then reloads. `window.__same` goes away only when the page reloads.
+  const change = (text) => evaluate(`(async () => { ${STORE} const [one] = await store.loadBooks(); store.saveSoon(book.setPageText(one, 0, ${JSON.stringify(text)}, Date.now())); window.__same = true; })()`);
+  await change('pip swam');
+  await tapOn('.refresh-button');
+  if (!await reloaded()) return 'Refresh did not reload';
+  if (JSON.stringify(await savedTexts()) !== '["pip swam"]') return `Refresh reloaded before saving: ${JSON.stringify(await savedTexts())}`;
+
+  // A failed save: no reload, and the "not saved" mark shows. Mended, Refresh saves and reloads.
+  await change('pip dived');
+  await evaluate(BREAK);
+  await tapOn('.refresh-button');
+  await sleep(1500);
+  if (!await evaluate('window.__same === true')) return 'Refresh reloaded although the save failed';
+  if (!await markShows()) return 'no "not saved" mark after a failed Refresh';
+  if (await evaluate(`document.querySelector('.refresh-button').disabled`)) return 'Refresh stayed switched off after a failed save';
+  await evaluate(MEND);
+  await tapOn('.refresh-button');
+  if (!await reloaded()) return 'Refresh did not reload once saving worked again';
+  if (JSON.stringify(await savedTexts()) !== '["pip dived"]') return `after the mended Refresh the book holds ${JSON.stringify(await savedTexts())}`;
+  return '';
+}
+
+/** Every screen fits at this size: the shelf, a full page, a page, the reading view. Returns a problem, or ''. */
+async function tryFits() {
+  await open('', 'document.querySelector(".go") !== null');
+  await evaluate(`(async () => { ${STORE} await store.startOver();
+    const long = 'The frog hops to the big rock, and sees a tiny fish! "Hello," says the frog. '.repeat(5).slice(0, 300);
+    let one = book.setPageText(book.newBook('made-up-fit-1', 1000), 0, long, 1000);
+    one = book.setPageText(book.addPage(one, 0, 1000), 1, 'Two fish had a party.', 1000);
+    await store.saveBook(one);
+    await store.saveBook({ ...book.setPageText(book.newBook('made-up-fit-2', 2000), 0, 'A snail raced a leaf.', 2000), finished: true, title: 'The Big Rock' });
+    await store.saveBook(book.setPageText(book.newBook('made-up-fit-3', 3000), 0, 'The moon fell in the pond and made a splash.', 3000));
+  })()`);
+  const width = await evaluate('innerWidth');
+  for (const [name, address, ready] of [
+    ['the shelf', '', '[...document.querySelectorAll(".book-card")].length === 3'],
+    ['a full page', '#book/made-up-fit-1/0', 'document.querySelector(".keyboard") !== null'],
+    ['a short page', '#book/made-up-fit-1/1', 'document.querySelector(".keyboard") !== null'],
+    ['the reading view', '#read/made-up-fit-1', 'document.querySelector(".read-page") !== null'],
+  ]) {
+    if (!await open(address, ready)) return `${name} did not draw`;
+    await sleep(300);
+    const problem = await fitProblem();
+    if (problem) return `${name}: ${problem}`;
+    if (name !== 'the shelf' && !await noFields()) return `${name} has a text field`;
+    if (process.env.SHOTS) {
+      const { data } = await page('Page.captureScreenshot', { format: 'png' });
+      writeFileSync(join(process.env.SHOTS, `${name.replace(/ /g, '-')}-${width}.png`), Buffer.from(data, 'base64'));
+    }
+  }
+  return '';
+}
+
 try {
   await checkScreen('Home (phone)', '');
+  await checkWith('Books: make a 3-page book, reload, finish, read it, Refresh saves first', tryBooks);
+  await checkWith('Every screen fits (phone)', tryFits);
   await checkWith('Saving: save, reload, spare copy, retry once, "not saved" mark, unreadable books', trySaving);
   await checkWith('Grown-up page: hold to open, every device check, delete a book, start over', tryGrownup);
   await checkWith('Backup: back up, start over, restore, restore again, broken file', tryBackup);
@@ -641,6 +798,7 @@ try {
     await checkScreen(`Home (${tablet})`, '');
     await checkKeyboard(`Keyboard (${tablet})`);
     await checkWith(`Stickers (${tablet})`, tryStickers);
+    await checkWith(`Every screen fits (${tablet})`, tryFits);
   }
 } catch (error) {
   problems.push(`stopped early: ${String(error.message).split('\n')[0]}`);

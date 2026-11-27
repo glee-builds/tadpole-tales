@@ -27,6 +27,7 @@ const FILES = [
   'src/keyboard.js',
   'src/store.js',
   'src/grownup.js',
+  'src/reading.js',
   'src/voice.js',
   'src/sentences.js',
   'src/readaloud.js',
