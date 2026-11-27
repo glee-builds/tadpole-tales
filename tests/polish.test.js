@@ -105,8 +105,8 @@ test('about 100 typical slips: print each word and its suggestion, check the one
   const right = {
     frend: 'friend', hav: 'have', littel: 'little', howse: 'house', verry: 'very', prety: 'pretty', becuse: 'because',
     castel: 'castle', dinosor: 'dinosaur', treasur: 'treasure', forrest: 'forest', tomorow: 'tomorrow', todai: 'today',
-    sumthing: 'something', agian: 'again', sory: null, pleese: 'please', hapy: 'happy', roket: 'rocket', wer: 'were',
-    wus: 'was', dont: "don't", skool: null, thay: null, sed: null,
+    sumthing: 'something', agian: 'again', sory: 'sorry', pleese: 'please', hapy: 'happy', roket: 'rocket', wer: null,
+    wus: 'was', dont: "don't", skool: null, thay: 'they', sed: 'said',
   };
   for (const [word, want] of Object.entries(right)) assert.equal(suggest(word), want, word);
 });

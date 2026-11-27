@@ -8,8 +8,8 @@ import {
 
 const NO_VOICE = `(() => { delete window.speechSynthesis; delete Window.prototype.speechSynthesis; })()`;
 const TEXT0 = 'I have a frend. We sit on a rok.';
-const TEXT1 = 'pipp went hom and had fun.';
-const MANY = 'I like my frend and my rok and hom. We ate lunc with bred. The dogg is nise. At scool I had a cak. My mothr and sistr plaed.';
+const TEXT1 = 'pipp went to scool and had fun.';
+const MANY = 'I like my frend and my rok and gardin. We ate lunc with bred. The dogg is nise. At scool I had a litle tabel. My mothr and sistr plaed with a rabit.';
 
 /** Run `check` with `source` put in every page before it loads. */
 async function withScript(source, check) {
@@ -87,7 +87,7 @@ export async function tryPolish() {
       if (afterFirst.join('|') !== `I have a friend. We sit on a rok.|${TEXT1}`) return `after "friend" the saved pages are "${afterFirst.join('|')}"`;
       // "Keep mine" changes nothing.
       await tapButton('Keep mine');
-      if (!await waitFor(`document.querySelector('.polish .finish-card-words')?.textContent === 'Did you mean home?'`, 3)) return '"Keep mine" did not go on';
+      if (!await waitFor(`document.querySelector('.polish .finish-card-words')?.textContent === 'Did you mean school?'`, 3)) return '"Keep mine" did not go on';
       if ((await savedPages('made-up-polish')).join('|') !== afterFirst.join('|')) return '"Keep mine" changed the book';
       // Skip mid-way keeps the earlier choices and goes on to the kind message.
       await tapOn('.finish-top .pill');
