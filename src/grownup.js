@@ -8,6 +8,7 @@ import { make, button, plural } from './ui.js';
 import { loadBooks, saveBook, deleteBook, startOver, getSetting, setSetting } from './store.js';
 import { makeBackup, backupName, readBackup, mergeBooks, isNewer, bookTitle, BACKUP_LIMIT } from './book.js';
 import { isSupported as canRecord } from './record.js';
+import { mergeProgress } from './lessons.js';
 
 // ---------- Install first ----------
 
@@ -458,9 +459,9 @@ async function restore(chosen) {
   }
   let settingsSaved = true;
   try {
-    // The name and lesson progress come back only if this device has none.
+    // The name comes back only if this device has none. Lesson progress is merged: no opened lesson is lost.
     if (found.author && !(await getSetting('author'))) await setSetting('author', found.author);
-    if (Object.keys(found.progress).length && !(await getSetting('progress'))) await setSetting('progress', found.progress);
+    if (Object.keys(found.progress).length) await setSetting('progress', mergeProgress(await getSetting('progress'), found.progress));
   } catch {
     settingsSaved = false;
   }
