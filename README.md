@@ -9,6 +9,7 @@ What the app does:
 - **Bookshelf:** every book is a card. Unfinished books come first. A finished book opens to read.
 - **Writing:** the writer types on the app's own keyboard, so the phone's keyboard never appears. A page holds up to 300 characters, and a book up to 12 pages.
 - **Stickers:** the writer adds emoji stickers to a page's picture, moves them, and sizes them.
+- **Lessons:** four lessons, one per finished book. Each has a lesson card, a "Plan your story" step, and an example story to read and find the idea in. The example stories collect on a second shelf, "Tadpole's books".
 - **Finish:** the writer gives the book a title and a cover, and types an author name once. Once the lesson wording is in, Finish also opens the next lesson, then offers "Hear your book", a self-check (tap a page or a sentence; never right or wrong), one "make it better" job and a kind message. Every step can be skipped.
 - **Read to me:** the device's own English voice reads the book aloud, one sentence at a time. It is hidden if the device has no English voice.
 - **Tell it:** the writer records a page out loud (up to 2 minutes), then plays it back while typing. Off until a grown-up turns it on; hidden on a device that can't record. Recordings stay on the device and are never in a backup.

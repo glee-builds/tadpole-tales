@@ -15,7 +15,7 @@ import { make, button } from './ui.js';
 import { mountWriter } from './keyboard.js';
 import { mountPicture } from './stickers.js';
 import { showReading } from './reading.js';
-import { sentencesOf, openedLessons } from './lessons.js';
+import { sentencesOf, openedLessons, checkFind } from './lessons.js';
 import { PLAN_LIMIT, planOf } from './plan.js';
 
 let loaded; // the one load of the lesson files, for this visit to the app
@@ -147,9 +147,9 @@ function showFind(root, example, { onStory, onClose }) {
   const story = example.pages;
   root.replaceChildren();
   const top = root.appendChild(make('div', 'screen-top'));
-  const skip = top.appendChild(button('pill', '✕ Skip', onClose));
+  top.append(button('pill', '‹ Story', onStory)); // to read it again, on the left
   top.append(make('h1', 'screen-title', 'Find it'));
-  top.append(button('pill', '‹ Story', onStory)); // to read it again
+  const skip = top.appendChild(button('pill', '✕ Skip', onClose)); // Done once the place is shown, on the right
   const message = root.appendChild(make('p', 'find-prompt', find.prompt));
   message.setAttribute('role', 'status');
   const stage = root.appendChild(make('div', 'find-stage'));
@@ -197,7 +197,7 @@ function showFind(root, example, { onStory, onClose }) {
     const list = stage.appendChild(make('div', 'find-sentences'));
     for (const sentence of sentencesOf({ pages: story }, at)) {
       const line = list.appendChild(button('find-sentence', sentence.text));
-      if (tapped && at === find.page && sentence.text === find.sentence) { line.classList.add('found'); line.append(make('span', 'found-badge', '👀 Here')); }
+      if (tapped && checkFind(example, { page: at, text: sentence.text })) { line.classList.add('found'); line.append(make('span', 'found-badge', '👀 Here')); }
       if (mark && mark.page === at && mark.text === sentence.text && !line.classList.contains('found')) line.classList.add('tapped');
       line.addEventListener('click', () => {
         if (tapped) return;

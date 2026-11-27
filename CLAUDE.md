@@ -48,6 +48,8 @@ sw.js                    the service worker: lets the app open offline; lists ev
 manifest.webmanifest     the home-screen install settings (name, icons, portrait)
 assets/                  the tadpole, the app icon and its PNGs (made with headless Chrome), the font files
 data/stickers.json       the sticker list: id, group, label and the device's own emoji
+data/lessons.json        the lesson wording: lessons, planning questions, self-check and kind messages (read by lesson-screens.js and finish.js)
+data/examples.json       the example story for each lesson, with its "Find it" prompt
 data/known-words.txt     words Polish never questions (built by tools/build-words.mjs); data/common-words.txt: the only words Polish may suggest
 tools/build-words.mjs    rebuilds data/known-words.txt
 src/app.js               starts the app; draws the bookshelf and the page screen (Write and Picture modes);
@@ -60,6 +62,7 @@ src/store.js             saving books and Tell it recordings on the device (the 
 src/stickers.js          the picture area: placing, moving and sizing stickers (mountPicture)
 src/stickers.css         styles for the picture area and the sticker tray, grouped by kind (linked from index.html)
 src/reading.js           the reading view (showReading): one page at a time, with Read to me
+src/lessons.js           the lesson path as plain functions: which lesson is next, the self-check, tips, the find check
 src/lesson-screens.js    lesson card, "Plan your story", example story with "Find it", the page screen's reminder and idea cards, the second shelf; loads data/lessons.json and examples.json if they exist
 src/lesson-screens.css   styles for those
 src/plan.js              a book's plan (planning answers) as plain functions

@@ -213,9 +213,9 @@ export const BACKUP_LIMIT = 5e6;     // characters: a real backup is far smaller
 export const PAGE_TEXT_LIMIT = 2000; // characters on one page in a backup (typing stops at 300)
 
 /**
- * Lesson progress from a backup: no lesson fields exist yet, so only plain
- * entries come back, a name of letters, digits, '-' or '_' (starting with a
- * letter) set to a number or true/false. Anything else is left out.
+ * Lesson progress from a backup (lessonsOpened, lastFinished and other plain entries): only
+ * entries come back, a name of letters, digits, '-' or '_' (starting with a letter) set to a
+ * number or true/false. Anything else is left out. (A book's plan and lesson are kept by upgradeBook.)
  */
 function progressOf(progress) {
   if (!isObject(progress)) return {};
