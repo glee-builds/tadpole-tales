@@ -14,7 +14,7 @@ const books = () => evaluate(`(async () => { ${STORE} return (await store.loadBo
 const fresh = async () => { await open('', HOME); await evaluate(`(async () => { ${STORE} await store.startOver(); })()`); await open('', HOME); };
 
 /** Run `check` with the fixture lesson files being served. */
-async function withLessons(check) {
+export async function withLessons(check) {
   lessonFiles.on = true;
   try { return await check(); } finally {
     lessonFiles.on = false;

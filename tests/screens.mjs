@@ -56,7 +56,7 @@ try {
   await checkWith('No lesson files: no card, no planning, no second shelf, no errors (phone)', tryNoLessons);
   await checkWith('Picture mode: add, drag, two-tap move, bigger, remove, 12 limit, save, reorder pages (phone)', tryStickers);
   await checkWith('Tell it: switch, record, stop, limit, play, again, microphone off, delete with page and book, not in backups, refused, no recorder (phone)', tryTellIt);
-  await checkWith('Tell it fits: a full page and the put-back bar, keyboard not moved (phone)', tryTellItFits);
+  await checkWith('Tell it fits: keys never move; full page, put-back bar, lesson row (phone)', tryTellItFits);
   for (const [tablet, size] of Object.entries(TABLETS)) {
     await page('Emulation.setDeviceMetricsOverride', { ...size, deviceScaleFactor: 2, mobile: true });
     await checkScreen(`Home (${tablet})`, '');

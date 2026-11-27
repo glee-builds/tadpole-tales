@@ -6,6 +6,7 @@
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { withLessons } from './lessons.mjs';
 import { send, page, evaluate, waitFor, until, open, tapOn, tapButton, press, typed, isDisabled, STORE, saveNow, fitProblem, settle, HOME } from './lib.mjs';
 
 // Put in every page before its own scripts: a pretend microphone and recorder, and an <audio> that
@@ -155,6 +156,7 @@ export async function tryTellIt() {
     await saveNow();
     if (await heardOn(first) !== 'sound-5' || await heardOn(second) !== 'sound-6') return `the recordings are "${await heardOn(first)}" and "${await heardOn(second)}", not sound-5 (left by Next) and sound-6 (left by Picture)`;
     await tapButton('Remove');
+    if (!await waitFor(`[...document.querySelectorAll('button')].some((b) => b.textContent.includes('Put page back'))`, 3)) return 'Remove did not offer "Put page back"';
     await tapButton('Put page back');
     if (!await waitFor(hearSays('▶ Hear it'), 3)) return 'a page put back lost its recording';
     await tapButton('Remove');
@@ -228,33 +230,45 @@ export async function tryTellIt() {
   return '';
 }
 
-/** With Tell it on, a full page and a page with the put-back bar still fit, and the keyboard stays put. Returns a problem, or ''. */
-export async function tryTellItFits() {
+/**
+ * Tell it takes the picture's room: the keys never move. A full page (with the put-back bar too) and a
+ * short page with a lesson row still fit; where the words already don't fit, they get no smaller. Returns a problem, or ''.
+ */
+export const tryTellItFits = () => withLessons(async () => {
   await open('', HOME);
   await evaluate(`(async () => { ${STORE} await store.startOver();
     const long = 'The frog hops to the big rock, and sees a tiny fish! "Hello," says the frog. '.repeat(5).slice(0, 300);
+    const lesson = { lesson: 'three-acts', plan: { who: 'Pip, a small green frog' } };
     let one = book.setPageText(book.newBook('made-up-tellfit', 1000), 0, long, 1000);
     await store.saveBook(book.setPageText(book.addPage(one, 0, 1000), 1, 'Two fish.', 1000));
+    await store.saveBook({ ...book.setPageText(book.newBook('made-up-tellfit-lesson', 1000), 0, long, 1000), ...lesson });
+    await store.saveBook({ ...book.setPageText(book.newBook('made-up-tellfit-short', 1000), 0, 'Two fish.', 1000), ...lesson });
   })()`);
-  const keysTop = async () => {
-    if (!await open('#book/made-up-tellfit/0', 'document.querySelector(".keyboard") !== null')) return null;
+  /** Where the words and keys sit on a page, with Tell it on or off. */
+  const layout = async (address, on) => {
+    await evaluate(`(async () => { ${STORE} await store.setSetting('tellIt', ${on}); })()`);
+    if (!await open(address, `document.querySelector(".keyboard") !== null && (${bar} !== null) === ${on}`)) return null;
     await settle();
-    return evaluate(`document.querySelector('.keyboard').getBoundingClientRect().top`);
+    return { problem: await fitProblem(), ...await evaluate(`({ words: document.querySelector('.writing').offsetHeight, keys: JSON.stringify(document.querySelector('.keyboard').getBoundingClientRect()) })`) };
   };
-  const off = await keysTop();
-  await evaluate(`(async () => { ${STORE} await store.setSetting('tellIt', true); })()`);
-  const on = await keysTop();
-  if (!await evaluate(`${bar} !== null`)) return 'Tell it did not show (this browser should be able to record)';
-  if (Math.abs(on - off) > 0.5) return `Tell it moved the keyboard from ${off} to ${on}`;
-  let problem = await fitProblem();
-  if (problem) return `a full page: ${problem}`;
+  for (const [name, address] of [
+    ['a full page', '#book/made-up-tellfit/0'],
+    ['a short page with a lesson row', '#book/made-up-tellfit-short/0'],
+    ['a full page with a lesson row', '#book/made-up-tellfit-lesson/0'], // at 375 x 667 the words don't fit even with Tell it off
+  ]) {
+    const off = await layout(address, false);
+    const on = await layout(address, true);
+    if (!off || !on) return `${name} did not draw`;
+    if (off.keys !== on.keys) return `${name}: Tell it moved the keys`;
+    if (!off.problem && on.problem) return `${name}: ${on.problem}`;
+    if (off.problem && on.words < off.words) return `${name}: Tell it made the words' area ${off.words - on.words}px smaller`;
+  }
+  await open('#book/made-up-tellfit/0', `${bar} !== null`);
   await tapButton('Remove');
   await waitFor(`[...document.querySelectorAll('button')].some((b) => b.textContent.includes('Put page back'))`, 3);
   await settle();
-  problem = await fitProblem();
+  const problem = await fitProblem();
   if (problem) return `with the put-back bar: ${problem}`;
-  const keys = await evaluate(`document.querySelector('.keyboard').getBoundingClientRect().top`);
-  if (Math.abs(keys - off) > 0.5) return `with the put-back bar the keyboard moved from ${off} to ${keys}`;
   await evaluate(`(async () => { ${STORE} await store.startOver(); })()`);
   return '';
-}
+});
