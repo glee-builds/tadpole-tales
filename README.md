@@ -4,6 +4,8 @@
 
 A place for a young writer to make picture books and learn how stories work. The writer tells a story, writes it in their own words on the app's own keyboard, adds stickers as pictures, and keeps finished books on a bookshelf. It runs on a phone and an older iPad, installs to the home screen, and is meant to work offline. It is a sibling of [Lily Pad](https://github.com/glee-builds/kids-puzzles) and [Little Pond](https://github.com/glee-builds/little-pond) and is built the same way: plain HTML, CSS, and JavaScript, with no framework, no build step, no accounts, and no network requests. Books are saved on the device.
 
+**Keep books safe:** add Tadpole Tales to the Home Screen and open it from there. Books are kept only on the device; removing the app's icon from the Home Screen deletes its books. Back them up from the grown-up page (hold "For grown-ups" on the bookshelf for 2 seconds).
+
 **Live:** https://glee-builds.github.io/tadpole-tales/
 
 ## Preview locally
