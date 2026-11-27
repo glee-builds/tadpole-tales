@@ -157,3 +157,23 @@ Version of iOS / iPadOS: phone ______  iPad ______   Phase: ______   Date: _____
 | Tell it: record again replaces it; stops by itself at 2 minutes (Phase 4) | | | |
 | Tell it: microphone dot goes off after Stop, Next, Home Screen (Phase 4) | | | |
 | Tell it: still there after leaving the book (Phase 4) | | | |
+
+## Polish (spelling check at the end of a book)
+
+Steps (phone, then iPad): finish a book that has a few misspelled lowercase words, going through the other steps.
+1. After "make it better" a "Spelling check" shows one word in its sentence, highlighted, with "Did you mean ...?".
+2. Tap the suggestion: only that word changes in the book. Tap "Keep mine": nothing changes.
+3. Nothing is red or says "wrong"; both buttons are easy to tap; no scrolling.
+4. Tap Skip part-way: earlier choices stay, the kind message shows.
+5. Close the app part-way and open it again: chosen words are kept.
+6. A book with no misspellings, and a character's name from "Plan your story", are not asked about.
+7. In Airplane Mode the step still works (word lists saved offline).
+
+| Check | Phone | iPad | Notes |
+|---|---|---|---|
+| Polish: asked one word at a time, nothing red | | | |
+| Polish: suggestion and Keep mine | | | |
+| Polish: Skip and close mid-way keep choices | | | |
+| Polish: names and correct words not asked | | | |
+| Polish: works in Airplane Mode | | | |
+
