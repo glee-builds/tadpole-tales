@@ -120,3 +120,18 @@ test('checkFind matches a page or an exact sentence in every example', () => {
     if (text) assert.equal(checkFind(example, { page: find.page, text: 'Something else.' }), false);
   }
 });
+
+test('restore merges lesson progress: the larger lessonsOpened, the device\'s own lastFinished unless it has none', async () => {
+  const { mergeProgress } = await import('../src/lessons.js');
+  // A new device that opened one lesson gets the backup's three.
+  assert.deepEqual(mergeProgress({ lessonsOpened: 1 }, { lessonsOpened: 3, lastFinished: 42 }), { lessonsOpened: 3, lastFinished: 42 });
+  // A device further along keeps its count and its own last book.
+  assert.deepEqual(mergeProgress({ lessonsOpened: 4, lastFinished: 7 }, { lessonsOpened: 2, lastFinished: 42 }), { lessonsOpened: 4, lastFinished: 7 });
+  assert.deepEqual(mergeProgress({ lessonsOpened: 2, lastFinished: 7 }, { lessonsOpened: 5, lastFinished: 42 }), { lessonsOpened: 5, lastFinished: 7 });
+  // No progress on the device: the backup's, whole; other entries are kept, the device's first.
+  assert.deepEqual(mergeProgress(undefined, { lessonsOpened: 2, other: true }), { lessonsOpened: 2, other: true });
+  assert.deepEqual(mergeProgress({ other: 1 }, { other: 2 }), { other: 1 });
+  // The merge comes out of a real backup file unchanged by readBackup.
+  const { progress } = readBackup(JSON.stringify(makeBackup({ books: [], progress: { lessonsOpened: 3, lastFinished: -5 } }, 0)));
+  assert.deepEqual(mergeProgress({ lessonsOpened: 1 }, progress), { lessonsOpened: 3, lastFinished: -5 });
+});

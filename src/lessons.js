@@ -31,6 +31,20 @@ export function openLessonAfterFinish(progress, lessons, bookId) {
   return next;
 }
 
+/**
+ * This device's progress with a backup's added (restore): the larger
+ * `lessonsOpened` wins, so moving to a new device never closes a lesson, and
+ * the device's own `lastFinished` is kept unless it has none. Other entries:
+ * the device's, else the backup's. Either may be undefined.
+ */
+export function mergeProgress(device = {}, backup = {}) {
+  const merged = { ...backup, ...device };
+  const counts = [device.lessonsOpened, backup.lessonsOpened].filter(Number.isFinite);
+  if (counts.length) merged.lessonsOpened = Math.max(...counts);
+  if (device.lastFinished === undefined && backup.lastFinished !== undefined) merged.lastFinished = backup.lastFinished;
+  return merged;
+}
+
 /** The lessons the writer can reread, in order. */
 export const openedLessons = (progress, lessons) => lessons.slice(0, opened(progress, lessons));
 

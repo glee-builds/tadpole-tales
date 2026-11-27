@@ -183,7 +183,7 @@ export async function tryBackup() {
   await evaluate(`(async () => { ${STORE} await store.startOver();
     await store.saveBook(book.setPageText(book.newBook('made-up-3', 3), 0, 'A snail raced a leaf.', 3));
     await store.saveBook(book.setPageText(book.newBook('made-up-4', 4), 0, 'Two fish had a party.', 4));
-    await store.setSetting('author', 'Pip'); })()`);
+    await store.setSetting('author', 'Pip'); await store.setSetting('progress', { lessonsOpened: 3, lastFinished: 42 }); })()`);
   await evaluate(`location.hash = 'grown-ups'`);
   if (!await waitFor(`[...document.querySelectorAll('.grownups button')].some((b) => b.textContent === 'Back up all books' && !b.disabled)`)) return 'the Back up button never became ready';
   if (!await evaluate(`document.querySelector('.grownups').textContent.includes('No backup yet.')`)) return 'the page does not say there is no backup yet';
@@ -204,11 +204,14 @@ export async function tryBackup() {
   if (!await evaluate(`[...document.querySelectorAll('.grownups > .gu-ask button')].some((b) => b.textContent === 'Back up first')`)) return 'start over does not offer a backup first';
   await tapOn('.grownups > .gu-ask .gu-danger');
   if (!await waitFor(`document.querySelector('.gu-books').textContent === 'No books yet.'`)) return 'start over did not empty the shelf';
+  await evaluate(`(async () => { ${STORE} await store.setSetting('progress', { lessonsOpened: 1 }); })()`); // a new device, one lesson opened
   let said = await restoreFrom(file);
   if (!said.startsWith('✓ Added 2 books.')) return `restoring said "${said}"`;
   const texts = (await savedTexts()).sort();
   if (JSON.stringify(texts) !== '["A snail raced a leaf.","Two fish had a party."]') return `after restoring the books are ${JSON.stringify(texts)}`;
   if (await evaluate(`(async () => { ${STORE} return store.getSetting('author'); })()`) !== 'Pip') return 'the name did not come back';
+  const progress = await evaluate(`(async () => { ${STORE} return JSON.stringify(await store.getSetting('progress')); })()`);
+  if (progress !== '{"lessonsOpened":3,"lastFinished":42}') return `restoring onto a device with progress gave ${progress}`;
 
   // Restoring the same file again adds nothing.
   said = await restoreFrom(file);
