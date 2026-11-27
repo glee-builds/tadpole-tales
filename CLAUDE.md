@@ -63,7 +63,7 @@ src/sentences.js         cuts a page's text into sentences for reading aloud
 src/voice.js             picks the best English voice on the device; never an online one
 src/finish.js            title, author name and cover after Finish (showFinish)
 src/grownup.js           the grown-up page, one function per section: device check, backup and restore, books, start over
-tests/                   tests for the plain functions (node --test) and tests/screens.mjs (a real browser)
+tests/                   tests for the plain functions (node --test) and tests/screens.mjs (a real browser; its checks are in tests/screens/)
 docs/                    decisions.md (the decisions log), phase-1-plan.md (task notes), device-checks.md (the owner's checklist)
 .github/                 the tests workflow and the pull request template
 README.md                what the app does and how to run it and the tests

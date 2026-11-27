@@ -1,4 +1,4 @@
-// Tests for src/book.js: what a book is.
+// Tests for src/book.js: what a book is, upgrades, page counts over many steps, and inputs left alone.
 // Run all tests with: node --test
 
 import { test } from 'node:test';
@@ -16,6 +16,27 @@ const bookOf = (letters) => {
   return book;
 };
 const texts = (book) => book.pages.map((page) => page.text).join('');
+
+/** A small seeded random number generator (mulberry32), so a failing run can be repeated. */
+function seeded(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Freeze an object and everything in it, so any change made in place throws in strict mode. */
+function deepFreeze(value) {
+  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+    Object.freeze(value);
+    Object.values(value).forEach(deepFreeze);
+  }
+  return value;
+}
 
 test('a new book has format 1 and one empty page', () => {
   assert.deepEqual(newBook('b-1', 1000), {
@@ -98,9 +119,16 @@ test('isBlank: no words and no stickers on any page', () => {
   assert.equal(isBlank(withSticker), false);
 });
 
-test('upgradeBook keeps a good book as it is', () => {
+test('upgradeBook keeps a good book as it is, and does not change the record', () => {
   const book = bookOf('ab');
   assert.deepEqual(upgradeBook(book), book);
+  const record = deepFreeze({
+    format: 1, id: 'b-3', created: 10, changed: 20, finished: true, title: 'Frog', cover: { stickers: [{ id: 'frog', x: 0.5, y: 0.5, size: 1 }] },
+    pages: [{ text: 'Hi', stickers: [] }],
+  });
+  const kept = upgradeBook(record);
+  assert.deepEqual(kept, record);
+  assert.notEqual(kept, record);
 });
 
 test('upgradeBook fills in missing fields', () => {
@@ -116,8 +144,11 @@ test('upgradeBook gives a book with no pages one empty page', () => {
 });
 
 test('upgradeBook keeps a newer format whole and refuses things that are not books', () => {
-  const newer = { ...newBook('b-1', 1), format: 2 };
+  const newer = { ...newBook('b-7', 1000), format: BOOK_FORMAT + 1, title: 'From later' };
+  const frozen = JSON.stringify(newer);
   assert.equal(upgradeBook(newer), newer);
+  assert.equal(JSON.stringify(newer), frozen);
+  assert.throws(() => upgradeBook({}), { message: 'not a book' });
   assert.throws(() => upgradeBook({ pages: [] }), { message: 'not a book' });
   assert.throws(() => upgradeBook({ id: 'b-1' }), { message: 'not a book' });
   assert.throws(() => upgradeBook(null), { message: 'not a book' });
@@ -181,4 +212,59 @@ test('movePage does nothing outside 1 to the number of pages, and never changes 
   for (let from = 0; from < 12; from++) for (let to = 0; to < 12; to++) {
     assert.equal(movePage(full, from, to, 2).pages.length, 12);
   }
+});
+
+test('page counts stay between 1 and 12 over many add, remove and restore steps', () => {
+  const rand = seeded(7);
+  let book = newBook('b-1', 1000);
+  let removed = null;
+  for (let step = 0; step < 3000; step++) {
+    const roll = rand();
+    const now = 1000 + step;
+    if (roll < 0.4) {
+      book = addPage(book, Math.floor(rand() * book.pages.length), now);
+    } else if (roll < 0.7) {
+      const result = removePage(book, Math.floor(rand() * book.pages.length), now);
+      book = result.book;
+      if (result.removed) removed = result.removed;
+    } else if (removed) {
+      book = putBackPage(book, removed, now);
+      removed = null;
+    }
+    assert.ok(book.pages.length >= 1 && book.pages.length <= MAX_PAGES, `page count ${book.pages.length} at step ${step}`);
+  }
+});
+
+test('removing a page and putting it straight back gives the same pages in the same order', () => {
+  const rand = seeded(99);
+  for (let round = 0; round < 200; round++) {
+    let book = newBook('b-1', 1000);
+    const count = 1 + Math.floor(rand() * (MAX_PAGES - 1));
+    for (let i = 1; i < count; i++) book = addPage(book, i - 1, 1000);
+    book = book.pages.reduce((b, _, i) => setPageText(b, i, `p${i}`, 1000), book);
+    const index = Math.floor(rand() * book.pages.length);
+    const { book: without, removed } = removePage(book, index, 2000);
+    if (!removed) continue; // only the last page cannot be removed; that case is covered elsewhere
+    const back = putBackPage(without, removed, 3000);
+    assert.deepEqual(back.pages, book.pages, `round ${round}`);
+  }
+});
+
+test('page functions never change the book or page passed in', () => {
+  let book = newBook('b-1', 1000);
+  book = setPageText(book, 0, 'one', 1000);
+  book = addPage(book, 0, 1000);
+  book = setPageText(book, 1, 'two', 1000);
+  deepFreeze(book);
+  const frozen = JSON.stringify(book);
+
+  const added = addPage(book, 0, 2000);
+  const { book: without, removed } = removePage(book, 0, 2000);
+  const back = putBackPage(without, removed, 2000);
+  setPageText(book, 0, 'changed', 2000);
+  upgradeBook(book);
+
+  assert.equal(JSON.stringify(book), frozen);
+  assert.equal(added.pages.length, 3);
+  assert.equal(back.pages.length, 2);
 });
