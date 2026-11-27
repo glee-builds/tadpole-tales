@@ -21,3 +21,4 @@ Every project decision, when it was made, and why. When a decision changes, don'
 | 2026-11-27 | Devices | A phone and an older iPad mini; the app must run on Safari 15.4 | Those are the devices in use |
 | 2026-11-27 | Look | Always light; does not follow dark mode | Same as the sibling apps |
 | 2026-11-27 | Backups | Backup files (`tadpole-tales-backup-*.json`) are ignored by Git | They hold the writer's books |
+| 2026-11-27 | Testing on GitHub | Every pull request runs `node --test` and `node tests/screens.mjs` | A broken change is caught before merging |
