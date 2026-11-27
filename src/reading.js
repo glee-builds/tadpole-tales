@@ -12,20 +12,24 @@ const MIN_PICTURE = 110; // px tall: below this the words shrink a little instea
 const GAP = 12; // px between the picture and the words
 
 /**
- * Draw `book` into `root` (a flex column that fills the screen). `onClose` leaves it.
+ * Draw `book` into `root` (a flex column that fills the screen). `onClose` leaves it;
+ * without it there is no top row (Finish's "Hear your book" draws its own).
  * `action` ({ label, onClick }) adds one more button to the top row (an example story's "Find it").
+ * Returns { stop }, which stops reading aloud.
  */
-export function showReading(root, book, { onClose, action }) {
+export function showReading(root, book, { onClose, action } = {}) {
   let index = 0;
   let stopSpeaking = null; // set while "Read to me" is reading
   let picture = null;
   root.replaceChildren();
 
-  const top = root.appendChild(make('div', 'screen-top'));
-  const close = top.appendChild(button('pill', '✕ Close', () => { stopReading(); onClose(); }));
-  close.setAttribute('aria-label', 'Close the book');
-  top.append(make('h1', 'screen-title read-title', book.title || 'Your book'));
-  if (action) top.append(button('pill pill-go read-action', action.label, () => { stopReading(); action.onClick(); }));
+  if (onClose) {
+    const top = root.appendChild(make('div', 'screen-top'));
+    const close = top.appendChild(button('pill', '✕ Close', () => { stopReading(); onClose(); }));
+    close.setAttribute('aria-label', 'Close the book');
+    top.append(make('h1', 'screen-title read-title', book.title || 'Your book'));
+    if (action) top.append(button('pill pill-go read-action', action.label, () => { stopReading(); action.onClick(); }));
+  }
 
   const page = root.appendChild(make('div', 'read-page'));
   page.setAttribute('aria-live', 'polite');
@@ -122,4 +126,5 @@ export function showReading(root, book, { onClose, action }) {
   show(0, false);
   if (document.fonts?.ready) document.fonts.ready.then(fit); // the words' height changes once Andika loads
   if (window.ResizeObserver) new ResizeObserver(fit).observe(page); // a turned iPad
+  return { stop: stopReading };
 }

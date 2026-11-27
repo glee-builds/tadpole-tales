@@ -9,7 +9,7 @@ What the app does:
 - **Bookshelf:** every book is a card. Unfinished books come first. A finished book opens to read.
 - **Writing:** the writer types on the app's own keyboard, so the phone's keyboard never appears. A page holds up to 300 characters, and a book up to 12 pages.
 - **Stickers:** the writer adds emoji stickers to a page's picture, moves them, and sizes them.
-- **Finish:** the writer gives the book a title and a cover, and types an author name once.
+- **Finish:** the writer gives the book a title and a cover, and types an author name once. Once the lesson wording is in, Finish also opens the next lesson, then offers "Hear your book", a self-check (tap a page or a sentence; never right or wrong), one "make it better" job and a kind message. Every step can be skipped.
 - **Read to me:** the device's own English voice reads the book aloud, one sentence at a time. It is hidden if the device has no English voice.
 - **Grown-up page:** hold "For grown-ups" on the bookshelf for 2 seconds to back up all books, restore them, delete a book, or start over.
 

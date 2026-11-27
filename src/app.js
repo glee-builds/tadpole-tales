@@ -4,7 +4,7 @@
 //   ''                    the bookshelf
 //   '#book/<id>/<page>'   the page screen (Write or Picture mode); <page> counts from 0
 //   '#read/<id>'          the reading view
-//   '#finish/<id>'        title, author name and cover, after "Finish"
+//   '#finish/<id>'        after "Finish": title, author name, cover, then the lesson steps (finish.js)
 //   '#grown-ups'          the grown-up page
 //   '#lesson/...', '#plan/...', '#example/...'   the lesson screens (src/lesson-screens.js)
 
@@ -16,7 +16,7 @@ import { loadBooks, saveSoon, saveNow, onSaveState, getSetting, setSetting } fro
 import { holdToOpen, showGrownup, isInstalled, INSTALL_NOTE } from './grownup.js';
 import { mountPicture } from './stickers.js';
 import { showReading } from './reading.js';
-import { showFinish } from './finish.js';
+import { showFinish, startFinish } from './finish.js';
 import { loadLessonData, drawLessonRoute, lessonBar, tadpoleBooks } from './lesson-screens.js';
 import { currentLesson } from './lessons.js';
 import { planOf, setPlanAnswer, ideaCards } from './plan.js';
@@ -224,7 +224,16 @@ function drawTopRow() {
   }
   const finish = top.appendChild(button('pill pill-go', '✓ Finish', async () => {
     if (isBlank(open.book)) { location.hash = ''; return; }
-    changed({ ...open.book, finished: true, changed: Date.now() });
+    const { id } = open.book;
+    let lesson;
+    try {
+      lesson = await startFinish(open.book, await loadLessonData()); // the next lesson opens and saves first
+    } catch {
+      screen?.querySelector('.save-mark')?.removeAttribute('hidden'); // it didn't save: stay and show the mark
+      return;
+    }
+    if (open?.book.id !== id) return; // left the book meanwhile
+    changed({ ...open.book, ...lesson, finished: true, changed: Date.now() });
     await saveNow();
     if (saveState !== 'not-saved') location.hash = `finish/${open.book.id}`; // if it didn't save, stay and show the mark
   }));
@@ -344,7 +353,7 @@ async function showRead(id, token) {
   document.body.append(screen);
 }
 
-// ---------- Title, author name and cover ----------
+// ---------- After Finish: title, author name, cover, lesson steps ----------
 
 async function showFinishScreen(id, token) {
   await saveNow();
@@ -352,6 +361,7 @@ async function showFinishScreen(id, token) {
   let author;
   book = await findBook(id);
   try { author = await getSetting('author'); } catch { /* asked for again */ }
+  const lessons = await loadLessonData();
   if (token !== shown) return;
   if (!book) { location.hash = ''; return; }
   screen = make('main', 'screen finish-screen');
@@ -362,6 +372,7 @@ async function showFinishScreen(id, token) {
   showFinish(body, {
     book,
     author,
+    lessons,
     onBook: saveSoon,
     onAuthor: (name) => setSetting('author', name).catch(() => mark.update('not-saved')), // the name didn't save: show the mark
     onDone: async () => {
@@ -370,6 +381,7 @@ async function showFinishScreen(id, token) {
       shelfMessage = 'Your book is on the shelf!';
       location.hash = '';
     },
+    onWrite: async () => { await saveNow(); location.hash = `book/${id}/0`; }, // "Do it" or "Go back and add it"
   });
   shelf.hidden = true;
   document.body.append(screen);

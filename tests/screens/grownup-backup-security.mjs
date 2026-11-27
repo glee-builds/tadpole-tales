@@ -289,8 +289,9 @@ export async function checkOffline() {
   if (!kept) problems.push('Offline: the service worker did not keep the app\'s files');
   await stopServer();
   await checkWith('Offline: the shelf and a saved book open with the server off', async () => {
-    if (!await open('', 'document.querySelectorAll(".book-card").length === 1')) return 'the shelf did not draw offline';
-    await tapOn('.book-card');
+    // The writer's one book (Tadpole's example books may show too, if the lesson files were saved).
+    if (!await open('', 'document.querySelectorAll(".book-card:not(.example-card)").length === 1')) return 'the shelf did not draw offline';
+    await tapOn('.book-card:not(.example-card)');
     if (!await waitFor(`document.querySelector('.read-page')?.textContent === 'The frog sat still.'`, 3)) return 'the saved book did not open offline';
     return '';
   });
