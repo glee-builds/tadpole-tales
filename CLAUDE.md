@@ -42,6 +42,7 @@ This project also adds:
 
 ```
 index.html          the bookshelf (empty for now)
+assets/             the tadpole, the icon and its PNGs (made with headless Chrome)
 styles.css
 docs/decisions.md   decisions log
 .github/            pull request template
