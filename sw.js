@@ -36,6 +36,7 @@ const FILES = [
   'src/lesson-screens.css',
   'src/plan.js',
   'src/polish.js',
+  'src/polish-screen.js',
   'src/readaloud.js',
   'src/stickers.js',
   'src/record.js',
