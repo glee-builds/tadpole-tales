@@ -537,7 +537,17 @@ const toolsShow = () => evaluate(`getComputedStyle(document.querySelector('.stic
 
 /** Add, drag, size and remove stickers in the demo, with real touches. Returns a problem, or ''. */
 async function tryStickers() {
-  if (!await open('#try-stickers', 'document.querySelector(".tray-sticker .emoji") !== null')) return 'the sticker demo did not draw';
+  await open('', 'document.querySelector(".go") !== null');
+  await evaluate(`(async () => { ${STORE} await store.startOver();
+    let one = book.setPageText(book.newBook('made-up-pic-1', 1000), 0, 'page a', 1000);
+    one = book.setPageText(book.addPage(one, 0, 1000), 1, 'page b', 1000);
+    await store.saveBook(book.setPageText(book.addPage(one, 1, 1000), 2, 'page c', 1000));
+  })()`);
+  if (!await open('#book/made-up-pic-1/0', 'document.querySelector(".keyboard") !== null')) return 'the page screen did not draw';
+  // Write mode shows a small picture; tapping it opens Picture mode, with no keyboard.
+  await tapOn('.picture-slot');
+  if (!await waitFor('document.querySelector(".tray-sticker .emoji") !== null', 3)) return 'tapping the small picture did not open Picture mode';
+  if (await evaluate('document.querySelector(".keyboard") !== null')) return 'the keyboard shows in Picture mode';
   await sleep(200);
   if (await evaluate('document.querySelectorAll("input, textarea, [contenteditable]").length')) return 'a text field is on the screen';
   const shape = await evaluate(`(() => { const box = document.querySelector('.picture').getBoundingClientRect(); return box.width / box.height; })()`);
@@ -557,13 +567,17 @@ async function tryStickers() {
     return `a 60, 30 drag moved the sticker ${Math.round(after.x - before.x)}, ${Math.round(after.y - before.y)}`;
   }
 
-  // Tap the empty picture: the buttons hide. Tap the sticker: they show.
-  const corner = await evaluate(`(() => { const box = document.querySelector('.picture').getBoundingClientRect(); return { x: box.left + 6, y: box.top + 6 }; })()`);
-  await touch(corner.x, corner.y);
-  if (await toolsShow()) return 'tapping the empty picture did not hide the buttons';
-  await touch(after.x, after.y);
+  // Two taps move a sticker: it is selected now, so tap an empty spot in the picture.
+  const spot = await evaluate(`(() => { const box = document.querySelector('.picture').getBoundingClientRect(); return { x: box.left + box.width * 0.15, y: box.top + box.height * 0.85 }; })()`);
+  await touch(spot.x, spot.y);
+  const tapped = (await placed())[2];
+  if (Math.abs(tapped.x - spot.x) > 3 || Math.abs(tapped.y - spot.y) > 3) return `the second tap put the sticker at ${Math.round(tapped.x)}, ${Math.round(tapped.y)}, not ${Math.round(spot.x)}, ${Math.round(spot.y)}`;
+  if (!await toolsShow()) return 'the sticker lost its buttons after a two-tap move';
+  // Tap the sticker again: it is let go and the buttons hide. Tap once more: they show.
+  await touch(tapped.x, tapped.y);
+  if (await toolsShow()) return 'tapping the selected sticker did not hide the buttons';
+  await touch(tapped.x, tapped.y);
   if (!await toolsShow()) return 'tapping a sticker did not show its buttons';
-
   // Bigger, then remove.
   const tools = await evaluate(`[...document.querySelectorAll('.sticker-tool')].map((b) => ({ words: b.textContent, tall: b.offsetHeight }))`);
   if (tools.some((tool) => tool.tall < 48)) return `a sticker button is less than 48px tall: ${JSON.stringify(tools)}`;
@@ -588,9 +602,36 @@ async function tryStickers() {
   if (end.some((s) => !s.inside)) return 'a sticker spills outside the picture';
   if (end[11].fx < 0.85 || end[11].fy < 0.8) return `dragging past the corner left the sticker at ${end[11].fx.toFixed(2)}, ${end[11].fy.toFixed(2)}`;
 
+  const beforeReload = await placed();
+  // Saved on the page: reload and see them, in Write mode's small picture and in Picture mode.
+  await sleep(1500);
+  await open('#book/made-up-pic-1/0', 'document.querySelector(".keyboard") !== null');
+  if (!await waitFor(`document.querySelectorAll('.picture .sticker').length === 12`, 3)) return `after a reload Write mode's picture has ${await evaluate(`document.querySelectorAll('.picture .sticker').length`)} stickers, not 12`;
+  if (await evaluate(`document.querySelectorAll('.picture button').length`)) return "Write mode's small picture has buttons";
+  await tapButton('Picture');
+  await waitFor(`document.querySelectorAll('.picture .sticker').length === 12`, 3);
+  const kept = await placed();
+  if (kept.some((k, i) => Math.abs(k.x - beforeReload[i].x) > 2 || Math.abs(k.y - beforeReload[i].y) > 2)) return 'the stickers are not where they were after a reload';
+  if (await evaluate(`document.querySelectorAll('.picture .sticker').length`) !== 12) return 'the stickers did not come back';
+
+  // Move page: page 1 later puts it second, and the stickers go with it. The ends are off.
+  if (!await isDisabled('Move earlier')) return 'Move earlier should be off on page 1';
+  await tapButton('Move later');
+  if (!await waitFor(`document.querySelector('.screen-title')?.textContent === 'Page 2 of 3'`, 3)) return 'Move later did not go to page 2';
+  if ((await placed()).length !== 12) return 'the stickers did not move with the page';
+  await tapButton('Move later');
+  await waitFor(`document.querySelector('.screen-title')?.textContent === 'Page 3 of 3'`, 3);
+  if (!await isDisabled('Move later')) return 'Move later should be off on the last page';
+  await sleep(1500);
+  await open('#book/made-up-pic-1/2', 'document.querySelector(".keyboard") !== null');
+  const order = await evaluate(`(async () => { ${STORE} const [one] = await store.loadBooks(); return one.pages.map((p) => p.text + ':' + p.stickers.length).join(); })()`);
+  if (order !== 'page b:0,page c:0,page a:12') return `after moving page 1 to the end and a reload the pages are "${order}"`;
+  await tapButton('Picture');
+  await waitFor('document.querySelector(".tray-sticker") !== null', 3);
+
   const fit = await evaluate(`(() => ({
     scrolls: document.documentElement.scrollHeight > innerHeight || document.documentElement.scrollWidth > innerWidth,
-    small: [...document.querySelectorAll('.tray-sticker, .back')].filter((b) => b.offsetWidth < 48 || b.offsetHeight < 48).length,
+    small: [...document.querySelectorAll('.tray-sticker, .pill, .mode-choice')].filter((b) => b.offsetParent !== null && (b.offsetWidth < 48 || b.offsetHeight < 48)).map((b) => b.textContent + b.offsetWidth + 'x' + b.offsetHeight).join(),
   }))()`);
   if (fit.scrolls) return 'the page scrolls';
   if (fit.small) return `${fit.small} buttons are smaller than 48px`;
@@ -652,7 +693,7 @@ const fitProblem = () => evaluate(`(() => {
   if (tray && tray.getBoundingClientRect().bottom > innerHeight + 0.5) return 'the sticker tray is off the bottom of the screen';
   const short = buttons.filter((node) => node.offsetHeight < 48);
   if (short.length) return short.length + ' buttons are shorter than 48px: ' + short.map((node) => node.textContent.trim()).join(', ');
-  const low = buttons.filter((node) => node.getBoundingClientRect().bottom > innerHeight + 0.5);
+  const low = buttons.filter((node) => !node.matches('.tray-sticker') && node.getBoundingClientRect().bottom > innerHeight + 0.5);
   if (low.length) return 'off the bottom of the screen: ' + low.map((node) => node.textContent.trim()).join(', ');
   const text = document.querySelector('.read-text');
   if (text) {
@@ -677,7 +718,7 @@ async function tryBooks() {
   // Backing out of a new book before writing anything leaves no empty book.
   await tapOn('.go');
   if (!await waitFor('document.querySelector(".keyboard") !== null', 3)) return 'Make a new book did not open the page screen';
-  await tapButton('Books');
+  await tapOn('.back');
   await sleep(1500);
   if ((await savedTexts()).length) return 'an empty book was saved';
 
@@ -702,10 +743,24 @@ async function tryBooks() {
   await tapButton('Put page back');
   if (!await waitFor(`document.querySelector('.screen-title')?.textContent === 'Page 3 of 3'`, 3)) return 'Put page back did not bring page 3 back';
   if (await typed() !== 'home') return `the put-back page holds "${await typed()}"`;
+  // Two removes in a row: Remove stays on, and each "Put page back" brings back the latest one.
+  await tapButton('Remove');
+  await waitFor(`document.querySelector('.screen-title')?.textContent === 'Page 2 of 2'`, 3);
+  if (await isDisabled('Remove')) return 'Remove went off after one remove';
+  await tapButton('Remove');
+  if (!await waitFor(`document.querySelector('.screen-title')?.textContent === 'Page 1 of 1'`, 3)) return 'a second Remove did not leave 1 page';
+  if (!await isDisabled('Remove')) return 'Remove should be off on the last page';
+  await tapButton('Put page back');
+  await waitFor(`document.querySelector('.screen-title')?.textContent === 'Page 2 of 2'`, 3);
+  if (await typed() !== 'hops') return `the first put-back brought back "${await typed()}", not the latest removed page`;
+  await tapButton('Put page back');
+  await waitFor(`document.querySelector('.screen-title')?.textContent === 'Page 3 of 3'`, 3);
+  if (await typed() !== 'home') return `the second put-back brought back "${await typed()}"`;
+  if (await evaluate(`[...document.querySelectorAll('button')].some((b) => b.textContent.includes('Put page back'))`)) return 'the put-back bar stayed with nothing to put back';
   await tapButton('Prev');
   await waitFor(`document.querySelector('.screen-title')?.textContent === 'Page 2 of 3'`, 3);
   if (await typed() !== 'hops') return `page 2 holds "${await typed()}"`;
-  await tapButton('Books');
+  await tapOn('.back');
   if (!await waitFor(`document.querySelectorAll('.book-card').length === 1`, 3)) return 'the shelf has no card for the new book';
   const card = await evaluate(`document.querySelector('.book-card').textContent`);
   if (!card.includes('Keep going') || !card.includes('3 pages') || !card.includes('pip')) return `the card says "${card}"`;
@@ -852,6 +907,13 @@ async function tryFinish() {
   return '';
 }
 
+/** With SHOTS=<folder>, save a screenshot of the screen on show. */
+async function shot(name, width) {
+  if (!process.env.SHOTS) return;
+  const { data } = await page('Page.captureScreenshot', { format: 'png' });
+  writeFileSync(join(process.env.SHOTS, `${name.replace(/[ ,]+/g, '-')}-${width}.png`), Buffer.from(data, 'base64'));
+}
+
 /** Every screen fits at this size: the shelf, a full page, a page, the reading view. Returns a problem, or ''. */
 async function tryFits() {
   await open('', 'document.querySelector(".go") !== null');
@@ -884,10 +946,30 @@ async function tryFits() {
       if (problem2) return `${name} with its stickers: ${problem2}`;
     }
     if (name !== 'the shelf' && !await noFields()) return `${name} has a text field`;
-    if (process.env.SHOTS) {
-      const { data } = await page('Page.captureScreenshot', { format: 'png' });
-      writeFileSync(join(process.env.SHOTS, `${name.replace(/ /g, '-')}-${width}.png`), Buffer.from(data, 'base64'));
+    if (name === 'a full page') { // the picture keeps a sensible size even on a full page, with a put-back bar showing
+      const size = await evaluate(`(() => { const box = document.querySelector('.picture').getBoundingClientRect(); return { w: box.width, h: box.height }; })()`);
+      if (size.h < 50 || size.w < 66) return `the picture on a full page is only ${Math.round(size.w)} x ${Math.round(size.h)}`;
     }
+    await shot(name, width);
+  }
+  // A page with a put-back bar: still fits.
+  if (!await open('#book/made-up-fit-1/1', 'document.querySelector(".keyboard") !== null')) return 'the put-back page did not draw';
+  await tapButton('Remove');
+  await waitFor(`[...document.querySelectorAll('button')].some((b) => b.textContent.includes('Put page back'))`, 3);
+  await sleep(300);
+  const barProblem = await fitProblem();
+  if (barProblem) return `with the put-back bar: ${barProblem}`;
+  await shot('put-back bar', width);
+  // Picture mode, on a full page and on a page of a short book.
+  for (const [name, address] of [['picture mode', '#book/made-up-fit-1/0'], ['picture mode, last page', '#book/made-up-fit-1/1']]) {
+    if (!await open(address, 'document.querySelector(".keyboard") !== null')) return `${name} did not draw`;
+    await tapButton('Picture');
+    if (!await waitFor('document.querySelector(".tray-sticker .emoji") !== null', 3)) return `${name} did not open`;
+    await sleep(300);
+    const problem = await fitProblem();
+    if (problem) return `${name}: ${problem}`;
+    if (!await noFields()) return `${name} has a text field`;
+    await shot(name, width);
   }
   return '';
 }
@@ -986,12 +1068,12 @@ try {
   await checkWith('Grown-up page: hold to open, every device check, delete a book, start over', tryGrownup);
   await checkWith('Backup: back up, start over, restore, restore again, broken file', tryBackup);
   await checkKeyboard('Keyboard: type, tap to move the cursor, hold backspace, 300 fit (phone)');
-  await checkWith('Stickers: add, drag, bigger, remove, 12 limit, all inside, read-only (phone)', tryStickers);
+  await checkWith('Picture mode: add, drag, two-tap move, bigger, remove, 12 limit, save, reorder pages (phone)', tryStickers);
   for (const [tablet, size] of Object.entries(TABLETS)) {
     await page('Emulation.setDeviceMetricsOverride', { ...size, deviceScaleFactor: 2, mobile: true });
     await checkScreen(`Home (${tablet})`, '');
     await checkKeyboard(`Keyboard (${tablet})`);
-    await checkWith(`Stickers (${tablet})`, tryStickers);
+    await checkWith(`Picture mode (${tablet})`, tryStickers);
     await checkWith(`Every screen fits (${tablet})`, tryFits);
     await checkWith(`Finish (${tablet})`, tryFinish);
   }

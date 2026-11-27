@@ -345,25 +345,44 @@ button { font-family: inherit; }
 /* ---------- The page screen (writing) ---------- */
 
 /* The picture area shrinks first: it takes what the words and keys leave. */
-.picture-slot { position: relative; flex: 1 1 0; min-height: 0; overflow: hidden; }
+/* The picture takes what the words and keys leave, but never less than 52px high (a small thumbnail). */
+.picture-slot { position: relative; flex: 1 1 0; min-height: 52px; overflow: hidden; cursor: pointer; }
 
-.picture {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  max-width: 100%;
-  aspect-ratio: 4 / 3;
-  transform: translateX(-50%);
+/* "Page 2 of 3": a badge on the picture area in Write mode, a slim row above the picture in Picture mode. */
+.picture-slot .screen-title { position: absolute; top: 0; left: 0; z-index: 1; margin: 0; padding: 2px 8px; border-radius: 10px; background: var(--surface); font-size: 0.85rem; }
+.title-row { flex: none; margin: 0; font-size: 1rem; }
+
+/* After a Remove: one bar to bring the page back. */
+/* With the bar showing, a full page still fits its words: the picture may shrink to nothing. */
+.has-putback .picture-slot { min-height: 0; }
+.putback-bar { flex: none; display: flex; padding: 0 4px; }
+.putback-bar .pill { flex: 1 1 auto; }
+
+/* Write | Picture: two big buttons with an icon and words, in the top row. */
+.mode-switch { flex: 1 1 0; display: flex; gap: 4px; min-width: 0; }
+
+.mode-choice {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 48px;
+  padding: 0 4px;
   border: 2px solid var(--border);
-  border-radius: 16px;
-  background: var(--water);
+  border-radius: 24px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
 }
+
+.mode-choice[aria-pressed="true"] { border-color: var(--go); background: var(--go); color: var(--on-go); font-weight: 800; box-shadow: 0 3px 0 #c9602f; }
 
 .page-tools { display: flex; gap: 6px; padding: 0 4px; }
 .page-tools .pill { flex: 1 1 auto; min-width: 0; padding: 0 8px; font-size: 0.95rem; }
 
-.screen .writing { flex: 1 1 auto; min-height: 96px; font-size: 18px; line-height: 1.45; }
+.screen .writing { flex: 1 1 auto; min-height: 96px; padding-top: 6px; padding-bottom: 6px; font-size: 18px; line-height: 1.4; }
 
 /* The "not saved" mark floats over a screen, so it is never squeezed out. */
 .screen > .save-mark { position: absolute; top: 60px; right: 8px; z-index: 5; margin: 0; box-shadow: 0 2px 6px rgb(0 0 0 / 0.15); }
@@ -494,3 +513,6 @@ button { font-family: inherit; }
 /* The page screen's picture is placed in a slot; here it simply sits in the flow. */
 .cover .picture,
 .finish-cover .picture { top: auto; bottom: auto; left: auto; max-width: none; transform: none; }
+
+/* The page screen has many rows; tighter gaps leave the words and keys their room at 375 x 667. */
+.page-screen { gap: 4px; padding-top: max(4px, env(safe-area-inset-top)); padding-bottom: max(4px, env(safe-area-inset-bottom)); }

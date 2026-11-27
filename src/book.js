@@ -5,6 +5,8 @@
 // or { stickers: [...] }, the same sticker shape as a page's.
 // `pages` is a list of { text, stickers }, 1 to 12 long. Every function
 // returns a new book and sets `changed` to `now`; none changes the one passed in.
+// A page's stickers are { id, x, y, size } (see stickers.js); the format number stays 1
+// because upgradeBook already fills `stickers` with [] on an older record.
 // The 300-character limit per page is kept by typing.js while the writer types.
 // setPageText stores whatever it is given, so a book's words are never cut.
 
@@ -64,6 +66,21 @@ export const setTitle = (book, title, now) => ({ ...book, title, changed: now })
 
 /** The cover's stickers (the title is separate). */
 export const setCoverStickers = (book, stickers, now) => ({ ...book, cover: { stickers }, changed: now });
+
+/** Replace page `index`'s stickers (a list of { id, x, y, size }, kept by stickers.js). */
+export function setPageStickers(book, index, stickers, now) {
+  const pages = book.pages.map((page, i) => (i === index ? { ...page, stickers } : page));
+  return { ...book, pages, changed: now };
+}
+
+/** Move page `from` to place `to` (both 0 to pages - 1). Out of range: unchanged. Never loses a page. */
+export function movePage(book, from, to, now) {
+  const last = book.pages.length - 1;
+  if (![from, to].every((n) => Number.isInteger(n) && n >= 0 && n <= last) || from === to) return book;
+  const pages = [...book.pages];
+  pages.splice(to, 0, ...pages.splice(from, 1));
+  return { ...book, pages, changed: now };
+}
 
 /** True when no page has any words or stickers. */
 export const isBlank = (book) => book.pages.every((page) => page.text === '' && page.stickers.length === 0);
