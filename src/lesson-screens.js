@@ -20,7 +20,7 @@ import { PLAN_LIMIT, planOf } from './plan.js';
 
 let loaded; // the one load of the lesson files, for this visit to the app
 
-/** { lessons, planning, examples } from the lesson files, or null if they are missing or odd. */
+/** { lessons, planning, messages, examples } from the lesson files, or null if they are missing or odd. */
 export function loadLessonData() {
   loaded ??= (async () => {
     try {
@@ -29,7 +29,7 @@ export function loadLessonData() {
         fetch(new URL('../data/examples.json', import.meta.url)).then((r) => (r.ok ? r.json() : null)),
       ]);
       if (!Array.isArray(lessons?.lessons) || !lessons.lessons.length || !Array.isArray(lessons.planning) || !Array.isArray(examples)) return null;
-      return { lessons: lessons.lessons, planning: lessons.planning, examples };
+      return { lessons: lessons.lessons, planning: lessons.planning, messages: lessons.messages, examples };
     } catch {
       return null; // offline and never saved: just no lessons
     }

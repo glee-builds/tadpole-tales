@@ -473,6 +473,60 @@ button { font-family: inherit; }
 .finish-title { margin: 0; max-width: 100%; font-size: 1.4rem; font-weight: 800; line-height: 1.2; text-align: center; overflow-wrap: anywhere; }
 .finish-by { margin: 0; color: var(--muted); font-weight: 700; }
 .finish-cover .sticker-tray { width: 100%; }
+
+/* ---------- Finish: hear your book, the self-check, the job, the kind message ---------- */
+
+.finish-hear { display: flex; flex: 1; flex-direction: column; gap: 8px; min-height: 0; }
+
+/* A big card in the middle: an icon, words, and buttons under them. */
+.finish-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin: auto 4px;
+  padding: 20px 16px;
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: 0 4px 0 var(--edge-deep);
+  text-align: center;
+}
+.finish-card p { margin: 0; }
+.finish-card-icon { font-size: 3rem; line-height: 1; }
+.finish-card-words { font-size: 1.35rem; font-weight: 800; line-height: 1.3; overflow-wrap: anywhere; }
+.finish-card-more { color: var(--words-ink); font-size: 1.15rem; font-weight: 800; }
+.finish-choices { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; width: 100%; }
+.finish-choices .pill { flex: 1 1 auto; white-space: normal; }
+
+/* The self-check. A tapped page or sentence is marked with a star: never right or wrong. */
+.finish-pages { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: repeat(2, 1fr); grid-auto-rows: minmax(64px, 112px); align-content: start; gap: 8px; padding: 4px; overflow-y: auto; }
+.finish-pages-many { grid-template-columns: repeat(3, 1fr); grid-auto-rows: minmax(64px, 96px); }
+.finish-page,
+.finish-sentence {
+  position: relative;
+  min-height: 48px;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 3px 0 var(--edge-deep);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent; /* the star and tint are the only mark */
+  -webkit-user-select: none;
+  user-select: none;
+}
+.finish-page { display: flex; flex-direction: column; gap: 2px; padding: 6px 8px; overflow: hidden; }
+.finish-page-number { font-weight: 800; color: var(--words-ink); }
+.finish-page-words { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 0.9rem; line-height: 1.3; overflow-wrap: anywhere; }
+.finish-sentences { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 4px; overflow-y: auto; }
+.finish-sentence { flex: none; padding: 8px 12px; font-size: 1.1rem; line-height: 1.35; overflow-wrap: anywhere; }
+.finish-picked { border-color: var(--words-ink); background: #eeebfb; box-shadow: 0 3px 0 var(--words-ink); }
+.finish-picked::after { content: "⭐"; position: absolute; top: -8px; right: -4px; font-size: 1.3rem; }
+.finish-not-yet { flex: none; margin: 0 4px; }
+.finish-screen .read-nav .pill { min-width: 104px; }
 .shelf-message { color: var(--size-ink); font-weight: 800; }
 
 /* The page screen's picture is placed in a slot; on a cover it simply sits in the flow. */

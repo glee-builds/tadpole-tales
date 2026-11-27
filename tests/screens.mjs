@@ -15,6 +15,7 @@
 //   shelf-and-books.mjs              the bookshelf, making and finishing a book, reading, Read to me, Refresh
 //   page-keyboard-pictures.mjs       the page screen: keyboard, pictures, and "every screen fits"
 //   grownup-backup-security.mjs      saving, the grown-up page, backup, damaged books, the server lock, offline
+//   finish-lessons.mjs               after the cover: hear your book, the self-check, the job, the kind message
 // To find a check, look for its label below, then for the function it runs.
 
 import { PHONE, TABLETS, page, problems, checked, checkScreen, checkWith, shutDown } from './screens/lib.mjs';
@@ -24,6 +25,9 @@ import { tryLessons, tryLessonPaths, tryLessonFits, tryNoLessons } from './scree
 import {
   trySaving, tryGrownup, tryBackup, tryHostile, tryServerLock, checkOffline, removeDownloads,
 } from './screens/grownup-backup-security.mjs';
+import {
+  tryLessonSteps, tryLessonSkips, tryNotYet, tryCloseAtEachStep, tryOnePage, tryFinishNoLessons,
+} from './screens/finish-lessons.mjs';
 
 try {
   await checkWith('Test server: nothing outside the repo', tryServerLock);
@@ -32,6 +36,12 @@ try {
   await checkWith('Every screen fits (phone)', tryFits);
   await checkWith('Read to me: underlines in order, turns the page, Stop, hand-turn, no voice (phone)', tryReadAloud);
   await checkWith('Finish: title, author name, cover, shelf, Edit, close mid-step (phone)', tryFinish);
+  await checkWith('Finish with lessons: saved first, hear, tap a sentence, Do it, finish again, Not now, kind message (phone)', tryLessonSteps);
+  await checkWith('Finish with lessons: every step skipped, no voice (phone)', tryLessonSkips);
+  await checkWith('Finish with lessons: "I don\'t have one yet", Go back, Carry on, tap two pages (phone)', tryNotYet);
+  await checkWith('Finish with lessons: close the app at each step, open again (phone)', tryCloseAtEachStep);
+  await checkWith('Finish with lessons: a one-page book has no two-page check (phone)', tryOnePage);
+  await checkWith('Finish with no lessons.json: as before lessons (phone)', tryFinishNoLessons);
   await checkWith('Saving: save, reload, spare copies per book, saveNow waits, retry once, "not saved" mark, unreadable books', trySaving);
   await checkWith('A book from a newer version: shown with a note, never opened or changed', tryNewer);
   await checkWith('Damaged books: the good book still shows; page, reading and grown-up screens draw', tryHostile);
@@ -51,6 +61,8 @@ try {
     await checkWith(`Every screen fits (${tablet})`, tryFits);
     await checkWith(`Finish (${tablet})`, tryFinish);
     await checkWith(`Lesson screens fit (${tablet})`, tryLessonFits);
+    await checkWith(`Finish with lessons (${tablet})`, tryLessonSteps);
+    await checkWith(`Finish with lessons: two pages, not yet (${tablet})`, tryNotYet);
   }
   await checkOffline(); // last: it stops the server
 } catch (error) {

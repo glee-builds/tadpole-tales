@@ -67,7 +67,8 @@ src/readaloud.js        "Read to me": speaks a book one sentence at a time with 
 src/sentences.js         cuts a page's text into sentences for reading aloud
 src/polish.js            spelling suggestions for the Polish step: loadWordLists, wordsToAsk, applySuggestion
 src/voice.js             picks the best English voice on the device; never an online one
-src/finish.js            title, author name and cover after Finish (showFinish)
+src/finish.js            after Finish (showFinish): title, author name, cover, then hear your book, the self-check,
+                         one "make it better" job and the kind message (from data/lessons.json, once it is there)
 src/grownup.js           the grown-up page, one function per section: device check, backup and restore, books, start over
 tests/                   tests for the plain functions (node --test) and tests/screens.mjs (a real browser; its checks are in tests/screens/)
 docs/                    decisions.md (the decisions log), phase-1-plan.md (task notes), device-checks.md (the owner's checklist)
